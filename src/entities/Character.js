@@ -34,6 +34,7 @@ export const isFemalePassenger = (honorific, index) => (index % 2 === 0) === (ho
  * @param {boolean} female  žena: malá prsa a delší vlasy
  */
 export function createCharacter(role = 'passenger', variant = 0, female = false) {
+  variant = Math.abs(Math.round(variant));   // pilot dostává záporné číslo; záporný index by vrátil undefined (bílá kůže)
   const g = new THREE.Group();
   const skin = SKIN[variant % SKIN.length];
   let shirt = SHIRTS[Math.floor(variant / 3) % SHIRTS.length];
