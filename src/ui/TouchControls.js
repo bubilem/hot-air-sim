@@ -23,13 +23,11 @@ export class TouchControls {
     this.el.className = 'controls';
     this.el.innerHTML = `
       <div class="ctl-left">
-        <button data-k="left" class="btn round" aria-label="${t('hud.rotL')}">⟲<kbd class="kh">A</kbd></button>
-        <button data-k="right" class="btn round" aria-label="${t('hud.rotR')}">⟳<kbd class="kh">D</kbd></button>
-        <button data-k="cam" class="btn round cam" aria-label="${t('hud.camera')}">${CAM_ICONS.chase}<kbd class="kh">C</kbd></button>
-        <div class="zoom-col">
-          <button data-k="zoomIn" class="btn zoom" aria-label="${t('hud.zoomIn')}">+</button>
-          <button data-k="zoomOut" class="btn zoom" aria-label="${t('hud.zoomOut')}">−</button>
-        </div>
+        <button data-k="left" class="btn round" style="grid-area: 1 / 1" aria-label="${t('hud.rotL')}">⟲<kbd class="kh">A</kbd></button>
+        <button data-k="zoomIn" class="btn round zoom" style="grid-area: 1 / 2" aria-label="${t('hud.zoomIn')}">+</button>
+        <button data-k="right" class="btn round" style="grid-area: 2 / 1" aria-label="${t('hud.rotR')}">⟳<kbd class="kh">D</kbd></button>
+        <button data-k="zoomOut" class="btn round zoom" style="grid-area: 2 / 2" aria-label="${t('hud.zoomOut')}">−</button>
+        <button data-k="cam" class="btn round cam" style="grid-area: 2 / 3" aria-label="${t('hud.camera')}">${CAM_ICONS.chase}<kbd class="kh">C</kbd></button>
       </div>
       <div class="ctl-right">
         <button data-k="vent" class="btn vent">${t('hud.vent')}<kbd class="kh">S</kbd></button>

@@ -133,19 +133,29 @@ small { color: var(--muted); font-size: 11px; font-weight: 600; letter-spacing: 
 
 .ctl-left {
   position: absolute; left: max(14px, env(safe-area-inset-left)); bottom: max(18px, env(safe-area-inset-bottom));
-  display: flex; gap: 12px; align-items: flex-end;
+  /* matice 3 × 2: ⟲ + prázdno / ⟳ − kamera (všechna tlačítka min. 56 px) */
+  display: grid; grid-template-columns: repeat(3, 56px); grid-template-rows: repeat(2, 56px); gap: 8px;
 }
-.btn.zoom { font-size: 28px; line-height: 1; width: 52px; height: 52px; background: var(--btn-overlay); backdrop-filter: blur(12px); }
+.ctl-left .btn.round { width: 56px; height: 56px; font-size: 22px; }
+.btn.zoom { font-size: 28px; line-height: 1; background: var(--btn-overlay); backdrop-filter: blur(12px); }
 .btn.zoom:hover { background: var(--btn-primary-hover); }
-.zoom-col { display: flex; flex-direction: column; gap: 8px; }
 .ctl-right {
   position: absolute; right: max(14px, env(safe-area-inset-right)); bottom: max(18px, env(safe-area-inset-bottom));
   display: flex; flex-direction: column; gap: 12px; align-items: flex-end;
 }
 
+/* Úzký telefon na výšku: matice vlevo a hořák vpravo se musí vejít vedle sebe */
+@media (max-width: 400px) {
+  .btn.burn, .btn.vent { width: 128px; }
+}
+@media (max-width: 340px) {
+  .btn.burn, .btn.vent { width: 108px; }
+}
 @media (max-height: 480px) {
   .btn.burn { height: 80px; width: 140px; }
   .btn.vent { height: 52px; width: 140px; }
+  .ctl-left { bottom: max(8px, env(safe-area-inset-bottom)); gap: 6px; }
+  .ctl-right { bottom: max(8px, env(safe-area-inset-bottom)); }
   .hud-side { top: 60px; }
 }
 
