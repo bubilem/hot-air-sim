@@ -4,7 +4,7 @@
 Žáci si na něm zkoušejí létání (fyzika) i programování (JavaScript, Three.js, architektura aplikace).
 
 Hra běží přímo v prohlížeči, bez instalace a bez serveru, na počítači i na mobilu (na výšku i na šířku).
-Rozhraní je česky a anglicky. Vzhled vychází z design systému **VOŠ, SPŠ a SOŠ Varnsdorf**.
+Rozhraní je česky a anglicky. Vzhled vychází z [design systému **VOŠ, SPŠ a SOŠ Varnsdorf**](https://github.com/skolavdf-dev/design-system).
 
 ---
 
@@ -88,7 +88,7 @@ hot-air-sim/
 │   ├── i18n/         překlady (cs, en)
 │   └── config/       konstanty (GameConfig.js) a barvy (Colors.js)
 ├── tests/            automatické testy
-└── tmp/              podklady (design systém školy)
+└── tmp/              lokální podklady (mimo Git)
 ```
 
 ---

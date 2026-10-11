@@ -197,7 +197,7 @@ V E1 jedna pevná oblast cca 5 × 5 km kolem lokality s mlhou na okraji; streamo
 
 ## 7. Design podle design systému školy
 
-Rozhraní se řídí **design systémem VOŠ, SPŠ a SOŠ Varnsdorf** (`tmp/design-system/docs/DESIGN.md`, `LOGO.md`;
+Rozhraní se řídí **design systémem VOŠ, SPŠ a SOŠ Varnsdorf** ([repozitář školy](https://github.com/skolavdf-dev/design-system): `docs/DESIGN.md`, `docs/LOGO.md`;
 výklad v `doc/09-design-system.md`). Závazná pravidla:
 
 - **Paleta:** žlutá `#ffd400`/`#ffea80`, modrá `#41d7ff`/`#00c0f3`, zelená `#c2dd78`/`#a6ce39`; pozadí gradient

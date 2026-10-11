@@ -157,7 +157,7 @@ hot-air-sim/
 ├── tests/                ← automatické testy (kapitola 12)
 ├── AGENTS.md             ← technická pravidla projektu (pro vývojáře a nástroje AI)
 ├── README.md             ← krátký úvod a odkaz na tuto dokumentaci
-└── tmp/                  ← dočasné podklady (design systém školy, archiv původního zadání)
+└── tmp/                  ← lokální podklady mimo Git (kopie design systému školy, archiv původního zadání)
 ```
 
 Složky `node_modules/` (stažené knihovny) a `dist/` (výsledek buildu) vznikají automaticky

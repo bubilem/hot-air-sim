@@ -4,17 +4,14 @@ Rozhraní HotAirSim (menu, panely, tlačítka, osvědčení) je navrženo podle 
 systému VOŠ, SPŠ a SOŠ Varnsdorf**. Tato kapitola vysvětluje, **co je design systém**, jaká pravidla
 přebíráme, jak jsou zapsána v CSS a jak do rozhraní správně přidat nový prvek.
 
-Zdroj pravidel (v projektu uložený dočasně v `tmp/design-system/`):
+Zdroj pravidel je repozitář školy **https://github.com/skolavdf-dev/design-system** (soubory níže jsou cesty v něm):
 
 | Soubor | Obsah |
 | :-- | :-- |
-| `tmp/design-system/docs/DESIGN.md` | barvy, písmo, tvary, komponenty, „Do’s and Don’ts“ |
-| `tmp/design-system/docs/LOGO.md` | geometrie a pravidla používání loga |
-| `tmp/design-system/index.html` | živá ukázka všech komponent (otevřete v prohlížeči) |
-| `tmp/design-system/assets/logo/` | logo v PDF, PNG a SVG |
-
-> **Doporučení:** složka `tmp/` je dočasná. Chcete-li ji zachovat, přesuňte `design-system` například do
-> `doc/design-system/` (nebo odkazujte na repozitář školy). Dokumentace odkazuje na jména souborů, ne na pevnou cestu.
+| `docs/DESIGN.md` | barvy, písmo, tvary, komponenty, „Do’s and Don’ts“ |
+| `docs/LOGO.md` | geometrie a pravidla používání loga |
+| `index.html` | živá ukázka všech komponent (otevřete v prohlížeči) |
+| `assets/logo/` | logo v PDF, PNG a SVG |
 
 ## 9.1 Co je design systém a proč ho používat
 
@@ -292,5 +289,5 @@ Při předělání na výukový projekt se změnilo:
 | odrážky tečky | trojúhelník z loga |
 | marketingová tlačítka, statistiky firmy, polepy | odstraněno |
 
-Původní materiály jsou archivovány v `tmp/archiv-puvodni-verze/` (jen pro referenci; jejich obsah nemá být dále
+Původní materiály jsou archivovány lokálně v `tmp/archiv-puvodni-verze/` (mimo Git; jen pro referenci; jejich obsah nemá být dále
 používán).
