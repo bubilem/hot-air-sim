@@ -195,6 +195,9 @@ vynásobí konstantou `CAMERA.pinchSpeed` a přičte se ke vzdálenosti kamery.
   panelu, za letu v HUD, při startu a oslavě samostatně vlevo nahoře.
 - **Encyklopedie** (`Encyclopedia`): okno s kategoriemi vlevo a textem vpravo (obsah v `i18n/wiki.*.js`). Při
   otevření zavolá callback `onToggle(true)`, `GameApp` nastaví `paused` a svět se **zastaví**.
+  Kategorie s příznakem `link: true` (O projektu a škole) přidá na konec odkaz na `SCHOOL_IT_URL` (obor Informační
+  technologie na webu školy). Stejný odkaz je v řádku pod tlačítky na obrazovce Oslava. Je to jediný externí odkaz ve hře;
+  otevírá se v nové záložce s `rel="noopener noreferrer"` a bez sledování.
 
 ## 10.7 Ukládání nastavení: `localStorage`
 

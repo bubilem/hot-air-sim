@@ -1,5 +1,6 @@
 // Závěrečná obrazovka: balonářský křestní list (Canvas → PNG) a tlačítka „stáhnout“ a „letět znovu“.
 import { t, getLang } from '../i18n/index.js';
+import { SCHOOL_IT_URL } from '../config/GameConfig.js';
 
 const W = 1400, H = 1190;
 const M = 98;   // m okraj diplomu (volné místo kolem obsahu)
@@ -58,6 +59,8 @@ export class ResultScreen {
           <button class="btn cta" id="r-dl">${t('result.download')}</button>
           <button class="btn ghost" id="r-again">${t('result.again')}</button>
         </div>
+        <p class="result-school">${t('result.school')}
+          <a href="${SCHOOL_IT_URL}" target="_blank" rel="noopener noreferrer">${t('result.moreIt')}</a></p>
       </div>`;
     app.uiRoot.appendChild(this.el);
     this.canvas = this.el.querySelector('#diploma');

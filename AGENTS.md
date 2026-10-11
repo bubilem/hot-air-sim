@@ -64,7 +64,7 @@ Postup řídí proměnné `inflation` 0…1, `upright` 0…1, `unroll` 0…1 a t
 - Křest sektem (korek, částice), titul podle lokality, oslovení a skóre (`public/titles.json`, viz `public/TITLES-README.md`; bez souboru platí vestavěné `title.*` v `i18n/`).
 - **Osvědčení** (Canvas → PNG): jméno, doba letu, max. výška, měkkost přistání, titul (nese i místo, např. „Baron Lužických hor“), skóre, datum. Nahoře velký symbol školy (trojúhelník hrotem dolů připomíná balon) a pod ním „HotAirSim“ jako koš; bez vzoru pláště a bez popisků „Místo“ / „Balon“. Diplom je záměrně střídmý a vzdušný, s okrajem kolem obsahu: nadpis, titul, jméno (když ho hráč nezadá, řádek se vynechá), čtyři údaje a dole řada „Virtuální let“ (vlevo), hvězdy a datum.
   Označeno jako **virtuální let**.
-- Tlačítka „Stáhnout diplom“ a „Letět znovu“. **Žádné externí odkazy, reklamy ani sledování.**
+- Tlačítka „Stáhnout diplom“ a „Letět znovu“. Pod nimi jeden nenápadný řádek o projektu školy s odkazem na obor Informační technologie (`SCHOOL_IT_URL` v `GameConfig.js`). **Žádné jiné externí odkazy, reklamy ani sledování.**
 
 ---
 
@@ -212,7 +212,7 @@ výklad v `doc/09-design-system.md`). Závazná pravidla:
   Obě místa musí zůstat konzistentní.
 - **Logo:** symbol školy se nesmí natahovat, otáčet ani měnit barvy; poměr 1000 : 866, hrot dolů, min. šířka 24 px.
   Loga jsou majetkem školy.
-- Název aplikace je **HotAirSim**. Hra propaguje školu: logo školy je na autě, přívěsu a trikách posádky (`entities/SchoolMark.js`). Ve hře nejsou značky třetích stran, reklamy ani odkazy na komerční služby.
+- Název aplikace je **HotAirSim**. Hra propaguje školu: logo školy je na autě, přívěsu a trikách posádky (`entities/SchoolMark.js`). Ve hře nejsou značky třetích stran, reklamy ani odkazy na komerční služby. Jediný externí odkaz je na obor Informační technologie na webu školy (`SCHOOL_IT_URL`): položka „O projektu a škole“ v Encyklopedii a řádek na obrazovce Oslava; otevírá se v nové záložce (`rel="noopener noreferrer"`), bez sledování.
 - **Galerie balonů:** obrázky pláště 2 : 1 v `public/envelopes/` + `manifest.json` (návod v `public/envelopes/README.md`); hra je načte při startu (`loadFleet`).
 - **Vzor pláště:** `entities/EnvelopeDesigns.js` kreslí vestavěné vzory do canvasu 1024 × 512 (osa x = obvod ve
   32 výsečích, osa y = od ústí k vrchlíku) a umí načíst vlastní PNG/WebP/JPEG (do 8 MB, ořez na 2:1, jen v prohlížeči).
