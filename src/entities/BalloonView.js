@@ -12,8 +12,8 @@ const PROFILE = [     // [poloměr, výška] pláště ve svislé poloze, v metr
   [2.0, 0], [2.6, 1.4], [4.2, 3.6], [6.4, 6.6], [8.2, 9.6],
   [9.3, 12.6], [9.7, 14.8], [9.3, 16.8], [8.0, 18.4], [5.6, 19.5], [2.9, 20.1], [0, 20.3],
 ];
-const ARCH_TIP = 1.8;      // m: minimální vyklenutí špičky pláště při ležení
-const ARCH_TIP_R = 3;      // m: do jakého poloměru prstence se doplňuje
+const CROWN_PULL = 4;      // m: o kolik lano nadzvedne vrchlík při vztyčování (v první třetině zvedání)
+const CROWN_FROM = 0.45;   // od jaké části výšky pláště (0..1) se vrchlík nadzvedává
 const SKIRT_ROWS = 3;      // spodní řady pláště tvoří tmavá "plachta" (sukně) u ústí
 const SKIRT_COLOR = 0.07;  // jas sukně (násobí se s texturou)
 
@@ -188,15 +188,18 @@ export class BalloonView {
     // tělo se nad ní klene), proto každý vrchol upravíme ve světové výšce a vrátíme do prostoru rigu.
     const GROUND = 0.03;
     const sup = lyingE * lyingE;
+    const H = PROFILE[PROFILE.length - 1][1];
+    const pull = CROWN_PULL * (27 / 4) * lyingE * lyingE * (1 - lyingE);   // maximum při lyingE = 2/3, na konci zvedání zanikne
     const g = this.grid;
     for (let i = 0; i <= RINGS; i++) {
       const r = this.profile[i].x, h = this.profile[i].y;
-      const reach = smooth(h / 7);               // u ústí je plášť přichycen ke koši, dál se klene
+      const reach = smooth(h / 7);               // u ústí je plášť přichycen ke koši, dál leží na zemi
       const y0 = h * kl;
-      // vyklenutí nad zem a klesnutí tenké látky na zem (ústí zůstává ve výšce koše, zbytek leží)
-      const sag = lyingE * smooth(h / 3) * Math.max(0, rigYE - r * kt);
-      const archR = r + ARCH_TIP * (1 - smooth(r / ARCH_TIP_R));   // u špičky vrchlíku se vyklenutí nesráží k nule (jinak se špička zamáčkne)
-      let dY = sup * reach * archR * kt - sag;
+      // Vleže leží střed prstence ve výšce svého poloměru (spodek na zemi), ústí zůstává u koše; špička tedy leží na zemi
+      let dY = sup * reach * (r * kt - rigYE);
+      // Při vztyčování lano táhne vrchlík vzhůru a ven (nejvíc v polovině zvedání, vzpřímený i ležící plášť je bez vlivu)
+      const crown = smooth((h / H - CROWN_FROM) / (1 - CROWN_FROM));
+      dY += pull * crown * crown * kt;
       // Zem: celý prstenec se zvedne tak, aby jeho nejnižší bod neprorážel zem (po prstencích, ne po vrcholech,
       // jinak by se špička a boky při vztyčování zamáčkly dovnitř)
       const ringMin = rigYE + y0 * cpE - r * kt * spE + dY;
