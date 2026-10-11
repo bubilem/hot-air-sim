@@ -46,6 +46,13 @@ export const TERRAIN = {
   rockLine: 100,       // m, nad touto výškou je holá skála
 };
 
+// Samostatný kostel mimo město (lokalita s `churches: [{ x, z, a }]`), obvykle na kopci
+export const LONE_CHURCH = {
+  padRadius: 24,      // m, rovná plošina pod kostelem
+  padFade: 2.4,       // násobek poloměru, kde je terén zase původní
+  clearing: 34,       // m, poloměr mýtiny v lese kolem kostela
+};
+
 // Cíl: značka má poloměr 60 m; kolem ní musí být louka. Les v kruhu se vyčistí mýtinou
 export const TARGET_CLEARING = {
   check: 75,          // m, do jaké vzdálenosti od středu cíle se kontroluje okolí

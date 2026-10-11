@@ -18,9 +18,11 @@ export const SITES = [
     elevation: 360,
     terrain: { base: 48, bigAmp: 28, midAmp: 7, hillAmp: 60, hillScale: 650, hillFrom: 0.42, hillTo: 0.95, forestBias: 0.12, treeLine: 115, rockLine: 128, hillClear: 450, hillFade: 450, startShift: 55, startFlatRadius: 75, startFlatFade: 150, startHeight: 'natural' },   // široká zalesněná návrší, jen nejvyšší vrcholky jsou skála
     towns: [
-      { x: 700, z: 450, r: 220, chimneyCount: 2 },   // Varnsdorf v údolí, ~600 m od startu; dva továrenské komíny
+      { x: 700, z: 450, r: 220, chimneyCount: 3 },   // Varnsdorf v údolí, ~600 m od startu; tři továrenské komíny
       { x: -900, z: 1500, r: 180 },
     ],
+    // Samostatný kostel na kopci severně od Varnsdorfu (x, z = poloha v m od startu, a = natočení lodi v rad)
+    churches: [{ x: 810, z: 90, a: 0.9 }],
     // Rybníky v nejnižších místech krajiny (x, z = střed v m od startu, r = poloměr hladiny)
     ponds: [
       { x: 700, z: -300, r: 65 },
@@ -145,7 +147,7 @@ export function createBiomes(site) {
     const b = site.wind[0].bearing * Math.PI / 180;
     terrain = { ...terrain, startCenter: { x: Math.sin(b) * terrain.startShift, z: -Math.cos(b) * terrain.startShift } };
   }
-  const biomes = new Biomes(site.seed, site.river, site.massifs, mapCenter(site), { terrain, towns: site.towns, ponds: site.ponds });
+  const biomes = new Biomes(site.seed, site.river, site.massifs, mapCenter(site), { terrain, towns: site.towns, ponds: site.ponds, churches: site.churches });
   biomes.findMeadow(site.target.bearing, site.target.dist);   // vytvoří mýtinu kolem cíle dřív, než se postaví terén
   return biomes;
 }

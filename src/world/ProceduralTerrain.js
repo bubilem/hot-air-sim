@@ -128,6 +128,7 @@ export class ProceduralTerrain {
     this.buildWater();
     this.buildTrees();
     this.buildTowns();
+    this.buildLoneChurches();
   }
 
   getMesh() { return this.group; }
@@ -329,6 +330,11 @@ uniform vec2 uGrassFade;`)
       this.group.add(this.buildChurch(t.church));
       for (const c of t.chimneys) this.group.add(this.buildChimney(c));
     }
+  }
+
+  /** Samostatné kostely mimo města (Biomes.churches), např. na kopci. */
+  buildLoneChurches() {
+    for (const c of this.biomes.churches) this.group.add(this.buildChurch(c));
   }
 
   /** Kostel: loď se sedlovou střechou, na konci čtvercová věž s jehlanovou střechou (lokální osa z = osa lodi). */

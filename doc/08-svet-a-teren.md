@@ -209,13 +209,20 @@ horách jsou dvě vesnice, v Českém ráji jedno městečko, jinde žádné.
 - **Rovný terén:** `rawHeight` pod městem plynule přechází na výšku středu města (`townFlat`, pásmo
   `TOWNS.flatFrom`–`flatTo` násobků poloměru). Domky tak nelevitují ani se nezabořují. Kolem města nejsou masivy.
 - **Rozmístění** počítá `Biomes.layoutTown` (čistá logika, deterministicky podle seedu): kostel poblíž středu,
-  případně komíny (`town.chimneyCount`; Varnsdorf v Lužických horách má dva, 45 m vysoké), pak **náhodně rozmístěné
+  případně komíny (`town.chimneyCount`; Varnsdorf v Lužických horách má tři, 45 m vysoké), pak **náhodně rozmístěné
   a natočené domky** různé výšky (zdi 3–7 m + střecha 2 m) a stromy v mezerách. Nic se nesmí překrývat
   (rejection sampling: náhodný bod se zahodí, když koliduje s už umístěnou stavbou).
 - **Vykreslení** (`ProceduralTerrain.buildTowns`): domky jsou dva `InstancedMesh` (stěny, střechy), kostel
   (loď + věž s jehlanem, 28 m) a komíny jsou samostatné meshe, stromy se přidají do společného instancování stromů.
 - **Přistání:** překážka je `surface = ground + Biomes.townObstacle(x, z)`: střechy a stromy `WORLD.townRoof` (9 m),
   věž kostela a komíny výš (landmarks). Dotyk ve městě je neúspěch (`KIND.TOWN`, „Přistání na střechách“).
+
+## 8.6c Samostatný kostel
+
+Lokalita může mít `churches: [{ x, z, a }]` (poloha v metrech od startu, `a` = natočení lodi). V Lužických horách stojí kostel
+na kopci severně od Varnsdorfu (`Biomes.setChurches`): pod ním je malá rovná plošina na výšce místa (`LONE_CHURCH.padRadius`),
+okolní les je vyčištěný mýtinou a věž i loď jsou překážka při přistání (`churchObstacle`, stejné rozměry jako kostel ve městě,
+`TOWNS.church`). Vykresluje ho `ProceduralTerrain.buildLoneChurches`.
 
 ## 8.6b Rybníky
 

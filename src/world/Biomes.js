@@ -1,7 +1,7 @@
 // Jediný zdroj pravdy o terénu: výška, sklon a biom (pro vizuál i herní logiku).
 // Bez závislosti na Three.js.
 import { createNoise2D } from 'simplex-noise';
-import { WORLD, MASSIFS, TERRAIN, TOWNS, PONDS, TARGET_CLEARING } from '../config/GameConfig.js';
+import { WORLD, MASSIFS, TERRAIN, TOWNS, PONDS, TARGET_CLEARING, LONE_CHURCH } from '../config/GameConfig.js';
 
 function mulberry32(a) {
   return function () {
@@ -73,7 +73,35 @@ export class Biomes {
     this.setRiver(river);
     this.ponds = extra.ponds || [];
     this.clearings = [];   // mýtiny v lese kolem cíle (viz findMeadow)
+    this.churches = [];
     this.setTowns(extra.towns || []);
+    this.setChurches(extra.churches || []);
+  }
+
+  /** Landmarks kostela (loď + věž) pro kolize: [{ x, z, r, h }]. */
+  churchLandmarks(cx, cz, a) {
+    const C = TOWNS.church;
+    const tz = C.nave[1] / 2 + C.tower / 2;   // věž u konce lodi (lokální osa z)
+    return [
+      { x: cx, z: cz, r: C.nave[0] / 2 + 2, h: C.naveWall + C.naveRoof },
+      { x: cx - Math.sin(a) * tz, z: cz + Math.cos(a) * tz, r: C.tower / 2 + 1, h: C.towerHeight + C.spireHeight },
+    ];
+  }
+
+  /** Samostatné kostely (např. na kopci): plošina na výšce místa, mýtina v lese a překážka (věž) pro kolize. */
+  setChurches(list) {
+    this.churches = list.map((c) => ({ x: c.x, z: c.z, a: c.a ?? 0, h: this.heightBeforeTowns(c.x, c.z) }));
+    for (const c of this.churches) {
+      c.landmarks = this.churchLandmarks(c.x, c.z, c.a);
+      this.clearings.push({ x: c.x, z: c.z, r: LONE_CHURCH.clearing });
+    }
+  }
+
+  /** Výška samostatného kostela nad terénem v bodě (0 mimo kostel). */
+  churchObstacle(x, z) {
+    let h = 0;
+    for (const c of this.churches) for (const l of c.landmarks) if (l.h > h && Math.hypot(x - l.x, z - l.z) < l.r) h = l.h;
+    return h;
   }
 
   /** Města: výška vyrovnané plochy se vezme z terénu ve středu (bez vlivu města samotného). */
@@ -105,11 +133,7 @@ export class Biomes {
     }
     t.church = { x: cx, z: cz, a: cAngle };
     placed.push({ x: cx, z: cz, rad: 17 });
-    const [tx, tz] = rot(cAngle, 0, C.nave[1] / 2 + C.tower / 2);   // věž u konce lodi (lokální osa z)
-    t.landmarks.push(
-      { x: cx, z: cz, r: C.nave[0] / 2 + 2, h: C.naveWall + C.naveRoof },
-      { x: cx + tx, z: cz + tz, r: C.tower / 2 + 1, h: C.towerHeight + C.spireHeight },
-    );
+    t.landmarks.push(...this.churchLandmarks(cx, cz, cAngle));
     // komíny (Varnsdorf): rozptýlené po městě
     for (let k = 0; k < (t.chimneyCount || 0); k++) {
       for (let tries = 0; tries < 200; tries++) {
@@ -214,6 +238,11 @@ export class Biomes {
     for (const t of this.towns) {
       const f = this.townFlat(t, x, z);
       if (f > 0) out += (t.h - out) * f;
+    }
+    // Samostatný kostel: malá rovná plošina pod ním
+    for (const c of this.churches) {
+      const d = Math.hypot(x - c.x, z - c.z);
+      if (d < LONE_CHURCH.padRadius * LONE_CHURCH.padFade) out += (c.h - out) * (1 - smooth(LONE_CHURCH.padRadius, LONE_CHURCH.padRadius * LONE_CHURCH.padFade, d));
     }
     return this.carveRiver(out, x, z);   // řeka až po městech, aby mohla protékat městem
   }
@@ -355,6 +384,10 @@ export class Biomes {
     const type = this.terrainType(x, z, height, slope);
     const ground = Math.max(height, WORLD.waterLevel);
     const surface = type === BIOME.FOREST ? ground + WORLD.forestCanopy : type === BIOME.TOWN ? ground + this.townObstacle(x, z) : ground;
+    if (this.churches.length) {
+      const ch = this.churchObstacle(x, z);
+      if (ch > 0) return { type, height, ground, surface: Math.max(surface, ground + ch), slope };
+    }
     return { type, height, ground, surface, slope };
   }
 

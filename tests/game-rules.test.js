@@ -211,6 +211,22 @@ describe('Města a kopečky', () => {
     expect(b.sample(castle.church.x, castle.church.z).type).toBe(BIOME.TOWN);
   });
 
+  it('Lužické hory: kostel na kopci severně od Varnsdorfu, rovná plošina, věž je překážka, bez lesa kolem', () => {
+    const site = getSite('luzicke'), b = createBiomes(site), c = b.churches[0], v = b.towns[0];
+    expect(c.z).toBeLessThan(v.z);                                  // severně (menší z) od Varnsdorfu
+    expect(Math.hypot(c.x - v.x, c.z - v.z)).toBeLessThan(600);     // hned vedle
+    expect(c.h).toBeGreaterThan(v.h + 40);                          // stojí na kopci
+    for (let a = 0; a < 360; a += 45) for (const r of [0, 12, 22]) {
+      const s = b.sample(c.x + Math.cos(a * Math.PI / 180) * r, c.z + Math.sin(a * Math.PI / 180) * r);
+      expect(Math.abs(s.height - c.h)).toBeLessThan(1);
+      expect(s.type).not.toBe(BIOME.FOREST);
+    }
+    const tower = c.landmarks[1];
+    expect(b.sample(tower.x, tower.z).surface - b.sample(tower.x, tower.z).ground).toBeGreaterThan(25);
+    const plain = new Biomes(8123);
+    expect(plain.churches).toHaveLength(0);
+  });
+
   it('kopečky zvyšují terén, výchozí terén zůstává stejný', () => {
     const hilly = new Biomes(8123, null, false, { x: 0, z: 0 }, { terrain: { hillAmp: 60 } }), plain = new Biomes(8123);
     let higher = 0, same = 0;
