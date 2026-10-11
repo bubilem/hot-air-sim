@@ -217,12 +217,18 @@ horách jsou dvě vesnice, v Českém ráji jedno městečko, jinde žádné.
 - **Přistání:** překážka je `surface = ground + Biomes.townObstacle(x, z)`: střechy a stromy `WORLD.townRoof` (9 m),
   věž kostela a komíny výš (landmarks). Dotyk ve městě je neúspěch (`KIND.TOWN`, „Přistání na střechách“).
 
-## 8.6c Samostatný kostel
+## 8.6c Samostatné dominanty (kostel, Hrádek, Bezděz)
 
-Lokalita může mít `churches: [{ x, z, a }]` (poloha v metrech od startu, `a` = natočení lodi). V Lužických horách stojí kostel
-na kopci severně od Varnsdorfu (`Biomes.setChurches`): pod ním je malá rovná plošina na výšce místa (`LONE_CHURCH.padRadius`),
-okolní les je vyčištěný mýtinou a věž i loď jsou překážka při přistání (`churchObstacle`, stejné rozměry jako kostel ve městě,
-`TOWNS.church`). Vykresluje ho `ProceduralTerrain.buildLoneChurches`.
+Lokalita může mít `dominants: [{ type, x, z, a }]` (`type` = `'church'`, `'hradek'` nebo `'bezdez'`, poloha v metrech od startu, `a` = natočení v rad).
+V Lužických horách stojí na kopci severně od Varnsdorfu **Hrádek**, dominanta města (`Biomes.setDominants`):
+
+- pod ním je rovná plošina na výšce místa (`DOMINANTS.<type>.padRadius`), okolní les je vyčištěný mýtinou (`clearing`),
+- věže i hlavní hmota jsou překážka při přistání (`dominantObstacle`; kruhy kolem hmot počítá `hradekLandmarks`),
+- vykresluje ho `ProceduralTerrain.buildHradek` z primitiv podle konfigurace `GameConfig.HRADEK`: kamenný sokl, žlutý hlavní kvádr
+  s červenou sedlovou střechou, **tři věže** s červenými jehlanovými střechami (velká, menší před ní, malá vlevo), **vížka přistavěná
+  k velké věži**, červené pásy pod střechami a tmavá okna na průčelí. Barvy jsou v `COLORS.hradek*`.
+
+Rozměry a polohy věží se mění jen v `HRADEK` (bez zásahu do kódu modelu). Typ `'church'` (kostel jako ve městě, `TOWNS.church`) zůstává k dispozici.
 
 ## 8.6b Rybníky
 
@@ -293,8 +299,9 @@ Takovéto **datově řízené** řešení je velmi flexibilní: nová lokalita j
   břehu (`flatTo`), hladší břeh (`edgeNoise`, `noiseScale`) a ostrov uprostřed (`island: { x, z, r }`).
   Bez těchto voleb je to malý kulatý rybník jako dřív.
 - **Kopec:** `terrain.peaks: [{ x, z, r, height }]` přidá osamělý kopec s plochým vrcholem. Na vrcholu stojí
-  hrad Bezděz: malé „město“ (`towns`) s pevným počtem domků (`houses`) a bez stromů (`treeCount: 0`),
-  takže vznikne kostel a jeden domek; terén se pod ním vyrovná.
+  hrad Bezděz jako samostatná dominanta (`dominants: [{ type: 'bezdez', … }]`, viz 8.6c): dlouhý okrový kvádr paláce s tmavou
+  sedlovou střechou, vysoká kruhová věž **bez střechy** (ploché zakončení s cimbuřím), nízká hradba a malá kruhová věž; model je v `GameConfig.BEZDEZ`.
+  (Volby `houses` a `treeCount` u `towns` zůstávají k dispozici, např. pro malé osady.)
 - **Výška města:** město má výchozí výšku terénu ve středu. Volba `height` ji nastaví pevně (Doksy tak leží
   u hladiny jezera, ne na planině nad ním).
 

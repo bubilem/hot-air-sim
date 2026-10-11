@@ -31,6 +31,13 @@ export const COLORS = {
   houseWalls: [0xe9e2d0, 0xd9c9a6, 0xe6d9a0, 0xc9d3d6, 0xd8b9a0],
   churchWall: 0xefe9dc,
   churchRoof: 0x4a3a35,
+  hradekWall: 0xe6c24a,    // Hrádek: žluté stěny, červená střecha a pásy, kamenný sokl
+  hradekRoof: 0xa8392b,
+  hradekTrim: 0x8f2f25,
+  hradekStone: 0x8c8a85,
+  hradekWindow: 0x3b2f2a,
+  bezdezWall: 0xd3b06c,    // Bezděz: okrové zdivo, tmavá střecha
+  bezdezRoof: 0x4a4540,
   chimney: 0x8d5a46,
   houseRoofs: [0x8a3b2e, 0x6e2f27, 0x3b3f45, 0x5a4636],
   water: 0x2c7fa8,

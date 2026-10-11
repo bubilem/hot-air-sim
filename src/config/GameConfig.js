@@ -46,12 +46,40 @@ export const TERRAIN = {
   rockLine: 100,       // m, nad touto výškou je holá skála
 };
 
-// Samostatný kostel mimo město (lokalita s `churches: [{ x, z, a }]`), obvykle na kopci
-export const LONE_CHURCH = {
-  padRadius: 24,      // m, rovná plošina pod kostelem
-  padFade: 2.4,       // násobek poloměru, kde je terén zase původní
-  clearing: 34,       // m, poloměr mýtiny v lese kolem kostela
+// Samostatné dominanty mimo města (lokalita s `dominants: [{ type, x, z, a }]`), obvykle na kopci; type = 'church' | 'hradek' | 'bezdez'
+export const DOMINANTS = {
+  church: { padRadius: 24, clearing: 34 },   // rovná plošina pod stavbou (m) a mýtina v lese kolem (m)
+  hradek: { padRadius: 28, clearing: 48 },
+  bezdez: { padRadius: 58, clearing: 90 },
+  padFade: 2.4,       // násobek poloměru plošiny, kde je terén zase původní
 };
+
+// Hrádek ve Varnsdorfu: zděný sokl, hlavní kvádr s červenou sedlovou střechou a tři věže (velká s přístavkem-vížkou,
+// menší před ní a malá vlevo). Rozměry v m, souřadnice lokální (x doprava při pohledu na průčelí, z k divákovi), y od vrchu soklu.
+export const HRADEK = {
+  plinth: { w: 30, d: 20, h: 3 },
+  main: { x: -1, z: 0, w: 22, d: 12, wall: 9, roof: 6 },
+  towers: [
+    { name: 'big', x: 9, z: -1.5, s: 6, h: 24, roof: 9 },
+    { name: 'medium', x: 5, z: 6, s: 5, h: 15, roof: 8 },
+    { name: 'tiny', x: -12, z: 3.5, s: 3, h: 8, roof: 4.5 },
+  ],
+  turret: { x: 12.2, z: 2.2, s: 2.6, y: 14, h: 6, roof: 3.5 },   // vížka přistavěná ke koutu velké věže
+  trim: 0.7,          // výška červeného pásu pod střechou
+  window: { w: 1.5, h: 2.4 },
+};
+
+// Hrad Bezděz: dlouhý kvádr paláce s tmavou sedlovou střechou, vysoká kruhová věž (bez střechy, s cimbuřím), nízká hradba a malá kruhová věž na jejím konci.
+// Lokální souřadnice: x podél paláce (hradba vlevo, -x), z k divákovi; y od terénu (vrchol kopce je srovnaný).
+export const BEZDEZ = {
+  palace: { x: 0, z: 0, w: 40, d: 11, wall: 11, roof: 5 },
+  tower: { x: 7, z: -3.5, r: 5.5, h: 36 },                  // velká kruhová věž za palácem (bez střechy, s cimbuřím)
+  wall: { x: -34, z: 0, len: 28, thick: 2.6, h: 7 },        // hradba k malé věži
+  smallTower: { x: -50, z: 0, r: 3.4, h: 13 },
+  windows: { w: 1.1, h: 2.2, count: 6, step: 5.6 },
+  merlon: { h: 1.5, size: 1.3 },   // cimbuří na věžích: zuby kolem okraje plochého zakončení
+};
+
 
 // Cíl: značka má poloměr 60 m; kolem ní musí být louka. Les v kruhu se vyčistí mýtinou
 export const TARGET_CLEARING = {

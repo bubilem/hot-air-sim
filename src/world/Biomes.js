@@ -1,7 +1,7 @@
 // Jediný zdroj pravdy o terénu: výška, sklon a biom (pro vizuál i herní logiku).
 // Bez závislosti na Three.js.
 import { createNoise2D } from 'simplex-noise';
-import { WORLD, MASSIFS, TERRAIN, TOWNS, PONDS, TARGET_CLEARING, LONE_CHURCH } from '../config/GameConfig.js';
+import { WORLD, MASSIFS, TERRAIN, TOWNS, PONDS, TARGET_CLEARING, DOMINANTS, HRADEK, BEZDEZ } from '../config/GameConfig.js';
 
 function mulberry32(a) {
   return function () {
@@ -73,9 +73,9 @@ export class Biomes {
     this.setRiver(river);
     this.ponds = extra.ponds || [];
     this.clearings = [];   // mýtiny v lese kolem cíle (viz findMeadow)
-    this.churches = [];
+    this.dominants = [];
     this.setTowns(extra.towns || []);
-    this.setChurches(extra.churches || []);
+    this.setDominants(extra.dominants || []);
   }
 
   /** Landmarks kostela (loď + věž) pro kolize: [{ x, z, r, h }]. */
@@ -88,19 +88,51 @@ export class Biomes {
     ];
   }
 
-  /** Samostatné kostely (např. na kopci): plošina na výšce místa, mýtina v lese a překážka (věž) pro kolize. */
-  setChurches(list) {
-    this.churches = list.map((c) => ({ x: c.x, z: c.z, a: c.a ?? 0, h: this.heightBeforeTowns(c.x, c.z) }));
-    for (const c of this.churches) {
-      c.landmarks = this.churchLandmarks(c.x, c.z, c.a);
-      this.clearings.push({ x: c.x, z: c.z, r: LONE_CHURCH.clearing });
+  /** Překážky Hrádku (kruhy kolem hmot): [{ x, z, r, h }] ve světových souřadnicích. */
+  hradekLandmarks(cx, cz, a) {
+    const rot = (lx, lz) => [cx + lx * Math.cos(a) - lz * Math.sin(a), cz + lx * Math.sin(a) + lz * Math.cos(a)];
+    const H = HRADEK, base = H.plinth.h;
+    const out = [];
+    const m = H.main, [mx, mz] = rot(m.x, m.z);
+    out.push({ x: mx, z: mz, r: Math.hypot(m.w, m.d) / 2, h: base + m.wall + m.roof });
+    for (const t of H.towers) {
+      const [x, z] = rot(t.x, t.z);
+      out.push({ x, z, r: t.s * 0.75 + 1, h: base + t.h + t.roof });
+    }
+    const u = H.turret, [ux, uz] = rot(u.x, u.z);
+    out.push({ x: ux, z: uz, r: u.s * 0.75 + 1, h: base + u.y + u.h + u.roof });
+    return out;
+  }
+
+  /** Překážky hradu Bezděz: palác (3 kruhy podél délky), velká věž, hradba (kruhy) a malá věž. */
+  bezdezLandmarks(cx, cz, a) {
+    const rot = (lx, lz) => [cx + lx * Math.cos(a) - lz * Math.sin(a), cz + lx * Math.sin(a) + lz * Math.cos(a)];
+    const B = BEZDEZ, out = [];
+    const p = B.palace, hp = p.wall + p.roof, rp = Math.hypot(p.d, p.d) / 2 + 1;
+    for (const k of [-1, 0, 1]) { const [x, z] = rot(p.x + k * (p.w / 2 - rp), p.z); out.push({ x, z, r: rp, h: hp }); }
+    const t = B.tower, [tx, tz] = rot(t.x, t.z);
+    out.push({ x: tx, z: tz, r: t.r + 1, h: t.h + B.merlon.h });
+    const w = B.wall;
+    for (const k of [-0.33, 0.33]) { const [x, z] = rot(w.x + k * w.len, w.z); out.push({ x, z, r: w.len * 0.3, h: w.h }); }
+    const s = B.smallTower, [sx, sz] = rot(s.x, s.z);
+    out.push({ x: sx, z: sz, r: s.r + 1, h: s.h + B.merlon.h });
+    return out;
+  }
+
+  /** Samostatné dominanty (kostel, Hrádek, Bezděz) na kopci: plošina na výšce místa, mýtina v lese a překážky pro kolize. */
+  setDominants(list) {
+    this.dominants = list.map((c) => ({ type: c.type ?? 'church', x: c.x, z: c.z, a: c.a ?? 0, h: this.heightBeforeTowns(c.x, c.z) }));
+    for (const c of this.dominants) {
+      const parts = { hradek: this.hradekLandmarks, bezdez: this.bezdezLandmarks }[c.type] ?? this.churchLandmarks;
+      c.landmarks = parts.call(this, c.x, c.z, c.a);
+      this.clearings.push({ x: c.x, z: c.z, r: DOMINANTS[c.type].clearing });
     }
   }
 
-  /** Výška samostatného kostela nad terénem v bodě (0 mimo kostel). */
-  churchObstacle(x, z) {
+  /** Výška samostatné dominanty nad terénem v bodě (0 mimo ni). */
+  dominantObstacle(x, z) {
     let h = 0;
-    for (const c of this.churches) for (const l of c.landmarks) if (l.h > h && Math.hypot(x - l.x, z - l.z) < l.r) h = l.h;
+    for (const c of this.dominants) for (const l of c.landmarks) if (l.h > h && Math.hypot(x - l.x, z - l.z) < l.r) h = l.h;
     return h;
   }
 
@@ -239,10 +271,10 @@ export class Biomes {
       const f = this.townFlat(t, x, z);
       if (f > 0) out += (t.h - out) * f;
     }
-    // Samostatný kostel: malá rovná plošina pod ním
-    for (const c of this.churches) {
-      const d = Math.hypot(x - c.x, z - c.z);
-      if (d < LONE_CHURCH.padRadius * LONE_CHURCH.padFade) out += (c.h - out) * (1 - smooth(LONE_CHURCH.padRadius, LONE_CHURCH.padRadius * LONE_CHURCH.padFade, d));
+    // Samostatná dominanta: rovná plošina pod ní
+    for (const c of this.dominants) {
+      const pad = DOMINANTS[c.type].padRadius, d = Math.hypot(x - c.x, z - c.z);
+      if (d < pad * DOMINANTS.padFade) out += (c.h - out) * (1 - smooth(pad, pad * DOMINANTS.padFade, d));
     }
     return this.carveRiver(out, x, z);   // řeka až po městech, aby mohla protékat městem
   }
@@ -384,8 +416,8 @@ export class Biomes {
     const type = this.terrainType(x, z, height, slope);
     const ground = Math.max(height, WORLD.waterLevel);
     const surface = type === BIOME.FOREST ? ground + WORLD.forestCanopy : type === BIOME.TOWN ? ground + this.townObstacle(x, z) : ground;
-    if (this.churches.length) {
-      const ch = this.churchObstacle(x, z);
+    if (this.dominants.length) {
+      const ch = this.dominantObstacle(x, z);
       if (ch > 0) return { type, height, ground, surface: Math.max(surface, ground + ch), slope };
     }
     return { type, height, ground, surface, slope };

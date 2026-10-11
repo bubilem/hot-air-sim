@@ -1,7 +1,7 @@
 // Vizuální reprezentace terénu: mřížka s vertexovými barvami, voda, instancované stromy.
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { WORLD, GRASS_DETAIL, TERRAIN_SOFT, TOWNS } from '../config/GameConfig.js';
+import { WORLD, GRASS_DETAIL, TERRAIN_SOFT, TOWNS, HRADEK, BEZDEZ } from '../config/GameConfig.js';
 import { COLORS } from '../config/Colors.js';
 import { BIOME } from './Biomes.js';
 
@@ -128,7 +128,7 @@ export class ProceduralTerrain {
     this.buildWater();
     this.buildTrees();
     this.buildTowns();
-    this.buildLoneChurches();
+    this.buildDominants();
   }
 
   getMesh() { return this.group; }
@@ -332,9 +332,96 @@ uniform vec2 uGrassFade;`)
     }
   }
 
-  /** Samostatné kostely mimo města (Biomes.churches), např. na kopci. */
-  buildLoneChurches() {
-    for (const c of this.biomes.churches) this.group.add(this.buildChurch(c));
+  /** Samostatné dominanty mimo města (Biomes.dominants), např. na kopci. */
+  buildDominants() {
+    for (const c of this.biomes.dominants) this.group.add({ hradek: this.buildHradek, bezdez: this.buildBezdez }[c.type]?.call(this, c) ?? this.buildChurch(c));
+  }
+
+  /**
+   * Hrádek: kamenný sokl, hlavní kvádr se sedlovou červenou střechou, tři věže s jehlanovými střechami a vížka přistavěná
+   * k velké věži. Stěny žluté, střecha a pásy červené, okna tmavá (jen na průčelí = +z).
+   */
+  buildHradek(c) {
+    const H = HRADEK, g = new THREE.Group();
+    const box = (w, h, d, x, y, z, hex) => {
+      const m = this.buildPart(new THREE.BoxGeometry(w, h, d).translate(0, h / 2, 0), hex);
+      m.position.set(x, y, z);
+      g.add(m);
+    };
+    const pyramid = (s, h, x, y, z, hex) => {   // čtyřboký jehlan nad čtvercovým půdorysem o straně s (+ přesah)
+      const m = this.buildPart(new THREE.ConeGeometry((s + 1) / Math.SQRT2, h, 4).rotateY(Math.PI / 4).translate(0, h / 2, 0), hex);
+      m.position.set(x, y, z);
+      g.add(m);
+    };
+    const windows = (x, y, z, n, step) => {   // n oken v řadě na průčelí
+      for (let i = 0; i < n; i++) box(H.window.w, H.window.h, 0.3, x + (i - (n - 1) / 2) * step, y, z, COLORS.hradekWindow);
+    };
+    const base = H.plinth.h;
+    box(H.plinth.w, base, H.plinth.d, 0, 0, 0, COLORS.hradekStone);
+    // hlavní kvádr s červenou sedlovou střechou (hřeben podél průčelí) a pásem pod střechou
+    const m = H.main;
+    box(m.w, m.wall, m.d, m.x, base, m.z, COLORS.hradekWall);
+    box(m.w + 0.6, H.trim, m.d + 0.6, m.x, base + m.wall - H.trim, m.z, COLORS.hradekTrim);
+    const prism = new THREE.Shape();
+    prism.moveTo(-0.5, 0); prism.lineTo(0.5, 0); prism.lineTo(0, 1); prism.closePath();
+    const roof = new THREE.ExtrudeGeometry(prism, { depth: 1, bevelEnabled: false }).translate(0, 0, -0.5).rotateY(Math.PI / 2).scale(m.w + 1.6, m.roof, m.d + 1.6);
+    const rm = this.buildPart(roof, COLORS.hradekRoof);
+    rm.position.set(m.x, base + m.wall, m.z);
+    g.add(rm);
+    windows(m.x - 1, base + 3, m.z + m.d / 2 + 0.1, 5, 4.2);
+    // věže: tělo, pás, jehlanová střecha, okna
+    for (const t of H.towers) {
+      box(t.s, t.h, t.s, t.x, base, t.z, COLORS.hradekWall);
+      box(t.s + 0.8, H.trim, t.s + 0.8, t.x, base + t.h - H.trim, t.z, COLORS.hradekTrim);
+      pyramid(t.s, t.roof, t.x, base + t.h, t.z, COLORS.hradekRoof);
+      windows(t.x, base + Math.min(5, t.h * 0.35), t.z + t.s / 2 + 0.1, 1, 0);
+      if (t.h > 12) windows(t.x, base + t.h - 6, t.z + t.s / 2 + 0.1, 1, 0);
+    }
+    // vížka (přístavek) na velké věži
+    const u = H.turret;
+    box(u.s, u.h, u.s, u.x, base + u.y, u.z, COLORS.hradekWall);
+    box(u.s + 0.6, H.trim, u.s + 0.6, u.x, base + u.y + u.h - H.trim, u.z, COLORS.hradekTrim);
+    pyramid(u.s, u.roof, u.x, base + u.y + u.h, u.z, COLORS.hradekRoof);
+    g.position.set(c.x, this.meshHeight(c.x, c.z) - 0.2, c.z);
+    g.rotation.y = -c.a;
+    return g;
+  }
+
+  /**
+   * Hrad Bezděz: dlouhý kvádr paláce s tmavou sedlovou střechou (okrové zdivo), vysoká kruhová věž bez střechy (cimbuří),
+   * nízká hradba a malá kruhová věž na jejím konci.
+   */
+  buildBezdez(c) {
+    const B = BEZDEZ, g = new THREE.Group();
+    const add = (geo, hex, x, y, z) => { const m = this.buildPart(geo, hex); m.position.set(x, y, z); g.add(m); return m; };
+    const box = (w, h, d, x, y, z, hex) => add(new THREE.BoxGeometry(w, h, d).translate(0, h / 2, 0), hex, x, y, z);
+    const round = (r, h, x, z) => {   // kruhová věž bez střechy: plochý vrch s tmavým pásem a cimbuřím
+      add(new THREE.CylinderGeometry(r, r * 1.08, h, 18).translate(0, h / 2, 0), COLORS.bezdezWall, x, 0, z);
+      add(new THREE.CylinderGeometry(r + 0.5, r + 0.5, 0.8, 18).translate(0, 0.4, 0), COLORS.bezdezRoof, x, h - 0.8, z);
+      const M = B.merlon, n = Math.max(8, Math.round(r * 2));
+      for (let i = 0; i < n; i++) {
+        if (i % 2) continue;   // zuby střídají mezery
+        const a = (i / n) * Math.PI * 2;
+        const m = add(new THREE.BoxGeometry(M.size, M.h, M.size).translate(0, M.h / 2, 0), COLORS.bezdezWall, x + Math.cos(a) * (r - 0.1), h, z + Math.sin(a) * (r - 0.1));
+        m.rotation.y = -a;
+      }
+    };
+    const p = B.palace;
+    box(p.w, p.wall, p.d, p.x, 0, p.z, COLORS.bezdezWall);
+    const prism = new THREE.Shape();
+    prism.moveTo(-0.5, 0); prism.lineTo(0.5, 0); prism.lineTo(0, 1); prism.closePath();
+    const roof = new THREE.ExtrudeGeometry(prism, { depth: 1, bevelEnabled: false }).translate(0, 0, -0.5).rotateY(Math.PI / 2).scale(p.w + 1.2, p.roof, p.d + 1.2);
+    add(roof, COLORS.bezdezRoof, p.x, p.wall, p.z);
+    const W = B.windows;
+    for (let i = 0; i < W.count; i++) box(W.w, W.h, 0.3, p.x + (i - (W.count - 1) / 2) * W.step, 4, p.z + p.d / 2 + 0.1, COLORS.hradekWindow);
+    round(B.tower.r, B.tower.h, B.tower.x, B.tower.z);
+    const w = B.wall;
+    box(w.len, w.h, w.thick, w.x, 0, w.z, COLORS.bezdezWall);
+    box(w.len, 0.6, w.thick + 0.5, w.x, w.h, w.z, COLORS.bezdezRoof);   // tmavé zakončení hradby
+    round(B.smallTower.r, B.smallTower.h, B.smallTower.x, B.smallTower.z);
+    g.position.set(c.x, this.meshHeight(c.x, c.z) - 0.2, c.z);
+    g.rotation.y = -c.a;
+    return g;
   }
 
   /** Kostel: loď se sedlovou střechou, na konci čtvercová věž s jehlanovou střechou (lokální osa z = osa lodi). */

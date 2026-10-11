@@ -4,7 +4,7 @@ import { scoreFlight } from '../src/core/Scoring.js';
 import { FlightPlan, estimateFlight } from '../src/core/FlightPlan.js';
 import { Biomes, BIOME } from '../src/world/Biomes.js';
 import { SITES, getSite, createBiomes } from '../src/world/Sites.js';
-import { WORLD } from '../src/config/GameConfig.js';
+import { WORLD, HRADEK } from '../src/config/GameConfig.js';
 import { titleFor } from '../src/core/Titles.js';
 import { readFileSync } from 'node:fs';
 
@@ -199,32 +199,40 @@ describe('Města a kopečky', () => {
   });
 
   it('Máchův kraj: velké jezero s ostrovem, Doksy u jezera, kopec s hradem, cíl na louce', () => {
-    const site = getSite('mach'), b = createBiomes(site), lake = site.ponds[0], [doksy, castle] = b.towns;
+    const site = getSite('mach'), b = createBiomes(site), lake = site.ponds[0], [doksy] = b.towns, castle = b.dominants[0];
     expect(b.sample(lake.x - 250, lake.z).type).toBe(BIOME.WATER);
     expect(b.sample(lake.x + lake.r * lake.aspect * 0.5, lake.z).type).toBe(BIOME.WATER);   // jezero je velké
     expect(b.sample(lake.island.x, lake.island.z).type).not.toBe(BIOME.WATER);              // ostrůvek uprostřed
     expect(b.sample(0, 0).type).toBe(BIOME.MEADOW);
+    expect(b.towns).toHaveLength(1);                                                        // jen Doksy; Bezděz je dominanta
     expect(Math.hypot(doksy.x - lake.x, doksy.z - lake.z)).toBeLessThan(1000);              // Doksy leží u jezera
-    expect(b.rawHeight(castle.x, castle.z)).toBeGreaterThan(b.rawHeight(castle.x + 600, castle.z + 600) + 60);   // hrad na kopci
-    expect(castle.buildings).toHaveLength(1);
-    expect(castle.trees).toHaveLength(0);
-    expect(b.sample(castle.church.x, castle.church.z).type).toBe(BIOME.TOWN);
+    expect(castle.type).toBe('bezdez');
+    expect(castle.h).toBeGreaterThan(b.rawHeight(castle.x + 600, castle.z + 600) + 60);     // hrad na kopci
+    for (let a = 0; a < 360; a += 45) for (const r of [0, 25, 50]) {                        // rovná plošina bez lesa
+      const q = b.sample(castle.x + Math.cos(a * Math.PI / 180) * r, castle.z + Math.sin(a * Math.PI / 180) * r);
+      expect(Math.abs(q.height - castle.h)).toBeLessThan(1);
+      expect(q.type).not.toBe(BIOME.FOREST);
+    }
+    const tower = castle.landmarks.reduce((m, l) => (l.h > m.h ? l : m));                   // vysoká kruhová věž
+    expect(b.sample(tower.x, tower.z).surface - b.sample(tower.x, tower.z).ground).toBeGreaterThan(36);
   });
 
-  it('Lužické hory: kostel na kopci severně od Varnsdorfu, rovná plošina, věž je překážka, bez lesa kolem', () => {
-    const site = getSite('luzicke'), b = createBiomes(site), c = b.churches[0], v = b.towns[0];
+  it('Lužické hory: Hrádek na kopci severně od Varnsdorfu, rovná plošina, věže jsou překážka, bez lesa kolem', () => {
+    const site = getSite('luzicke'), b = createBiomes(site), c = b.dominants[0], v = b.towns[0];
+    expect(c.type).toBe('hradek');
     expect(c.z).toBeLessThan(v.z);                                  // severně (menší z) od Varnsdorfu
     expect(Math.hypot(c.x - v.x, c.z - v.z)).toBeLessThan(600);     // hned vedle
     expect(c.h).toBeGreaterThan(v.h + 40);                          // stojí na kopci
-    for (let a = 0; a < 360; a += 45) for (const r of [0, 12, 22]) {
+    for (let a = 0; a < 360; a += 45) for (const r of [0, 12, 24]) {
       const s = b.sample(c.x + Math.cos(a * Math.PI / 180) * r, c.z + Math.sin(a * Math.PI / 180) * r);
       expect(Math.abs(s.height - c.h)).toBeLessThan(1);
       expect(s.type).not.toBe(BIOME.FOREST);
     }
-    const tower = c.landmarks[1];
-    expect(b.sample(tower.x, tower.z).surface - b.sample(tower.x, tower.z).ground).toBeGreaterThan(25);
-    const plain = new Biomes(8123);
-    expect(plain.churches).toHaveLength(0);
+    const tallest = c.landmarks.reduce((a, l) => (l.h > a.h ? l : a));   // velká věž s vížkou
+    expect(b.sample(tallest.x, tallest.z).surface - b.sample(tallest.x, tallest.z).ground).toBeGreaterThan(35);
+    expect(c.landmarks.length).toBe(1 + HRADEK.towers.length + 1);       // hlavní kvádr, tři věže, vížka
+    expect(HRADEK.towers).toHaveLength(3);
+    expect(new Biomes(8123).dominants).toHaveLength(0);
   });
 
   it('kopečky zvyšují terén, výchozí terén zůstává stejný', () => {
