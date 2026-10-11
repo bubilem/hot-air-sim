@@ -150,6 +150,32 @@ a hra funguje i v podsložce, například `https://skola.example/hot-air-sim/`.
 Build vypíše upozornění „Some chunks are larger than 500 kB“. Je to proto, že knihovna Three.js je velká;
 pro naši hru je to v pořádku (na místní síti se načte okamžitě).
 
+### Nasazení na IIS (školní web, Windows)
+
+Ostrá verze běží na `https://www.skolavdf.cz/hub/hot-air-sim/` (hosting Foprsi, Windows + IIS).
+
+1. `npm run build`, pak nahrajte **obsah** složky `dist/` (ne složku samotnou) do `/hub/hot-air-sim/`.
+2. Ve složce `dist/` je i `web.config` (zdroj `public/web.config`). Nastavuje:
+   - **MIME typy** `.webp`, `.mp3`, `.json`, `.svg`, `.woff2`, `.js` (starší IIS je nezná a vrací 404); každý je zapsán jako
+     `<remove>` + `<mimeMap>`, aby nevznikla chyba 500.19 kvůli duplicitě;
+   - **výchozí dokument** `index.html` a **statickou kompresi** js/json/svg (JS má 750 kB, po gzipu 207 kB);
+   - **cache:** `assets/` a `fonts/` na rok (názvy souborů s hashem), `music/` na 30 dní, vše ostatní s `no-cache`
+     (`index.html`, `titles.json`, `envelopes/manifest.json`, aby se úpravy projevily hned);
+   - **hlavičky:** `X-Content-Type-Options`, `Referrer-Policy` a `Content-Security-Policy` (jen vlastní zdroje; `'unsafe-inline'`
+     je nutné pro načítací obrazovku v `index.html`, `blob:` a `data:` pro vlastní obrázek pláště a diplom).
+3. Adresa `…/hot-air-sim` bez lomítka na konci se přesměruje na `…/hot-air-sim/` (relativní cesty to potřebují).
+4. Změní-li se adresa, upravte v `index.html` `canonical`, `og:url`, `og:image`, `twitter:image` a JSON-LD (musí být
+   **absolutní** URL, sociální sítě nespouštějí JavaScript).
+
+Co ověřit u správce webu, pokud něco nefunguje:
+
+- hlavní web (CMS) nemá globální URL rewrite, který by zachytil `/hub/…` (jinak vrací 404 nebo stránku CMS);
+- hosting nemá zamčené sekce `staticContent`, `httpCompression` a `httpProtocol` (jinak chyba 500.19: nastavení pak musí provést hosting);
+- nadřazený `web.config` nepřidává hlavičky, které se střetávají s CSP (např. `X-Frame-Options`).
+
+`robots.txt` a `sitemap.xml` se čtou jen z kořene domény; o zařazení stránky do sitemapy školy požádejte správce webu.
+Náhled pro sociální sítě je `public/og-image.png` (1200 × 630), ikony `public/apple-touch-icon.png` a `public/favicon-32.png`.
+
 ## 2.6 Použité knihovny
 
 Projekt má záměrně jen **dvě běžné závislosti**.
@@ -183,10 +209,9 @@ Testovací nástroj kompatibilní s Vite. Soubory `tests/*.test.js` spouští p�
 
 ### Písmo Raleway
 
-Písmo se načítá z **Google Fonts** pomocí `<link>` v `index.html` (řezy 200, 400, 600, 700). Pokud je
-počítač offline, prohlížeč použije záložní systémové písmo (`system-ui`) a rozhraní zůstane funkční.
-Pro školní síť bez přístupu k Google Fonts můžete písmo stáhnout a vložit do složky `public/` – viz
-cvičení v [kapitole 14](14-cviceni-a-projekty.md).
+Písmo je **hostované lokálně** ve složce `public/fonts/` (`woff2`, řezy 200, 400, 600, 700 v rozsazích `latin` a
+`latin-ext`, tedy včetně české diakritiky) a deklarované pomocí `@font-face` v `index.html`. Hra tak nevolá žádné cizí servery
+(soukromí, funguje i offline). Licence písma (SIL OFL) je v `public/fonts/LICENSE-Raleway-OFL.txt`.
 
 ## 2.7 Doporučené nastavení editoru (VS Code)
 

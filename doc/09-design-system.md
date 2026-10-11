@@ -97,10 +97,12 @@ Hodnoty v `Colors.js` jsou **stejné** jako v CSS; při změně školní barvy j
 
 ## 9.4 Typografie
 
-Celá aplikace používá výhradně **Raleway**; načítá se v `index.html`:
+Celá aplikace používá výhradně **Raleway**; je hostované lokálně (`public/fonts/*.woff2`, licence OFL) a deklarované
+v `index.html` pomocí `@font-face` (nic se nenačítá z Google Fonts):
 
-```html
-<link href="https://fonts.googleapis.com/css2?family=Raleway:wght@200;400;600;700&display=swap" rel="stylesheet" />
+```css
+@font-face { font-family: Raleway; font-weight: 700; font-display: swap;
+  src: url('./fonts/raleway-latin-700-normal.woff2') format('woff2'); unicode-range: U+0000-00FF, /* … */; }
 ```
 
 ```css

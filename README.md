@@ -43,6 +43,8 @@ npm run dev        # spustí vývojový server -> http://localhost:5173
 | `npm run preview` | vyzkouší produkční verzi |
 | `npm test` | spustí automatické testy (Vitest) |
 
+Nasazení: obsah `dist/` se nahraje na statický hosting; pro školní IIS je v `dist/` připravený `web.config` (návod v [doc/02](doc/02-instalace-a-spusteni.md), „Nasazení na IIS“).
+
 Ladicí parametry adresy: `?skip=1` přeskočí start, `?skip=1&alt=200` začne rovnou ve výšce 200 m.
 V konzoli prohlížeče je hra dostupná jako `window.game`.
 

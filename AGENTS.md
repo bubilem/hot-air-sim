@@ -12,6 +12,7 @@ Podrobný výklad všeho, co zde stojí, najdete v dokumentaci `doc/` (začněte
   horkovzdušného balonu, na kterém žáci studují **létání (fyziku)** i **programování**.
 - **Cíl žáka:** Pochopit, proč balon stoupá, proč nemá kormidlo (směr se volí výškou, tj. vrstvou větru), a
   naučit se, jak je z fyzikálních rovnic postavená 3D aplikace (herní smyčka, architektura, vykreslování, testy).
+- **Nasazení:** statický build (`dist/`) na školním IIS, `https://www.skolavdf.cz/hub/hot-air-sim/`; `public/web.config` (MIME, cache, CSP), SEO/Open Graph v `index.html`, náhled `public/og-image.png` (viz `doc/02`, „Nasazení na IIS“).
 - **Platforma:** Webový prohlížeč, mobil (na výšku i na šířku), tablet, PC (myš/klávesnice). Bez instalace, bez serveru.
 - **Jazyk UI:** čeština (výchozí) + angličtina. Všechny texty jdou přes `src/i18n/` (`cs.js`, `en.js`, funkce
   `t(key)`), žádné texty natvrdo v kódu.
@@ -203,7 +204,7 @@ výklad v `doc/09-design-system.md`). Závazná pravidla:
 - **Paleta:** žlutá `#ffd400`/`#ffea80`, modrá `#41d7ff`/`#00c0f3`, zelená `#c2dd78`/`#a6ce39`; pozadí gradient
   `#003b4b → #006783`; panely `#001b2273` (blur 12 px), plovoucí prvky `rgba(0,20,26,.95)` (blur 20 px);
   primární tlačítko `#0083a6`, hover `#b29400`; nebezpečí `#ef4444`.
-- **Písmo:** výhradně **Raleway** (200/400/600/700).
+- **Písmo:** výhradně **Raleway** (200/400/600/700), hostované lokálně v `public/fonts/` (žádné Google Fonts, soukromí).
 - **Tvary:** panely, karty, tabulky = `border-radius: 0`; **jen tlačítka a formulářová pole 4 px**.
 - **Bezrámový vzhled:** žádné šedé ani průsvitné rámečky; oddělujte plochou (`--tint`) a odsazením.
 - **Plochý styl:** žádné záře ani barevné stíny tlačítek.
