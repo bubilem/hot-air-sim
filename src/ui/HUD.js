@@ -1,0 +1,126 @@
+// Přístrojová deska: výška, variometr, teplota, plyn, vítr (rozbalovací žebříček po vrstvách), cíl.
+import { t } from '../i18n/index.js';
+import { PHYSICS } from '../config/GameConfig.js';
+import { vecToBearing } from '../core/WindModel.js';
+import { LOGO_HTML } from './brand.js';
+import { ICON_SETTINGS, ICON_HOME, ICON_WIKI, bindHomeButton } from './SettingsMenu.js';
+
+const COMPASS = ['S', 'SV', 'V', 'JV', 'J', 'JZ', 'Z', 'SZ'];
+const STORE_KEY = 'hotairsim.windLadder';
+
+function loadOpen() {
+  try {
+    const v = localStorage.getItem(STORE_KEY);
+    if (v !== null) return v === '1';
+  } catch { /* úložiště nemusí být dostupné */ }
+  return Math.min(window.innerWidth, window.innerHeight) >= 700;
+}
+
+export class HUD {
+  constructor(root, onSettings, onHome, onWiki) {
+    this.el = document.createElement('div');
+    this.el.className = 'hud';
+    this.el.innerHTML = `
+      <div class="hud-top">
+        <div class="hud-left">
+          <div class="logo">${LOGO_HTML}</div>
+          <button class="btn round small gear" data-f="gear" aria-label="${t('settings.title')}">${ICON_SETTINGS}</button>
+          <button class="btn round small gear" data-f="wiki" aria-label="${t('wiki.title')}">${ICON_WIKI}</button>
+          <button class="btn round small gear home" data-f="home">${ICON_HOME}</button>
+        </div>
+        <div class="hud-right">
+          <div class="panel windp">
+            <button class="windhead" data-f="windtoggle" aria-label="${t('hud.wind.toggle')}">
+              <small>${t('hud.wind')}</small><b data-f="wind">–</b><i class="arrow" data-f="arrow">➤</i><em class="chev" data-f="chev">▾</em>
+            </button>
+            <div class="ladder" data-f="ladder"></div>
+          </div>
+          <div class="panel wind tgt"><small>${t('hud.target')}</small><b data-f="tdist">–</b><i class="arrow" data-f="tarrow">➤</i></div>
+        </div>
+      </div>
+      <div class="hud-side panel">
+        <div><small>${t('hud.altitude')}</small><b><span data-f="alt">0</span> m</b></div>
+        <div><small>${t('hud.vsi')}</small><b><span data-f="vsi">0.0</span> m/s</b></div>
+        <div><small>${t('hud.temp')}</small><b><span data-f="temp">0</span> °C</b></div>
+        <div class="gasbar"><small>${t('hud.gas')}</small><div class="bar"><div data-f="gas"></div></div></div>
+      </div>
+      <div class="hud-msg" data-f="msg"></div>`;
+    root.appendChild(this.el);
+    this.f = {};
+    this.el.querySelectorAll('[data-f]').forEach((n) => { this.f[n.dataset.f] = n; });
+    this.cacheText = {};
+    this.ladderSig = '';
+    this.open = loadOpen();
+    this.applyOpen();
+    this.f.gear.addEventListener('click', () => onSettings?.(this.f.gear));
+    this.f.wiki.addEventListener('click', () => onWiki?.());
+    bindHomeButton(this.f.home, onHome);
+    this.f.windtoggle.addEventListener('click', () => {
+      this.open = !this.open;
+      try { localStorage.setItem(STORE_KEY, this.open ? '1' : '0'); } catch { /* ignorováno */ }
+      this.ladderSig = '';
+      this.applyOpen();
+    });
+  }
+
+  applyOpen() {
+    this.f.ladder.style.display = this.open ? '' : 'none';
+    this.f.chev.textContent = this.open ? '▴' : '▾';
+  }
+
+  setVisible(v) { this.el.style.display = v ? '' : 'none'; }
+
+  destroy() { this.el.remove(); }
+
+  set(key, text) {
+    if (this.cacheText[key] !== text) { this.f[key].textContent = text; this.cacheText[key] = text; }
+  }
+
+  /** Žebříček větru: všechny vrstvy a řádek "Vy" na odpovídající výšce. */
+  updateLadder({ layers, altStart, wind, cameraYaw }) {
+    if (!this.open || !layers) return;
+    const rows = layers.map((l) => ({ alt: l.alt, x: l.x, z: l.z, you: false }));
+    rows.push({ alt: altStart, x: wind.x, z: wind.z, you: true });
+    rows.sort((a, b) => b.alt - a.alt);
+    const fmt = (r) => {
+      const kmh = Math.round(Math.hypot(r.x, r.z) * 3.6);
+      const b = vecToBearing(r.x, r.z);
+      return { kmh, b, dir: COMPASS[Math.round(b / 45) % 8] };
+    };
+    const sig = rows.map((r) => { const f = fmt(r); return `${r.you ? 'Y' : ''}${Math.round(r.alt / 5)}:${f.kmh}:${Math.round(f.b / 3)}`; }).join('|') + Math.round(cameraYaw / 3);
+    if (sig === this.ladderSig) return;
+    this.ladderSig = sig;
+    this.f.ladder.innerHTML = rows.map((r) => {
+      const f = fmt(r);
+      const rot = (f.b - cameraYaw - 90).toFixed(0);
+      const label = r.you ? `${t('hud.you')} · ${Math.max(0, Math.round(r.alt))} m` : `${r.alt} m`;
+      return `<div class="lr${r.you ? ' you' : ''}"><span>${label}</span><i style="transform:rotate(${rot}deg)">➤</i><b>${f.kmh} km/h ${f.dir}</b></div>`;
+    }).join('') + `<div class="lnote">${t('hud.ladder.note')}</div>`;
+  }
+
+  update({ agl, vy, tempIn, gasFrac, wind, cameraYaw, target, edge, layers, altStart }) {
+    this.set('alt', Math.round(agl));
+    this.set('vsi', (vy >= 0 ? '+' : '') + vy.toFixed(1));
+    this.set('temp', Math.round(tempIn));
+    this.f.gas.style.width = `${Math.round(gasFrac * 100)}%`;
+    this.f.gas.style.background = gasFrac < 0.2 ? 'var(--danger)' : '';
+    const sp = Math.hypot(wind.x, wind.z) * 3.6;
+    const b = vecToBearing(wind.x, wind.z);
+    this.set('wind', `${Math.round(sp)} km/h ${COMPASS[Math.round(b / 45) % 8]}`);
+    // Šipka větru relativně k pohledu kamery (nahoře = dopředu)
+    this.f.arrow.style.transform = `rotate(${(b - cameraYaw - 90).toFixed(0)}deg)`;
+    this.updateLadder({ layers, altStart, wind, cameraYaw });
+
+    if (target) {
+      const d = target.dist;
+      this.set('tdist', d >= 1000 ? `${(d / 1000).toFixed(1)} km` : `${Math.round(d)} m`);
+      this.f.tarrow.style.transform = `rotate(${(target.bearing - cameraYaw - 90).toFixed(0)}deg)`;
+    }
+
+    let msg = '';
+    if (edge) msg = t('hud.edge');
+    else if (tempIn >= PHYSICS.alarmTemp) msg = t('hud.overheat');
+    else if (gasFrac <= 0) msg = t('hud.nogas');
+    this.set('msg', msg);
+  }
+}

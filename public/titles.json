@@ -1,0 +1,54 @@
+{
+  "default": {
+    "m": {
+      "cs": ["Učeň větru", "Pán z Lučních strání", "Baron nad oblaky", "Hrabě ze Skalního kaňonu"],
+      "en": ["Apprentice of the Wind", "Lord of the Meadows", "Baron of the Clouds", "Count of the Rock Canyon"]
+    },
+    "f": {
+      "cs": ["Učednice větru", "Paní z Lučních strání", "Baronka nad oblaky", "Hraběnka ze Skalního kaňonu"],
+      "en": ["Apprentice of the Wind", "Lady of the Meadows", "Baroness of the Clouds", "Countess of the Rock Canyon"]
+    }
+  },
+  "sites": {
+    "luzicke": {
+      "m": {
+        "cs": ["Učeň Lužických hor", "Pán Lužických hor", "Baron Lužických hor", "Kníže Lužických hor"],
+        "en": ["Apprentice of the Lusatian Mountains", "Lord of the Lusatian Mountains", "Baron of the Lusatian Mountains", "Prince of the Lusatian Mountains"]
+      },
+      "f": {
+        "cs": ["Učednice Lužických hor", "Paní Lužických hor", "Baronka Lužických hor", "Kněžna Lužických hor"],
+        "en": ["Apprentice of the Lusatian Mountains", "Lady of the Lusatian Mountains", "Baroness of the Lusatian Mountains", "Princess of the Lusatian Mountains"]
+      }
+    },
+    "raj": {
+      "m": {
+        "cs": ["Učeň Českého ráje", "Pán Českého ráje", "Baron Českého ráje", "Kníže Českého ráje"],
+        "en": ["Apprentice of Bohemian Paradise", "Lord of Bohemian Paradise", "Baron of Bohemian Paradise", "Prince of Bohemian Paradise"]
+      },
+      "f": {
+        "cs": ["Učednice Českého ráje", "Paní Českého ráje", "Baronka Českého ráje", "Kněžna Českého ráje"],
+        "en": ["Apprentice of Bohemian Paradise", "Lady of Bohemian Paradise", "Baroness of Bohemian Paradise", "Princess of Bohemian Paradise"]
+      }
+    },
+    "polabi": {
+      "m": {
+        "cs": ["Učeň Polabí", "Pán Polabí", "Baron Polabí", "Kníže Polabí"],
+        "en": ["Apprentice of the Elbe Lowlands", "Lord of the Elbe Lowlands", "Baron of the Elbe Lowlands", "Prince of the Elbe Lowlands"]
+      },
+      "f": {
+        "cs": ["Učednice Polabí", "Paní Polabí", "Baronka Polabí", "Kněžna Polabí"],
+        "en": ["Apprentice of the Elbe Lowlands", "Lady of the Elbe Lowlands", "Baroness of the Elbe Lowlands", "Princess of the Elbe Lowlands"]
+      }
+    },
+    "mach": {
+      "m": {
+        "cs": ["Učeň Máchova kraje", "Pán Máchova kraje", "Baron Máchova kraje", "Kníže Máchova kraje"],
+        "en": ["Apprentice of Mácha's Land", "Lord of Mácha's Land", "Baron of Mácha's Land", "Prince of Mácha's Land"]
+      },
+      "f": {
+        "cs": ["Učednice Máchova kraje", "Paní Máchova kraje", "Baronka Máchova kraje", "Kněžna Máchova kraje"],
+        "en": ["Apprentice of Mácha's Land", "Lady of Mácha's Land", "Baroness of Mácha's Land", "Princess of Mácha's Land"]
+      }
+    }
+  }
+}

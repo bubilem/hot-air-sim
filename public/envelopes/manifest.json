@@ -1,0 +1,20 @@
+{
+  "balloons": [
+    {
+      "id": "skolavdf",
+      "name": {
+        "cs": "skolavdf.cz",
+        "en": "skolavdf.cz"
+      },
+      "file": "skolavdf.webp"
+    },
+    {
+      "id": "barevnak",
+      "name": {
+        "cs": "Barevňák",
+        "en": "Barevňák"
+      },
+      "file": "barevnak.webp"
+    }
+  ]
+}

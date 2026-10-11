@@ -1,0 +1,6 @@
+# Jednotné konce řádků v repozitáři; Git na Windows si je převede podle nastavení
+* text=auto
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary

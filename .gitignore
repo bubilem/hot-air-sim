@@ -1,0 +1,24 @@
+# Závislosti a výstup buildu
+node_modules/
+dist/
+coverage/
+
+# Logy a lokální prostředí
+*.log
+npm-debug.log*
+.env
+.env.*
+!.env.example
+
+# Editory a systém
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Lokální nastavení nástrojů (sdílí se jen launch.json pro náhled dev serveru)
+.claude/*
+!.claude/launch.json
+
+# Pracovní kopie a archiv (design systém školy a staré verze; nejsou součástí repozitáře)
+tmp/

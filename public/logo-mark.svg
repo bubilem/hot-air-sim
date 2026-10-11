@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 565 489.01">
+  <g id="yellow">
+    <polygon points="0 0 186 108 233 191 140.91 244.5 0 0" fill="#ffdf6a"/>
+    <polygon points="0 0 282.5 0 282.5 108.17 186 108 0 0" fill="#ffd503"/>
+  </g>
+  <g id="blue">
+    <polyline points="331 191 424 244 565 0 379.15 108.17" fill="#16c1f3"/>
+    <g id="Vrstva_4" data-name="Vrstva 4">
+      <polygon points="282 0 565 0 380 108 282 108 282 0" fill="#70d0f6"/>
+    </g>
+  </g>
+  <g id="green">
+    <g id="Vrstva_7" data-name="Vrstva 7">
+      <path d="m283,276l48-85,93,53s-141,246.41-141,245v-213Z" fill="#a6ce39"/>
+    </g>
+    <g id="Vrstva_6" data-name="Vrstva 6">
+      <polygon points="283 489 141 244 233 191 283 276 283 489" fill="#c0db75"/>
+    </g>
+  </g>
+</svg>

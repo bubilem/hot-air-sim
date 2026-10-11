@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#003b4b" />
+  <title>HotAirSim – simulátor horkovzdušného balonu</title>
+  <link rel="icon" type="image/svg+xml" href="./logo-mark.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@200;400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    /* Načítací obrazovka: styl je přímo v HTML, aby byla vidět dřív, než se načte zbytek aplikace */
+    html, body { margin: 0; background: #003b4b; }
+    #loading { position: fixed; inset: 0; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px;
+      background: linear-gradient(#003b4b, #006783); color: #fff; font: 600 18px Raleway, Arial, sans-serif; letter-spacing: .04em; transition: opacity .3s; }
+    #loading.done { opacity: 0; pointer-events: none; }
+    #loading .spin { width: 52px; height: 52px; border: 5px solid #ffffff2e; border-top-color: #ffd400; border-radius: 50%; animation: loading-spin 0.9s linear infinite; }
+    @keyframes loading-spin { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) { #loading .spin { animation-duration: 3s; } }
+  </style>
+</head>
+<body>
+  <div id="loading" role="status"><div class="spin"></div><span id="loading-text">Načítání…</span></div>
+  <script>if (!/^cs|^sk/i.test(navigator.language || 'cs')) document.getElementById('loading-text').textContent = 'Loading…';</script>
+  <canvas id="game"></canvas>
+  <div id="ui"></div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
