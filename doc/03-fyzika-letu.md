@@ -467,6 +467,40 @@ vzorec počítá.
 
 ---
 
+## 3.10a Kolize pláště za letu
+
+Přistání řeší koš, ale plášť je velký (průměr necelých 20 m, výška 20 m) a o překážku se může zachytit dřív než koš.
+Modul `core/Collisions.js` proto každý třetí krok fyziky vzorkuje povrch (`Biomes.sample().surface`, tedy včetně
+korun stromů, střech, komínů a dominant) na kružnicích kolem osy balonu (poloměry 2,5 / 5 / 7,5 / 9,5 m, 8 směrů).
+Překážka o výšce *s* v odstupu *d* od osy zasahuje do pláště, když je *d* menší než poloměr pláště ve výšce *s*
+nad ústím (obrys `ENVELOPE_PROFILE`). Nad 60 m nad povrchem se kolize vůbec nehledají (nejvyšší skalní stěna má 55 m).
+
+**Reakce** míří po normále obrysu: na spodku břicha nahoru (balon „vyjede“ nad koruny), na rovníku vodorovně od
+překážky, na kopuli dolů. Balon se vytlačí z překážky a složka rychlosti proti ní se odrazí (`restitution` = 0,2).
+Při stálém tlaku větru zůstane balon přitlačený, dokud pilot nestoupne.
+
+**Škody** závisí na rychlosti nárazu *v* a **tvrdosti** povrchu *k* (skála 1,2, budova nebo dominanta 1,0, les 0,5,
+svah 0,3, louka 0,25), energie *E* = *v* · *k*:
+
+| Energie *E* | Důsledek |
+| :-- | :-- |
+| *E* > 1,5 | **trhlina** v plášti (štěrbina, trvalý únik tepla jako díra po přehřátí; max. jedna za 1,5 s) |
+| tření (> 2 m/s) po tvrdém povrchu | trhlina po každých 8 m / *k* |
+| *E* > 5 | **havárie**: plášť praskne, let končí (`KIND.COLLISION`), balon spadne |
+
+**Koš (`probeBasket`).** Plášť je nad košem, takže vysoké překážky (koruny 9 m, domy) zasáhne dřív on. Překážky nižší než
+ústí pláště (3,4 m nad spodkem koše) a ty, o které se opírá jen koš, hledá druhá sonda: osm vzorků kolem půdorysu koše
+(rohy a středy stran, 0,25 m za okrajem, otočené podle `heading`). Překážka je les, skála nebo stavba, jejíž povrch je
+víc než 0,5 m nad spodkem koše; sklon louky se nepočítá (ten řeší model země). Dřív koš tuto situaci neviděl: bod pod jeho
+středem při vodorovném pohybu do zdi nebo lesa jen „vyskočil“ na střechu či koruny. Reakce (`applyBasketContact`):
+
+| Povrch | Důsledek |
+| :-- | :-- |
+| **les** (tolerantní) | koš se zbrzdí (odraz 0, brzdění větvemi `forestDrag`) a zůstane přitlačený, dokud pilot nestoupne; **zachycení v korunách** (neúspěch, `KIND.FOREST`) až při rychlosti proti okraji nad `forestSnagSpeed` = 5 m/s |
+| **stavba, skála** | odraz (`basketRestitution`); při energii *v* · *k* > `crashEnergy` **havárie** (`KIND.COLLISION`) |
+
+Trhliny a popáleniny se počítají společně (`holeMax` = 8) a každá snižuje skóre o 25 bodů (nejvýš o 150).
+
 ## 3.11 Souhrn vzorců
 
 | Veličina | Vzorec | Kde v kódu |

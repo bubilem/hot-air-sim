@@ -1,5 +1,5 @@
 // Aerostatická fyzika balonu. Bez závislosti na Three.js.
-import { PHYSICS as P } from '../config/GameConfig.js';
+import { PHYSICS as P, COLLISION as C } from '../config/GameConfig.js';
 
 const M_AIR = 0.028964;
 const R_GAS = 8.314;
@@ -44,6 +44,9 @@ export class PhysicsEngine {
     this.collapse = 0;      // 0..1, propadnutí vrchlíku po extrémně dlouhém odvětrání
     this.stress = 0;        // K·s nad scorchTemp od poslední díry
     this.holes = [];        // popálená místa: {u: obvod 0..1, v: od ústí 0..1, size}
+    this.lastTear = -Infinity;   // flightTime poslední trhliny
+    this.scrape = 0;        // m tření po povrchu od poslední trhliny (× tvrdost)
+    this.contactTime = -Infinity;   // flightTime posledního dotyku pláště s překážkou
     this.fireTimer = 0;
     this.fire = 0;          // 0..1, rozsah požáru pláště
     this.rand = rng(c.seed ?? 1);
@@ -122,14 +125,86 @@ export class PhysicsEngine {
     if (this.fire > 0 || this.fireTimer >= P.fireDelay) this.fire = Math.min(1, this.fire + dt / P.fireSpread);
   }
 
-  /** Nová díra: nejčastěji ve vrchní části pláště, kde je nejhorkější vzduch. */
+  /** Nová popálená díra: nejčastěji ve vrchní části pláště, kde je nejhorkější vzduch. */
   addHole() {
     const r = this.rand;
     const size = 0.5 + 0.5 * r();
     const u = r();
     const v = 0.55 + 0.45 * r();
-    if (this.holes.length < P.holeMax) this.holes.push({ u, v, size });
-    else this.holes[Math.floor(r() * this.holes.length)].size += 0.25;
+    this.pushHole({ u, v, size, kind: 'burn' });
+  }
+
+  /** Přidá díru (popáleninu nebo trhlinu); při plném počtu zvětší některou z existujících. */
+  pushHole(h) {
+    if (this.holes.length < P.holeMax) this.holes.push(h);
+    else this.holes[Math.floor(this.rand() * this.holes.length)].size += 0.25;
+  }
+
+  /**
+   * Zásah pláště do překážky (výsledek `probeEnvelope`): vytlačí balon po normále, odrazí rychlost
+   * a podle rychlosti nárazu a tvrdosti povrchu protrhne plášť nebo ho zničí.
+   * @param {{depth:number,nx:number,ny:number,nz:number,hardness:number,angle:number,v:number}} c
+   * @param {number} dt  čas od posledního vyhodnocení kolize
+   * @returns {{impact:number, tear:boolean, crash:boolean}}
+   */
+  applyContact(c, dt) {
+    this.pos.x += c.nx * c.depth; this.pos.y += c.ny * c.depth; this.pos.z += c.nz * c.depth;
+    const vn = this.vel.x * c.nx + this.vel.y * c.ny + this.vel.z * c.nz;
+    let impact = 0;
+    if (vn < 0) {
+      impact = -vn;
+      const k = (1 + C.restitution) * vn;
+      this.vel.x -= k * c.nx; this.vel.y -= k * c.ny; this.vel.z -= k * c.nz;
+    }
+    const vt = Math.hypot(this.vel.x - vn * c.nx, this.vel.y - vn * c.ny, this.vel.z - vn * c.nz);
+    this.contactTime = this.flightTime;
+
+    const out = { impact, tear: false, crash: false };
+    const energy = impact * c.hardness;
+    if (energy > C.crashEnergy) out.crash = true;
+    if (vt > C.scrapeMinSpeed) this.scrape += vt * c.hardness * dt;
+    const ready = this.flightTime - this.lastTear >= C.tearCooldown;
+    if (ready && (energy > C.tearEnergy || this.scrape > C.scrapeDist)) {
+      const size = Math.min(1.4, Math.max(0.4, 0.4 + 0.15 * energy));
+      // směr ve světě -> souřadnice u pláště (rotace koše: heading)
+      const a = c.angle - this.heading * Math.PI / 180;
+      const u = (((1 - a / (2 * Math.PI)) % 1) + 1) % 1;
+      this.pushHole({ u, v: c.v, size, kind: 'tear' });
+      this.lastTear = this.flightTime;
+      this.scrape = 0;
+      out.tear = true;
+    }
+    return out;
+  }
+
+  /**
+   * Boční dotyk koše s překážkou (výsledek `probeBasket`): koš se odtlačí a zbrzdí. Les je tolerantní, pomalý koš o větve
+   * jen přibrzdí a zůstane přitlačený, dokud pilot nestoupne; rychlý náraz je zachycení v korunách. Stavba a skála
+   * se odrážejí a při velké energii nárazu je to havárie.
+   * @param {{nx:number,nz:number,depth:number,hardness:number,kind:string}} c
+   * @param {number} dt
+   * @returns {{impact:number, snag:boolean, crash:boolean}}
+   */
+  applyBasketContact(c, dt) {
+    this.pos.x += c.nx * c.depth; this.pos.z += c.nz * c.depth;
+    const vn = this.vel.x * c.nx + this.vel.z * c.nz;
+    const forest = c.kind === 'forest';
+    let impact = 0;
+    if (vn < 0) {
+      impact = -vn;
+      const k = (1 + (forest ? 0 : C.basketRestitution)) * vn;
+      this.vel.x -= k * c.nx; this.vel.z -= k * c.nz;
+    }
+    if (forest) {   // větve brzdí i pohyb podél okraje lesa
+      const f = Math.exp(-C.forestDrag * dt);
+      this.vel.x *= f; this.vel.z *= f;
+    }
+    this.contactTime = this.flightTime;
+    return {
+      impact,
+      snag: forest && impact > C.forestSnagSpeed,
+      crash: !forest && impact * c.hardness > C.crashEnergy,
+    };
   }
 
   /**

@@ -147,6 +147,8 @@ export default {
   'landing.water': 'Přistání ve vodě.',
   'landing.forest': 'Zachytili jste se v korunách stromů.',
   'landing.rock': 'Náraz do skal.',
+  'landing.collision': 'Náraz pláště do překážky – plášť se protrhl.',
+  'landing.impact': 'Rychlost nárazu',
   'landing.town': 'Přistání na střechách – v zástavbě se přistávat nesmí.',
   'landing.field': 'Přistání na poli: penalizace za úrodu.',
   'landing.speed': 'Dosedli jste rychlostí',

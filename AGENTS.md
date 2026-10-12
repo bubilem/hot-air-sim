@@ -119,6 +119,7 @@ src/
 │   ├── PhysicsEngine.js     # Aerostatika (teplota, vztlak, odpor) – bez Three.js
 │   ├── WindModel.js         # Vrstvy větru podle výšky – bez Three.js
 │   ├── FlightPlan.js        # Datový model plánu letu + odhad (estimateFlight)
+│   ├── Collisions.js        # Kolize pláště s terénem a překážkami za letu – bez Three.js
 │   ├── Scoring.js           # Skóre a titul
 │   └── Titles.js            # Tituly podle lokality (načítá public/titles.json)
 ├── entities/
@@ -149,7 +150,7 @@ doc/                         # Dokumentace pro žáky a učitele
 ```
 
 ### 5.2 Oddělení logiky od vizuálu
-- `PhysicsEngine`, `WindModel`, `Scoring`, `Biomes`, `LandingResolver`, `FlightPlan`, `Sites` **nesmí importovat Three.js
+- `PhysicsEngine`, `WindModel`, `Scoring`, `Biomes`, `LandingResolver`, `FlightPlan`, `Sites`, `Collisions` **nesmí importovat Three.js
   ani sahat na DOM**. Jsou testovatelné samostatně.
 - Entity mají (podle možností) `update(dt)`, `getMesh()`, `reset()`; vizuál vzniká v `*View.js` / `buildMesh()`.
 - **Těžiště je u koše:** `BalloonView.setShape` otáčí celou sestavu kolem spodní hrany koše; poddajný plášť se při
@@ -170,6 +171,10 @@ doc/                         # Dokumentace pro žáky a učitele
 - **Paraventil** se držením rozevírá (`ventHold` → `ventMul`); při extrémně dlouhém držení se vrchlík propadá (`collapse`,
   menší objem). **Přehřátí** nad `scorchTemp` trvale pálí plášť (`holes` zvyšují únik tepla), nad `fireTemp` plášť vzplane
   (`fire`). Hořák nemá pojistku. Viz `doc/03`, odst. 3.6a–b.
+- **Kolize pláště** (`core/Collisions.js`): plášť o překážku (stromy, budovy, skály) za letu zachytí, vytlačí se po normále
+  obrysu, rychlý náraz ho protrhne (`holes`, `kind: 'tear'`) nebo zničí (`KIND.COLLISION`). Viz `doc/03`, odst. 3.10a. Koš má vlastní sondu (`probeBasket`): les je tolerantní (zbrzdí, zachycení až od `forestSnagSpeed`), stavby a skály odrážejí.
+- **Výška:** okolní teplota klesá o `lapseRate` (6,5 K/km), nad `oxygenAlt` (3 000 m n. m.) roste hypoxie a pilot omdlí (`unconscious`:
+  ovládání se ignoruje). Viz `doc/03`, odst. 3.9a.
 - Cíl odezvy: viditelné zpoždění několika sekund mezi zážehem a změnou stoupání; hráč nesmí být frustrován.
 - **Pevný krok fyziky 1/60 s** s akumulátorem, nezávislý na FPS.
 

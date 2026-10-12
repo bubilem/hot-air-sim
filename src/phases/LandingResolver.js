@@ -10,6 +10,7 @@ export const KIND = {
   FOREST: 'forest',
   ROCK: 'rock',
   TOWN: 'town',
+  COLLISION: 'collision',   // plášť narazil do překážky za letu
 };
 
 /**

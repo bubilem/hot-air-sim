@@ -162,6 +162,39 @@ export const PHYSICS = {
   minBalloonRadius: 9,
 };
 
+// Profil pláště [poloměr, výška nad ústím] ve svislé poloze, v metrech (kreslí ho BalloonView, kolize ho berou jako obrys)
+export const ENVELOPE_PROFILE = [
+  [2.0, 0], [2.6, 1.4], [4.2, 3.6], [6.4, 6.6], [8.2, 9.6],
+  [9.3, 12.6], [9.7, 14.8], [9.3, 16.8], [8.0, 18.4], [5.6, 19.5], [2.9, 20.1], [0, 20.3],
+];
+
+// Půdorys koše: poloviny rozměrů v osách x (šířka) a z (délka) rigu, v metrech
+export const BASKET_SIZE = { hx: 0.7, hz: 1.1 };
+
+// Kolize pláště a koše s terénem a překážkami za letu (viz core/Collisions.js)
+export const COLLISION = {
+  mouthAbove: 3.4,       // m, ústí pláště nad spodkem koše
+  radii: [2.5, 5, 7.5, 9.5],   // m, vzorkované kružnice kolem osy
+  angles: 8,             // vzorků na kružnici
+  skipAgl: 60,           // m nad povrchem, odkud se kolize nehledají (nejvyšší skalní stěna je ~55 m)
+  interval: 3,           // kolize se řeší každý n-tý krok fyziky
+  restitution: 0.2,      // odraz od překážky
+  // „tvrdost“ povrchu: násobí rychlost nárazu při vyhodnocení škod
+  hardness: { rock: 1.2, building: 1.0, forest: 0.5, hill: 0.3, soft: 0.25 },
+  tearEnergy: 1.5,       // m/s · tvrdost: odtud nárazy trhají plášť
+  tearCooldown: 1.5,     // s mezi dvěma trhlinami
+  scrapeDist: 8,         // m po povrchu (× tvrdost) na jednu trhlinu při tření
+  scrapeMinSpeed: 2,     // m/s tangenciální rychlosti, od které se plášť tře
+  crashEnergy: 5,        // m/s · tvrdost: nad touto hodnotou plášť praskne a let končí
+  buildingRise: 3,       // m: povrch nad terénem o tolik (a ne les) je budova / dominanta
+  // Koš: vzorky kolem půdorysu (rohy a středy stran) hledají překážku vedle koše
+  basketMargin: 0.25,    // m, jak daleko za okrajem koše se překážka hledá
+  basketRise: 0.5,       // m: povrch výš než spodek koše o tolik je překážka (nižší vyrovnává model země)
+  basketRestitution: 0.15,   // odraz koše od tvrdé překážky
+  forestSnagSpeed: 5,    // m/s: rychlejší boční náraz do lesa = zachycení v korunách (neúspěch); pomalejší koš jen zbrzdí
+  forestDrag: 2,         // 1/s, brzdění koše o větve, dokud se dotýká lesa
+};
+
 // Skalní masivy (lokalita s `massifs: true`): zvýšené skalnaté plošiny se strmými svahy (parametry lze přepsat v `site.massifs`)
 export const MASSIFS = {
   scale: 800,          // m, velikost masivů (šum)
@@ -253,6 +286,7 @@ export const LANDING = {
   hardVxz: 6,
   dragFriction: 1.6,   // m/s2, zpomalení tažení koše po trávě
   treeFallSpeed: 5,    // m/s, pád balonu z korun stromů na zem po zachycení
+  collisionFallSpeed: 8,   // m/s, pád zničeného balonu po nárazu pláště do překážky
 };
 
 // Hudba na pozadí (soubor v public/music)

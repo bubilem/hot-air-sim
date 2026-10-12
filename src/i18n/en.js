@@ -147,6 +147,8 @@ export default {
   'landing.water': 'Landed in water.',
   'landing.forest': 'You got caught in the treetops.',
   'landing.rock': 'You hit the rocks.',
+  'landing.collision': 'The envelope hit an obstacle and tore open.',
+  'landing.impact': 'Impact speed',
   'landing.town': 'You came down on the rooftops – no landing in built-up areas.',
   'landing.field': 'Landed on a field: crop damage penalty.',
   'landing.speed': 'Touchdown speed',

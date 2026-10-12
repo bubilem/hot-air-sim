@@ -4,14 +4,10 @@
 import * as THREE from 'three';
 import { COLORS } from '../config/Colors.js';
 import { designCanvas } from './EnvelopeDesigns.js';
-import { ENVELOPE_GLOW } from '../config/GameConfig.js';
+import { ENVELOPE_GLOW, ENVELOPE_PROFILE as PROFILE, BASKET_SIZE } from '../config/GameConfig.js';
 
 const SEGS = 32;      // výseče po obvodu
 const RINGS = 28;     // prstence po výšce
-const PROFILE = [     // [poloměr, výška] pláště ve svislé poloze, v metrech
-  [2.0, 0], [2.6, 1.4], [4.2, 3.6], [6.4, 6.6], [8.2, 9.6],
-  [9.3, 12.6], [9.7, 14.8], [9.3, 16.8], [8.0, 18.4], [5.6, 19.5], [2.9, 20.1], [0, 20.3],
-];
 const CROWN_PULL = 4;      // m: o kolik lano nadzvedne vrchlík při vztyčování (v první třetině zvedání)
 const CROWN_FROM = 0.45;   // od jaké části výšky pláště (0..1) se vrchlík nadzvedává
 const SKIRT_ROWS = 3;      // spodní řady pláště tvoří tmavá "plachta" (sukně) u ústí
@@ -36,8 +32,8 @@ const DRAPE_RECENTER = 18;             // m: o kolik se koš smí posunout, než
 
 export const BASKET_BOTTOM = -3.4;
 export const BASKET_TOP = -2.4;
-export const BASKET_HX = 0.7;   // polovina šířky koše (osa x rigu)
-export const BASKET_HZ = 1.1;   // polovina délky koše (osa z rigu)
+export const BASKET_HX = BASKET_SIZE.hx;   // polovina šířky koše (osa x rigu)
+export const BASKET_HZ = BASKET_SIZE.hz;   // polovina délky koše (osa z rigu)
 
 const smooth = (x) => { const t = Math.min(1, Math.max(0, x)); return t * t * (3 - 2 * t); };
 
@@ -143,9 +139,11 @@ export class BalloonView {
         .replace('#include <common>', '#include <common>\nvarying float vGlowY;\nuniform float uGlow, uGlowTop, uGlowH, uFlick;\nuniform vec3 uGlowColor;\nuniform sampler2D uBurn;')
         .replace('#include <map_fragment>',
           `#include <map_fragment>
-          vec2 burnMask = texture2D(uBurn, vMapUv).rg;
+          vec3 burnMask = texture2D(uBurn, vMapUv).rgb;
           float burnB = burnMask.r;
-          if (burnB > 0.62) discard;
+          float tearB = burnMask.b;
+          if (burnB > 0.62 || tearB > 0.55) discard;
+          diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.9), smoothstep(0.25, 0.5, tearB) * 0.7);   // roztřepený okraj trhliny
           diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.2, 0.11, 0.05), smoothstep(0.1, 0.3, burnB) * 0.85);
           diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.02), smoothstep(0.3, 0.45, burnB));`)
         .replace('#include <emissivemap_fragment>',
@@ -351,6 +349,7 @@ export class BalloonView {
     this.emberLayer = new Float32Array(n);   // žhnutí děr (doznívá)
     this.fireLayer = new Float32Array(n);    // spálení od požáru
     this.fireEmber = new Float32Array(n);    // žhnutí čela požáru
+    this.tearLayer = new Float32Array(n);    // trhliny od nárazů (štěrbiny bez zuhelnatění)
     this.noise = null;
     this.emberLive = 0;
     this.emberAcc = 0;
@@ -389,6 +388,21 @@ export class BalloonView {
     const ru = rM * BURN_W / (2 * Math.PI * Math.max(this.profile[ring].x, 2.5));
     const rv = rM * BURN_H / this.arcLen;
     const cx = h.u * BURN_W, cy = h.v * BURN_H, off = (idx * 53) % BURN_W;
+    if (h.kind === 'tear') {
+      // Trhlina: úzká štěrbina (vodorovná nebo svislá podle polohy), okraje rozedrané šumem, bez zuhelnatění
+      const horiz = (idx & 1) === 0;
+      const au = horiz ? ru * 2.2 : ru * 0.4, av = horiz ? rv * 0.4 : rv * 2.2;
+      for (let y = Math.max(0, Math.floor(cy - av * 1.2)); y <= Math.min(BURN_H - 1, Math.ceil(cy + av * 1.2)); y++) {
+        for (let x = Math.floor(cx - au * 1.2); x <= Math.ceil(cx + au * 1.2); x++) {
+          const d = Math.hypot((x - cx) / au, (y - cy) / av);
+          if (d > 1.2) continue;
+          const xi = ((x % BURN_W) + BURN_W) % BURN_W, i = y * BURN_W + xi;
+          const b = 1 - d + (this.noise[y * BURN_W + (xi + off) % BURN_W] - 0.5) * 0.5;
+          if (b > this.tearLayer[i]) this.tearLayer[i] = b;
+        }
+      }
+      return;
+    }
     for (let y = Math.max(0, Math.floor(cy - rv * 1.1)); y <= Math.min(BURN_H - 1, Math.ceil(cy + rv * 1.1)); y++) {
       for (let x = Math.floor(cx - ru * 1.1); x <= Math.ceil(cx + ru * 1.1); x++) {
         const d = Math.hypot((x - cx) / ru, (y - cy) / rv);
@@ -422,12 +436,13 @@ export class BalloonView {
 
   /** Složí vrstvy do textury masky (R = spálení, G = žhnutí). */
   uploadBurn() {
-    const d = this.burnData, hl = this.holeLayer, fl = this.fireLayer, el = this.emberLayer, fe = this.fireEmber;
+    const d = this.burnData, hl = this.holeLayer, fl = this.fireLayer, el = this.emberLayer, fe = this.fireEmber, tl = this.tearLayer;
     let live = 0;
     for (let i = 0; i < hl.length; i++) {
       const r = Math.max(hl[i], fl[i]), g = Math.max(el[i], fe[i]);
       d[i * 4] = Math.min(255, Math.max(0, r * 255));
       d[i * 4 + 1] = Math.min(255, g * 255);
+      d[i * 4 + 2] = Math.min(255, Math.max(0, tl[i] * 255));
       if (el[i] > live) live = el[i];
     }
     this.emberLive = live;
@@ -536,7 +551,7 @@ export class BalloonView {
       for (const h of holes) {
         this.surfacePoint(h.u, h.v, P);
         for (let n = count(2 + 3 * h.size); n > 0; n--) this.emit(P, [0.62, 0.62, 0.64], 1.4, 2.2, 0.28, 2.6, 2.4, 0.8);
-        if (this.emberLive > 0.15) for (let n = count(4 * this.emberLive); n > 0; n--) this.emit(P, [0.1, 0.09, 0.08], 1.2, 2.5, 0.45, 2.8, 2.8, 0.8);
+        if (h.kind !== 'tear' && this.emberLive > 0.15) for (let n = count(4 * this.emberLive); n > 0; n--) this.emit(P, [0.1, 0.09, 0.08], 1.2, 2.5, 0.45, 2.8, 2.8, 0.8);
       }
       if (fire > 0) {
         const front = 1 - fire * (1 - FIRE_FRONT_MIN);

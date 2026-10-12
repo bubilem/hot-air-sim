@@ -29,15 +29,18 @@ export class LandingPhase {
     this.ui = null;
   }
 
-  enter({ touch }) {
+  enter({ touch, collision, kind }) {
     const app = this.app, b = app.balloon, p = b.physics, w = app.world;
     app.controls.setVisible(false);
     app.controls.enabled = false;
     b.view.setTerrain((x, z) => w.biomes.groundHeight(x, z));   // vyfouklý plášť leží na svahu, ne ve vzduchu ani v kopci
 
     const biome = app.sample(p.pos.x, p.pos.z);
-    this.result = classifyTouchdown(touch, biome);
+    this.result = collision ? { kind: KIND.COLLISION, success: false, field: false }
+      : kind ? { kind, success: false, field: false }   // druh určila kolize za letu (např. zachycení o les)
+      : classifyTouchdown(touch, biome);
     this.touch = touch;
+    this.collisionSpeed = collision?.speed ?? 0;
     this.kind = this.result.kind;
     this.tl = TIMELINE[this.kind] || TIMELINE.other;
     this.success = this.result.success;
@@ -50,7 +53,7 @@ export class LandingPhase {
     if (sp < 0.2) { const wd = w.wind.at(p.pos.y - w.startY); dx = wd.x; dz = wd.z; }
     const n = Math.hypot(dx, dz) || 1;
     this.dir = { x: dx / n, z: dz / n };
-    const fixedKinds = [KIND.WATER, KIND.FOREST, KIND.ROCK, KIND.TOWN];
+    const fixedKinds = [KIND.WATER, KIND.FOREST, KIND.ROCK, KIND.TOWN, KIND.COLLISION];
     this.slideV = fixedKinds.includes(this.kind) ? 0 : touch.vxz * (this.kind === KIND.SOFT ? 0.5 : 1);
     this.fallHeading = vecToBearing(this.dir.x, this.dir.z) - 90;
     p.vel.x = p.vel.y = p.vel.z = 0;
@@ -65,7 +68,7 @@ export class LandingPhase {
       gasFrac: p.gas / gasMax,
       targetDist: Math.hypot(w.target.x - p.pos.x, w.target.z - p.pos.z),
     };
-    this.score = scoreFlight({ kind: this.kind, field: this.result.field, gasFrac: this.stats.gasFrac, targetDist: this.stats.targetDist, flightTime: this.stats.flightTime, maxAlt: this.stats.maxAlt });
+    this.score = scoreFlight({ kind: this.kind, field: this.result.field, gasFrac: this.stats.gasFrac, targetDist: this.stats.targetDist, flightTime: this.stats.flightTime, maxAlt: this.stats.maxAlt, damage: p.holes.length });
     app.flightResult = { kind: this.kind, touch, ...this.stats, ...this.score, field: this.result.field };
 
     app.audio.update({});
@@ -114,7 +117,9 @@ export class LandingPhase {
 
   buildUi() {
     const ok = this.success;
-    const detail = `${t('landing.speed')}: ${this.touch.vy.toFixed(1)} m/s ↓ · ${this.touch.vxz.toFixed(1)} m/s →`;
+    const detail = this.kind === KIND.COLLISION
+      ? `${t('landing.impact')}: ${this.collisionSpeed.toFixed(1)} m/s`
+      : `${t('landing.speed')}: ${this.touch.vy.toFixed(1)} m/s ↓ · ${this.touch.vxz.toFixed(1)} m/s →`;
     this.ui = document.createElement('div');
     this.ui.className = `landingui panel interactive ${ok ? 'ok' : 'bad'}`;
     this.ui.innerHTML = `

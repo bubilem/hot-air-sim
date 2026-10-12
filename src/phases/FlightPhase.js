@@ -1,6 +1,8 @@
 // Fáze 3a: Let. Hořák, paraventil, rotace, vítr po vrstvách, kamery z třetí osoby a z koše.
 import * as THREE from 'three';
-import { CAMERA, PHYSICS } from '../config/GameConfig.js';
+import { CAMERA, PHYSICS, COLLISION } from '../config/GameConfig.js';
+import { probeEnvelope, probeBasket } from '../core/Collisions.js';
+import { KIND } from './LandingResolver.js';
 import { PILOT_EYE_X, PILOT_EYE_Z } from '../entities/Balloon.js';
 
 const DEG = Math.PI / 180;
@@ -42,6 +44,7 @@ export class FlightPhase {
     app.controls.setCamMode('chase');
     app.resetUserCamera();
     this.stats = { edge: false };
+    this.tick = 0;
   }
 
   exit() {
@@ -55,6 +58,32 @@ export class FlightPhase {
     const surface = app.sample(p.pos.x, p.pos.z).surface;
     const wind = w.wind.at(p.pos.y - w.startY);
     const out = b.update(dt, input, wind, surface);
+    if (++this.tick % COLLISION.interval === 0) {
+      const sample = (x, z) => app.sample(x, z);
+      const touch = () => ({ vy: Math.max(0, -p.vel.y), vxz: Math.hypot(p.vel.x, p.vel.z) });
+      const bc = probeBasket(p.pos, p.heading, sample);
+      if (bc) {
+        const r = p.applyBasketContact(bc, dt * COLLISION.interval);
+        if (r.impact > 0.5) app.audio.thud(Math.min(0.7, r.impact / 8));
+        if (r.crash) {
+          app.go('LANDING', { touch: touch(), collision: { speed: r.impact } });
+          return;
+        }
+        if (r.snag) {   // rychlý boční náraz do lesa: zachycení v korunách
+          app.go('LANDING', { touch: touch(), kind: KIND.FOREST });
+          return;
+        }
+      }
+      const c = probeEnvelope(p.pos, sample);
+      if (c) {
+        const r = p.applyContact(c, dt * COLLISION.interval);
+        if (r.impact > 0.5) app.audio.thud(Math.min(0.7, r.impact / 8));
+        if (r.crash) {
+          app.go('LANDING', { touch: { vy: Math.max(0, -p.vel.y), vxz: Math.hypot(p.vel.x, p.vel.z) }, collision: { speed: r.impact } });
+          return;
+        }
+      }
+    }
     if (out.touchdown && p.maxAlt > 3) {
       app.go('LANDING', { touch: out.touchdown });
     }
