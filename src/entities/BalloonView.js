@@ -30,6 +30,9 @@ const BURN_R0 = 1.8, BURN_R1 = 1.9;    // m: poloměr skvrny = R0 + R1 · veliko
 const EMBER_TAU = 6;                   // s, doznívání žhnutí čerstvé díry
 const FIRE_FRONT_MIN = 0.12;           // do jaké výšky (0..1) pláště se oheň nejvýš šíří od vrchlíku
 const SMOKE_N = 160;                   // kapacita částic kouře a plamenů
+const DRAPE_RADIUS = 45;               // m: okolí koše, ve kterém se vzorkuje terén pro ležící plášť
+const DRAPE_STEP = 1.5;                // m: rozestup vzorků terénu
+const DRAPE_RECENTER = 18;             // m: o kolik se koš smí posunout, než se terén vzorkuje znovu
 
 export const BASKET_BOTTOM = -3.4;
 export const BASKET_TOP = -2.4;
@@ -76,6 +79,9 @@ export class BalloonView {
 
     this.state = { inflation: -1, upright: -1, unroll: -1, envUpright: -1 };
     this.sag = 0;
+    this.terrain = null;    // (x, z) => výška terénu; zapíná „přilepení“ ležícího pláště k terénu
+    this.terrainGrid = null;
+    this.pose = { x: 0, y: 0, z: 0, h: 0 };
     this.holeSizes = [];    // velikosti děr, které už jsou namalovány v masce
     this.fireLevel = 0;
     this.scorchT = 0;
@@ -258,6 +264,8 @@ export class BalloonView {
       }
     }
 
+    this.drape(rigX, rigY, phi, lyingE);
+
     for (let v = 0; v < this.vRing.length; v++) {
       const k = (this.vRing[v] * SEGS + this.vSeg[v]) * 3;
       this.envPos[v * 3] = g[k]; this.envPos[v * 3 + 1] = g[k + 1]; this.envPos[v * 3 + 2] = g[k + 2];
@@ -265,6 +273,57 @@ export class BalloonView {
     this.envGeo.attributes.position.needsUpdate = true;
     this.envGeo.computeBoundingSphere();
 
+  }
+
+  // ---------- Plášť ležící na terénu ----------
+  /** Zapne přilepení ležícího pláště k terénu: `fn(x, z)` vrací výšku země (null = vypnuto). */
+  setTerrain(fn) {
+    this.terrain = fn;
+    this.terrainGrid = null;
+    this.state.inflation = -1;
+  }
+
+  /** Výška terénu v bodě (bilineárně ze sítě kolem koše; síť se vzorkuje jen při potřebě). */
+  groundAt(x, z) {
+    let g = this.terrainGrid;
+    if (!g || Math.hypot(x - g.cx, z - g.cz) > DRAPE_RADIUS - 5 || Math.hypot(this.pose.x - g.cx, this.pose.z - g.cz) > DRAPE_RECENTER) {
+      const n = Math.round(2 * DRAPE_RADIUS / DRAPE_STEP) + 1;
+      g = { cx: this.pose.x, cz: this.pose.z, n, data: new Float32Array(n * n) };
+      for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) g.data[i * n + j] = this.terrain(g.cx - DRAPE_RADIUS + i * DRAPE_STEP, g.cz - DRAPE_RADIUS + j * DRAPE_STEP);
+      this.terrainGrid = g;
+    }
+    const fx = Math.min(g.n - 1.001, Math.max(0, (x - g.cx + DRAPE_RADIUS) / DRAPE_STEP));
+    const fz = Math.min(g.n - 1.001, Math.max(0, (z - g.cz + DRAPE_RADIUS) / DRAPE_STEP));
+    const i = Math.floor(fx), j = Math.floor(fz), tx = fx - i, tz = fz - j, n = g.n, d = g.data;
+    return (d[i * n + j] * (1 - tz) + d[i * n + j + 1] * tz) * (1 - tx) + (d[(i + 1) * n + j] * (1 - tz) + d[(i + 1) * n + j + 1] * tz) * tx;
+  }
+
+  /**
+   * Ležící plášť model počítá nad vodorovnou zemí v úrovni koše. Na svahu by pak plášť visel nad terénem nebo se v něm
+   * ztratil, proto se každý vrchol posune svisle o rozdíl výšky terénu (v místě vrcholu a u koše). U ústí, kde je plášť
+   * přichycen ke koši, je vliv nulový, a vrchol nikdy neleží pod terénem.
+   */
+  drape(rigX, rigY, phi, lyingE) {
+    if (!this.terrain || lyingE < 0.02) return;
+    const P = this.pose, g = this.grid;
+    const cphi = Math.cos(phi), sphi = Math.sin(phi);   // převod rig -> kořen: rotace o -phi
+    const psi = -P.h * Math.PI / 180, cp = Math.cos(psi), sp = Math.sin(psi);   // kořen -> svět (heading)
+    const lie = lyingE * lyingE;
+    for (let i = 1; i <= RINGS; i++) {
+      const reach = smooth(this.profile[i].y / 7);
+      if (reach <= 0.01) continue;
+      const w = lie * reach;
+      for (let j = 0; j < SEGS; j++) {
+        const k = (i * SEGS + j) * 3;
+        const x = g[k], y = g[k + 1], z = g[k + 2];
+        const xr = x * cphi + y * sphi + rigX, yr = -x * sphi + y * cphi + rigY;
+        const wx = P.x + xr * cp + z * sp, wz = P.z - xr * sp + z * cp, wy = P.y + yr;
+        const gnd = this.groundAt(wx, wz);
+        let dY = (gnd - P.y) * w;
+        if (wy + dY < gnd + 0.03) dY = gnd + 0.03 - wy;   // látka neprochází terénem
+        if (dY !== 0) { g[k] += -dY * sphi; g[k + 1] += dY * cphi; }
+      }
+    }
   }
 
   /** Míra sesednutí pláště 0..1 (po dlouhém odvětrání nebo při požáru). */
@@ -693,6 +752,10 @@ export class BalloonView {
 
   /** Poloha: x,z = střed koše, y = spodek koše (nebo povrch při ležení). */
   setPose(x, y, z, headingDeg) {
+    const P = this.pose;
+    // ležící plášť závisí na poloze a natočení koše: při změně se tvar přepočítá
+    if (this.terrain && (Math.abs(P.x - x) + Math.abs(P.y - y) + Math.abs(P.z - z) > 0.02 || Math.abs(P.h - headingDeg) > 0.2)) this.state.inflation = -1;
+    P.x = x; P.y = y; P.z = z; P.h = headingDeg;
     this.root.position.set(x, y, z);
     this.root.rotation.y = -headingDeg * Math.PI / 180;
   }

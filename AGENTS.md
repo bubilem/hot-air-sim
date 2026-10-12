@@ -154,6 +154,8 @@ doc/                         # Dokumentace pro žáky a učitele
 - Entity mají (podle možností) `update(dt)`, `getMesh()`, `reset()`; vizuál vzniká v `*View.js` / `buildMesh()`.
 - **Těžiště je u koše:** `BalloonView.setShape` otáčí celou sestavu kolem spodní hrany koše; poddajný plášť se při
   ležení opírá o zem. Platí pro start i přistání.
+  Při přistání dostane pohled funkci výšky terénu (`BalloonView.setTerrain`): ležící plášť se vrchol po vrcholu přilepí
+  na svah (`drape`), ať neleží vodorovně ve vzduchu nebo v kopci.
 - **Plášť** je jedna `BufferGeometry` z profilu; vrcholy se interpolují podle `inflation`, `upright`, `unroll`.
   Žádné shape keys, žádné nové assety.
 

@@ -9,6 +9,9 @@ import { ChaseVehicle } from '../entities/ChaseVehicle.js';
 import { vecToBearing } from '../core/WindModel.js';
 
 const TRAILER_OFFSET = CHASE.trailerOffset;
+const REST_RADIUS = 1.1;   // m: koš (i převrácený na bok) zabírá kolem středu přibližně tuto plochu
+const REST_SINK = 0.1;     // m: o kolik se smí koš zabořit do trávy
+const RING = Array.from({ length: 8 }, (_, i) => [Math.cos(i * Math.PI / 4) * REST_RADIUS, Math.sin(i * Math.PI / 4) * REST_RADIUS]);
 const DEG = Math.PI / 180;
 const smooth = (x) => { const k = Math.min(1, Math.max(0, x)); return k * k * (3 - 2 * k); };
 const angDiff = (a, b) => ((b - a + 540) % 360) - 180;
@@ -30,6 +33,7 @@ export class LandingPhase {
     const app = this.app, b = app.balloon, p = b.physics, w = app.world;
     app.controls.setVisible(false);
     app.controls.enabled = false;
+    b.view.setTerrain((x, z) => w.biomes.groundHeight(x, z));   // vyfouklý plášť leží na svahu, ne ve vzduchu ani v kopci
 
     const biome = app.sample(p.pos.x, p.pos.z);
     this.result = classifyTouchdown(touch, biome);
@@ -97,6 +101,17 @@ export class LandingPhase {
     this.ui = null;
   }
 
+  /**
+   * Výška, na které koš odpočívá: nejvyšší povrch pod jeho půdorysem (střed a okruh kolem něj), aby se na svahu
+   * převrácený koš nezabořil do kopce. `key`: 'surface' (střechy, koruny) nebo 'ground' (holá země pod stromy).
+   */
+  supportY(x, z, key) {
+    const app = this.app;
+    let h = app.sample(x, z)[key];
+    for (const [dx, dz] of RING) h = Math.max(h, app.sample(x + dx, z + dz)[key]);
+    return h - REST_SINK;
+  }
+
   buildUi() {
     const ok = this.success;
     const detail = `${t('landing.speed')}: ${this.touch.vy.toFixed(1)} m/s ↓ · ${this.touch.vxz.toFixed(1)} m/s →`;
@@ -126,7 +141,7 @@ export class LandingPhase {
     p.pos.x += this.dir.x * this.slideV * dt;
     p.pos.z += this.dir.z * this.slideV * dt;
     this.slideV = Math.max(0, this.slideV - LANDING.dragFriction * dt);
-    p.pos.y = app.sample(p.pos.x, p.pos.z).surface;
+    p.pos.y = this.supportY(p.pos.x, p.pos.z, 'surface');
   }
 
   update(dt) {
@@ -146,7 +161,13 @@ export class LandingPhase {
     p.heading += dh * Math.min(1, dt * 1.5);
 
     const s = app.sample(p.pos.x, p.pos.z);
-    if (this.kind === KIND.FOREST) p.pos.y = Math.max(s.ground, p.pos.y - LANDING.treeFallSpeed * dt);   // balon se z korun propadne na zem
+    // Koš padá (z korun stromů, po nárazu pláště) nebo se po dosednutí zvedne na vrch svahu, aby se nezabořil
+    if (this.kind === KIND.COLLISION) p.pos.y = Math.max(this.supportY(p.pos.x, p.pos.z, 'surface'), p.pos.y - LANDING.collisionFallSpeed * dt);   // zničený balon padá
+    else if (this.kind === KIND.FOREST) p.pos.y = Math.max(this.supportY(p.pos.x, p.pos.z, 'ground'), p.pos.y - LANDING.treeFallSpeed * dt);   // balon se z korun propadne na zem
+    else if (this.slideV <= 0) {
+      const rest = this.supportY(p.pos.x, p.pos.z, 'surface');
+      p.pos.y += (rest - p.pos.y) * Math.min(1, dt * 8);
+    }
     b.syncView(s.ground);
 
     // Startovní vybavení mizí (zmenšení)

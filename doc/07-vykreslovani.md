@@ -274,6 +274,9 @@ kde `kt`, `kw`, `kl` jsou **funkce** `inflation` a `unroll`. K tomu přibývá:
 
 - **Vyklenutí ležícího pláště** nad zem (`archR`, `sup`) a **„klesnutí“ látky na zem** (`sag`), aby plášť
   ležel na trávě a ne ve vzduchu ani pod zemí.
+- **Plášť na svahu (`drape`)**: model ležícího pláště předpokládá vodorovnou zem v úrovni koše. Při přistání dostane
+  `BalloonView` funkci výšky terénu (`setTerrain`, síť 1,5 m kolem koše, bilineárně) a každý vrchol posune svisle o rozdíl
+  výšky terénu proti úrovni koše. U ústí je vliv nulový (plášť drží u koše), vrchol nikdy neleží pod terénem.
 - **Ořez pod zem**: prstenec se zvedne, aby jeho nejnižší bod neprorazil povrch (`ringMin < GROUND`).
 - **Rotace celého rigu** kolem hrany koše (matice 2D rotace v rovině xy, `phi`).
 
