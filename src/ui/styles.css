@@ -108,9 +108,48 @@ small { color: var(--muted); font-size: 11px; font-weight: 600; letter-spacing: 
 .bar { height: 8px; background: rgba(255,255,255,.14); overflow: hidden; margin-top: 4px; }
 .bar > div { height: 100%; background: var(--blue-1); width: 100%; transition: width .2s; }
 
-.hud-msg {
-  position: absolute; top: 18%; left: 0; right: 0; text-align: center;
-  font-weight: 700; font-size: 28px; color: var(--danger); text-shadow: 0 2px 8px rgba(0,0,0,.6);
+.hud-vignette {
+  position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .6s;
+  background: radial-gradient(ellipse at center, rgba(0,0,0,0) 25%, #000 85%);
+}
+/* Přístroje: přehřátí a poškození pláště */
+.hud-side .hot b { color: var(--danger); animation: alert-blink 1s ease-in-out infinite; }
+.hud-side .dmg b { display: flex; align-items: center; gap: 6px; color: var(--yellow-1); }
+.hud-side .dmg svg { width: 18px; height: 18px; }
+
+/* ---------- Hlášení pilotovi (ui/Alerts.js) ----------
+   Ploché karty úrovně 2: barevný blok s ikonou, titulek a jedna věta. Vpravo od přístrojů (na výšku telefonu),
+   na širokých displejích uprostřed nahoře. Krátká hlášení mají dole ubývající proužek. */
+.hud-alerts {
+  position: absolute; top: max(108px, calc(env(safe-area-inset-top) + 96px)); left: 154px; right: 12px;
+  display: grid; gap: 6px; align-content: start; pointer-events: none;
+}
+@media (min-width: 900px) {
+  .hud-alerts { top: max(12px, env(safe-area-inset-top)); left: 50%; right: auto; width: clamp(280px, calc(100vw - 640px), 400px); transform: translateX(-50%); }
+}
+.alert {
+  --lv: var(--danger); --lv-ink: #fff;
+  position: relative; overflow: hidden; display: grid; grid-template-columns: 44px 1fr;
+  background: var(--float-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, .25);
+  animation: alert-in .25s ease-out;
+}
+.alert.warning { --lv: var(--yellow-1); --lv-ink: var(--bg-top); }
+.alert.info { --lv: var(--blue-1); --lv-ink: var(--bg-top); }
+.alert .ai { display: grid; place-items: center; background: var(--lv); color: var(--lv-ink); }
+.alert.danger .ai { animation: alert-blink 1s ease-in-out infinite; }
+.alert .at { padding: 8px 12px; min-width: 0; }
+.alert strong { display: block; font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--lv); }
+.alert span { display: block; margin-top: 2px; font-size: 13px; font-weight: 400; line-height: 1.3; color: rgba(255, 255, 255, .85); }
+.alert .ttl { position: absolute; left: 44px; right: 0; bottom: 0; height: 3px; background: var(--lv); transform-origin: left; animation: alert-ttl var(--ttl) linear forwards; }
+.alert.out { animation: alert-out .22s ease-in forwards; }
+@keyframes alert-in { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+@keyframes alert-out { to { opacity: 0; transform: translateY(-8px); } }
+@keyframes alert-ttl { to { transform: scaleX(0); } }
+@keyframes alert-blink { 50% { opacity: .55; } }
+@media (prefers-reduced-motion: reduce) {
+  .alert, .alert .ai, .hud-side .hot b { animation: none; }
+  .alert .ttl { animation-duration: 0s; }
 }
 
 /* ---------- Ovládací prvky ---------- */

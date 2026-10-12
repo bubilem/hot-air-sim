@@ -139,7 +139,7 @@ src/
 │   ├── LandingPhase.js, LandingResolver.js, CelebrationPhase.js
 ├── ui/
 │   ├── brand.js             # Logo (symbol školy) a název aplikace
-│   ├── HUD.js, PlanScreen.js, ResultScreen.js, SettingsMenu.js, Encyclopedia.js, TouchControls.js
+│   ├── HUD.js, Alerts.js, PlanScreen.js, ResultScreen.js, SettingsMenu.js, Encyclopedia.js, TouchControls.js
 │   └── styles.css           # Design systém školy (sekce 7)
 ├── audio/                   # SynthAudio.js (WebAudio), MusicPlayer.js
 ├── i18n/                    # index.js (t, setLang), cs.js, en.js, wiki.cs.js, wiki.en.js

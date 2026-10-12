@@ -4,6 +4,7 @@ import { PHYSICS } from '../config/GameConfig.js';
 import { vecToBearing } from '../core/WindModel.js';
 import { LOGO_HTML } from './brand.js';
 import { ICON_SETTINGS, ICON_HOME, ICON_WIKI, bindHomeButton } from './SettingsMenu.js';
+import { AlertCenter, ALERTS, ALERT_ICONS } from './Alerts.js';
 
 const COMPASS = ['S', 'SV', 'V', 'JV', 'J', 'JZ', 'Z', 'SZ'];
 const STORE_KEY = 'hotairsim.windLadder';
@@ -21,6 +22,7 @@ export class HUD {
     this.el = document.createElement('div');
     this.el.className = 'hud';
     this.el.innerHTML = `
+      <div class="hud-vignette" data-f="vig"></div>
       <div class="hud-top">
         <div class="hud-left">
           <div class="logo">${LOGO_HTML}</div>
@@ -41,14 +43,17 @@ export class HUD {
       <div class="hud-side panel">
         <div><small>${t('hud.altitude')}</small><b><span data-f="alt">0</span> m</b></div>
         <div><small>${t('hud.vsi')}</small><b><span data-f="vsi">0.0</span> m/s</b></div>
-        <div><small>${t('hud.temp')}</small><b><span data-f="temp">0</span> °C</b></div>
+        <div data-f="temprow"><small>${t('hud.temp')}</small><b><span data-f="temp">0</span> °C</b></div>
+        <div><small>${t('hud.tempOut')}</small><b><span data-f="tempout">0</span> °C</b></div>
+        <div class="dmg" data-f="dmg" style="display:none"><small>${t('hud.hull')}</small><b>${ALERT_ICONS.tear}<span data-f="dmgn">0</span></b></div>
         <div class="gasbar"><small>${t('hud.gas')}</small><div class="bar"><div data-f="gas"></div></div></div>
-      </div>
-      <div class="hud-msg" data-f="msg"></div>`;
+      </div>`;
     root.appendChild(this.el);
     this.f = {};
     this.el.querySelectorAll('[data-f]').forEach((n) => { this.f[n.dataset.f] = n; });
     this.cacheText = {};
+    this.alerts = new AlertCenter(this.el);
+    this.prevHoles = 0;
     this.ladderSig = '';
     this.open = loadOpen();
     this.applyOpen();
@@ -98,10 +103,12 @@ export class HUD {
     }).join('') + `<div class="lnote">${t('hud.ladder.note')}</div>`;
   }
 
-  update({ agl, vy, tempIn, gasFrac, wind, cameraYaw, target, edge, layers, altStart, fire = 0, holes = 0 }) {
+  update({ agl, vy, tempIn, gasFrac, wind, cameraYaw, target, edge, layers, altStart, fire = 0, holes = [], contact = false, tempOut = 0, hypoxia = 0, unconscious = false, thin = false, ceiling = false }) {
     this.set('alt', Math.round(agl));
     this.set('vsi', (vy >= 0 ? '+' : '') + vy.toFixed(1));
     this.set('temp', Math.round(tempIn));
+    this.set('tempout', Math.round(tempOut));
+    this.f.vig.style.opacity = unconscious ? '0.92' : (hypoxia * 0.75).toFixed(2);
     this.f.gas.style.width = `${Math.round(gasFrac * 100)}%`;
     this.f.gas.style.background = gasFrac < 0.2 ? 'var(--danger)' : '';
     const sp = Math.hypot(wind.x, wind.z) * 3.6;
@@ -117,12 +124,25 @@ export class HUD {
       this.f.tarrow.style.transform = `rotate(${(target.bearing - cameraYaw - 90).toFixed(0)}deg)`;
     }
 
-    let msg = '';
-    if (fire > 0) msg = t('hud.fire');
-    else if (edge) msg = t('hud.edge');
-    else if (tempIn >= PHYSICS.alarmTemp) msg = t('hud.overheat');
-    else if (gasFrac <= 0) msg = t('hud.nogas');
-    else if (holes > 0) msg = t('hud.holes');
-    this.set('msg', msg);
+    // Stav přístrojů: přehřátá teplota a počet poškození pláště
+    const overheat = tempIn >= PHYSICS.alarmTemp;
+    this.f.temprow.classList.toggle('hot', overheat);
+    this.f.dmg.style.display = holes.length ? '' : 'none';
+    this.set('dmgn', holes.length);
+
+    // Nové poškození: jednorázové hlášení (při novém letu se počítadlo vynuluje)
+    if (holes.length > this.prevHoles) this.alerts.flash(holes[holes.length - 1].kind === 'tear' ? ALERTS.tear : ALERTS.burn, 6);
+    this.prevHoles = holes.length;
+
+    const active = [];
+    if (unconscious) active.push(ALERTS.passedout);
+    if (fire > 0) active.push(ALERTS.fire);
+    else if (overheat) active.push(ALERTS.overheat);
+    if (contact) active.push(ALERTS.contact);
+    if (edge) active.push(ALERTS.edge);
+    if (gasFrac <= 0) active.push(ALERTS.nogas);
+    if (thin) active.push(ALERTS.thin);
+    if (ceiling) active.push(ALERTS.ceiling);
+    this.alerts.update(active);
   }
 }

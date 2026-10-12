@@ -207,13 +207,34 @@ Odrážkou je **trojúhelník s hrotem dolů** ve stylu loga. Obecné seznamy ma
 `kbd` a `.kh` (nápověda kláves na tlačítkách) mají poloprůhledné pozadí a spodní stín vytvářející „tlačítko
 klávesy“ bez rámečku. Nápověda se zobrazuje **jen tam, kde je myš** (`@media (hover: hover) and (pointer: fine)`).
 
+### Hlášení pilotovi (`.alert`)
+
+Za letu se důležité stavy (přehřátí, požár, trhlina v plášti, řídký vzduch, došel plyn…) nezobrazují jako text přes
+obrazovku, ale jako **plochá karta úrovně 2** (`--float-bg`, `blur(20px)`, stín úrovně 2, `border-radius: 0`).
+Karta má vlevo **barevný blok s ikonou** (barva = závažnost), uprostřed **verzálkový titulek** a pod ním jednu větu.
+
+| Závažnost | Blok a titulek | Příklad |
+| :-- | :-- | :-- |
+| `danger` | `--danger`, ikona pulzuje (průhlednost, ne záře) | Požár pláště, Přehřátí, Pilot omdlel |
+| `warning` | `--yellow-1`, tmavá ikona | Trhlina, Řídký vzduch, Došel plyn, Okraj mapy |
+| `info` | `--blue-1` | Strop |
+
+Chování řídí `src/ui/Alerts.js` (`AlertCenter`): **trvalé stavy** trvají, dokud platí; **jednorázové události**
+(nová trhlina) zmizí po několika sekundách a mají dole ubývající proužek; viditelné jsou nejvýš tři karty, nejzávažnější
+nahoře. Na výšku telefonu stojí karty vpravo od přístrojů, od šířky 900 px uprostřed nahoře. Přístroje hlášení doplňují:
+teplota při přehřátí zčervená a bliká, v postranním panelu přibude řádek „Plášť“ s počtem poškození.
+Texty jsou v `i18n/` (`alert.<id>.title` a `alert.<id>.text`); `prefers-reduced-motion` vypíná animace.
+
+**Přidání nového hlášení:** přidejte záznam do `ALERTS` (id, závažnost, ikona z `ALERT_ICONS`), dvojici textů do `cs.js` a
+`en.js` a podmínku do `HUD.update()` (trvalý stav) nebo zavolejte `alerts.flash(ALERTS.x, sekundy)` (událost).
+
 ### Stavové barvy
 
 | Stav | Barva | Příklad |
 | :-- | :-- | :-- |
 | úspěch | `--green-2` | „Měkké přistání!“ |
 | varování | `--yellow-1` | penalizace za přistání na poli, těžký koš |
-| chyba / havárie | `--danger` | „Havárie“, „PŘEHŘÁTÍ!“, přetížený balon |
+| chyba / havárie | `--danger` | „Havárie“, hlášení „Přehřátí“ a „Požár pláště“, přetížený balon |
 | informace | `--blue-1` | cíl, vítr |
 
 ## 9.7 Logo a značka aplikace
