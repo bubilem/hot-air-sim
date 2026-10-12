@@ -17,6 +17,7 @@ export class TouchControls {
     this.onCamera = null;
     this.onZoom = null;   // (směr) => void; -1 přiblížit, +1 oddálit
     this.keys = new Set();
+    this.zoomKeys = new Map();   // e.code -> časovač opakovaného přibližování klávesou + / −
     this.enabled = true;
 
     this.el = document.createElement('div');
@@ -24,9 +25,9 @@ export class TouchControls {
     this.el.innerHTML = `
       <div class="ctl-left">
         <button data-k="left" class="btn round" style="grid-area: 1 / 1" aria-label="${t('hud.rotL')}">⟲<kbd class="kh">A</kbd></button>
-        <button data-k="zoomIn" class="btn round zoom" style="grid-area: 1 / 2" aria-label="${t('hud.zoomIn')}">+</button>
+        <button data-k="zoomIn" class="btn round zoom" style="grid-area: 1 / 2" aria-label="${t('hud.zoomIn')}">+<kbd class="kh">+</kbd></button>
         <button data-k="right" class="btn round" style="grid-area: 2 / 1" aria-label="${t('hud.rotR')}">⟳<kbd class="kh">D</kbd></button>
-        <button data-k="zoomOut" class="btn round zoom" style="grid-area: 2 / 2" aria-label="${t('hud.zoomOut')}">−</button>
+        <button data-k="zoomOut" class="btn round zoom" style="grid-area: 2 / 2" aria-label="${t('hud.zoomOut')}">−<kbd class="kh">−</kbd></button>
         <button data-k="cam" class="btn round cam" style="grid-area: 2 / 3" aria-label="${t('hud.camera')}">${CAM_ICONS.chase}<kbd class="kh">C</kbd></button>
       </div>
       <div class="ctl-right">
@@ -57,16 +58,42 @@ export class TouchControls {
       btn.addEventListener('contextmenu', (e) => e.preventDefault());
     }
 
+    // Klávesy + a − (podle znaku, takže fungují na každé rozložení i na numerické klávesnici); drží se jako tlačítka
+    const zoomDir = (e) => {
+      if (e.ctrlKey || e.metaKey || e.altKey) return 0;
+      if (e.key === '+' || e.key === '=' || e.code === 'NumpadAdd') return -1;
+      if (e.key === '-' || e.key === '_' || e.code === 'NumpadSubtract') return 1;
+      return 0;
+    };
+    const stopZoomKey = (code) => {
+      const m = this.zoomKeys.get(code);
+      if (!m) return;
+      clearInterval(m.timer);
+      this.zoomKeys.delete(code);
+      this.el.querySelector(`[data-k="${m.btn}"]`)?.classList.remove('active');
+    };
+
     window.addEventListener('keydown', (e) => {
       if (e.target && /^(INPUT|TEXTAREA)$/.test(e.target.tagName)) return;
+      const zd = zoomDir(e);
+      if (zd) {
+        e.preventDefault();
+        if (this.enabled && !this.zoomKeys.has(e.code)) {
+          this.onZoom?.(zd);
+          const btn = zd < 0 ? 'zoomIn' : 'zoomOut';
+          this.el.querySelector(`[data-k="${btn}"]`)?.classList.add('active');
+          this.zoomKeys.set(e.code, { btn, timer: setInterval(() => this.onZoom?.(zd), 50) });
+        }
+        return;
+      }
       if (e.repeat) return;
       this.keys.add(e.code);
       if (e.code === 'KeyC') this.onCamera?.();
       this.refresh();
       if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
     });
-    window.addEventListener('keyup', (e) => { this.keys.delete(e.code); this.refresh(); });
-    window.addEventListener('blur', () => { this.keys.clear(); this.refresh(); });
+    window.addEventListener('keyup', (e) => { this.keys.delete(e.code); stopZoomKey(e.code); this.refresh(); });
+    window.addEventListener('blur', () => { this.keys.clear(); for (const code of [...this.zoomKeys.keys()]) stopZoomKey(code); this.refresh(); });
   }
 
   /** Ikona tlačítka kamery podle aktuálního pohledu ('chase' = na balon, 'cockpit' = z koše). */

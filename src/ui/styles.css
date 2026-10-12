@@ -439,7 +439,7 @@ kbd, .kh {
 /* Nápověda kláves přímo na tlačítkách – jen tam, kde je myš / klávesnice */
 .btn .kh { display: none; position: absolute; right: 8px; bottom: 6px; background: rgba(0,0,0,.28); color: inherit; }
 .btn { position: relative; }
-.btn.round .kh { right: 50%; transform: translateX(50%); bottom: 4px; }
+.btn.round .kh { right: 4px; bottom: 3px; }
 @media (hover: hover) and (pointer: fine) { .btn .kh { display: block; } }
 .btn.small .kh { bottom: -7px; font-size: 10px; padding: 2px 5px; min-width: 0; }
 

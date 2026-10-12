@@ -102,6 +102,7 @@ Za celý start odpovídají dvě proměnné: `inflation` (naplnění pláště 0
 - `S` / `↓` – paraventil,
 - `A` / `D` / `←` / `→` – otáčení koše,
 - `C` – přepnutí kamery (zvenku / z koše),
+- `+` / `−` – přiblížení a oddálení kamery (drží se),
 - tažení myší nebo prstem – rozhlížení, kolečko nebo štípnutí – přiblížení,
 - `M` – ztlumení zvuku.
 

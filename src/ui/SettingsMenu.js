@@ -37,7 +37,7 @@ const HELP = [
   [['C'], 'help.camera'],
   [['M'], 'help.mute'],
   [['key.drag'], 'help.look'],
-  [['key.wheel'], 'help.zoom'],
+  [['key.wheel', '+', '−'], 'help.zoom'],
 ];
 
 export class SettingsMenu {

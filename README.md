@@ -21,7 +21,7 @@ Rozhraní je česky a anglicky. Vzhled vychází z [design systému **VOŠ, SPŠ
 4. **Přistání** – podle svislé a vodorovné rychlosti měkké, tvrdé nebo havárie; voda, les a skála = neúspěch.
 5. **Oslava** – křest sektem, titul a stažitelné osvědčení (PNG).
 
-**Ovládání:** `Mezerník` / `W` hořák · `S` paraventil · `A` `D` rotace · `C` kamera · `M` ztlumit zvuk ·
+**Ovládání:** `Mezerník` / `W` hořák · `S` paraventil · `A` `D` rotace · `C` kamera · `+` `−` přiblížení · `M` ztlumit zvuk ·
 tažení = rozhlížení · kolečko / štípnutí = přiblížení. Na telefonu dotyková tlačítka.
 
 ---

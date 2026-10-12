@@ -248,7 +248,7 @@ výklad v `doc/09-design-system.md`). Závazná pravidla:
   - žádné real-time stíny; balon vrhá kruhový falešný stín;
   - `pointerdown`/`pointerup` místo `click` u ovládacích prvků, `touch-action: none`.
 - Dotyková tlačítka pro ovládání palcem min. 56 px; podpora na výšku i na šířku; klávesnice: `Mezerník`/`W` hořák,
-  `S` paraventil, `A`/`D` rotace, `C` kamera, `M` ztlumení.
+  `S` paraventil, `A`/`D` rotace, `C` kamera, `+`/`−` přiblížení, `M` ztlumení. Nápověda klávesy je na každém ovládacím tlačítku v pravém dolním rohu.
 - Zvuk spouštět až po první interakci (autoplay politika).
 
 ---
