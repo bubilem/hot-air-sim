@@ -1,7 +1,7 @@
 // Jediný zdroj pravdy o terénu: výška, sklon a biom (pro vizuál i herní logiku).
 // Bez závislosti na Three.js.
 import { createNoise2D } from 'simplex-noise';
-import { WORLD, MASSIFS, TERRAIN, TOWNS, PONDS, TARGET_CLEARING, DOMINANTS, HRADEK, BEZDEZ } from '../config/GameConfig.js';
+import { WORLD, MASSIFS, TERRAIN, TOWNS, PONDS, TARGET_CLEARING, DOMINANTS, HRADEK, BEZDEZ, TROSKY } from '../config/GameConfig.js';
 
 function mulberry32(a) {
   return function () {
@@ -119,13 +119,28 @@ export class Biomes {
     return out;
   }
 
-  /** Samostatné dominanty (kostel, Hrádek, Bezděz) na kopci: plošina na výšce místa, mýtina v lese a překážky pro kolize. */
+  /** Překážky hradu Trosky: každá skála (válec) + kamenná věž na ní, mezi nimi hradba. */
+  troskyLandmarks(cx, cz, a) {
+    const rot = (lx, lz) => [cx + lx * Math.cos(a) - lz * Math.sin(a), cz + lx * Math.sin(a) + lz * Math.cos(a)];
+    const T = TROSKY, out = [];
+    for (const k of [T.panna, T.baba]) {
+      const [x, z] = rot(k.x, k.z);
+      out.push({ x, z, r: k.r * 1.1, h: k.h });                                          // skalní sloup
+      out.push({ x, z, r: k.tower.s * 0.75 + 1, h: k.h + k.tower.h + T.merlon.h });      // kamenná věž nahoře
+    }
+    const p = T.panna, b = T.baba, len = b.x - b.r - (p.x + p.r), mx = (p.x + p.r + b.x - b.r) / 2, mz = (p.z + b.z) / 2;
+    for (const f of [-0.3, 0.3]) { const [x, z] = rot(mx + f * len, mz); out.push({ x, z, r: len * 0.3, h: T.wall.h }); }
+    return out;
+  }
+
+  /** Samostatné dominanty (kostel, Hrádek, Bezděz, Trosky) na kopci: plošina na výšce místa, mýtina v lese a překážky pro kolize. */
   setDominants(list) {
     this.dominants = list.map((c) => ({ type: c.type ?? 'church', x: c.x, z: c.z, a: c.a ?? 0, h: this.heightBeforeTowns(c.x, c.z) }));
     for (const c of this.dominants) {
-      const parts = { hradek: this.hradekLandmarks, bezdez: this.bezdezLandmarks }[c.type] ?? this.churchLandmarks;
+      const parts = { hradek: this.hradekLandmarks, bezdez: this.bezdezLandmarks, trosky: this.troskyLandmarks }[c.type] ?? this.churchLandmarks;
       c.landmarks = parts.call(this, c.x, c.z, c.a);
       this.clearings.push({ x: c.x, z: c.z, r: DOMINANTS[c.type].clearing });
+      c.rockR = DOMINANTS[c.type].rockR;
     }
   }
 
@@ -288,6 +303,12 @@ export class Biomes {
     return out * (1 - c) + WORLD.riverBed * c;
   }
 
+  /** Základní vlny terénu (velké + střední + malé) bez kopečků, hor a úprav. */
+  baseNoise(x, z) {
+    const T = this.terrainCfg;
+    return T.base + this.nBig(x / 1200, z / 1200) * T.bigAmp + this.nMid(x / 350, z / 350) * T.midAmp + this.nSmall(x / 120, z / 120) * 2;
+  }
+
   /** Výška čistého šumu (bez rovného startu, okraje mapy, masivů, řeky a měst). */
   noiseHeight(x, z) {
     const T = this.terrainCfg;
@@ -302,7 +323,10 @@ export class Biomes {
     if (T.ridge) h += this.ridgeHeight(x, z);
     for (const p of T.peaks || []) {   // osamělé kopce: plochý vrchol a svahy
       const d = Math.hypot(x - p.x, z - p.z);
-      if (d < p.r) h += p.height * (1 - smooth(p.r * 0.25, p.r, d));
+      if (d < p.r) {
+        if (p.level) h += (this.baseNoise(p.x, p.z) - this.baseNoise(x, z)) * (1 - smooth(p.r * 0.2, p.r * 0.9, d));   // úbočí se vyrovná na výšku podhůří pod vrcholem: kopec je souměrný a vrchol nejvyšší
+        h += p.height * (1 - smooth(p.r * 0.25, p.r, d));
+      }
     }
     return h;
   }
@@ -366,6 +390,7 @@ export class Biomes {
     if (this.river && this.riverDistance(x, z) < this.river.reach + M.riverClear) return 0;
     const nt = this.nearestTown(x, z);
     if (nt && nt.d < nt.t.r * TOWNS.clearMassif) return 0;
+    for (const p of this.terrainCfg.peaks || []) if (Math.hypot(x - p.x, z - p.z) < p.r * 1.15) return 0;   // na osamělém kopci (a těsně pod ním) masivy nejsou: kopec zůstává nejvyšší
     const v = this.nRock(x / M.scale + 40, z / M.scale - 25) * 0.5 + 0.5
       + this.nRock(x / 170 - 8, z / 170 + 13) * M.detail;
     return smooth(M.threshold, M.threshold + M.edge, v) * f;
@@ -399,6 +424,7 @@ export class Biomes {
   terrainType(x, z, height, slope) {
     if (height < WORLD.waterLevel) return BIOME.WATER;
     if (this.towns.length && this.townAt(x, z) > 0) return BIOME.TOWN;
+    for (const c of this.dominants) if (c.rockR && Math.hypot(x - c.x, z - c.z) < c.rockR) return BIOME.ROCK;   // holá skála kolem skalních věží
     const T = this.terrainCfg;
     if (slope > WORLD.rockSlopeDeg || height > T.rockLine || (this.massifs && this.massifAt(x, z) > this.massifCfg.rockMin)) return BIOME.ROCK;
     if (height < T.treeLine && this.forestNoise(x, z) >= 0.52 && slope < 26) return BIOME.FOREST;

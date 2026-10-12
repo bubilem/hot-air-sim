@@ -78,12 +78,15 @@ export const SITES = [
     id: 'raj',
     name: { cs: 'Český ráj – Skalní města', en: 'Bohemian Paradise – Rock Cities' },
     desc: {
-      cs: 'Pískovcové věže a plošiny vyrůstají z lesů a luk, mezi nimi se krčí jediné městečko. Vítr se s výškou stáčí z jihovýchodu na jihozápad. Pozor, náraz do skály končí pádem.',
-      en: 'Sandstone towers and plateaus rise out of forests and meadows, with a single small town tucked between them. The wind turns from southeast to southwest with height. Careful: hitting a rock ends in a crash.',
+      cs: 'Pískovcové věže a plošiny vyrůstají z lesů a luk, mezi nimi se krčí jediné městečko a na nejvyšší hoře se tyčí dvě skalní věže hradu Trosky. Vítr se s výškou stáčí z jihovýchodu na jihozápad. Pozor, náraz do skály končí pádem.',
+      en: 'Sandstone towers and plateaus rise out of forests and meadows, with a single small town tucked between them and the two rock towers of Trosky castle on the highest hill. The wind turns from southeast to southwest with height. Careful: hitting a rock ends in a crash.',
     },
     seed: 4711,
     elevation: 290,
     massifs: { height: 34 },   // nižší skalní plošiny než dřív (55 m), ať se krajina liší od Lužických hor
+    // Nejvyšší hora ráje (Trosky): osamělý kopec; les roste vysoko po svazích, skála je až na vrcholu
+    terrain: { treeLine: 160, rockLine: 175, peaks: [{ x: 1600, z: 580, r: 420, height: 105, level: true }] },
+    dominants: [{ type: 'trosky', x: 1600, z: 580, a: 0.5 }],   // hrad Trosky: dvě skalní věže s kamennými věžemi
     towns: [{ x: 1000, z: 900, r: 170 }],   // jediné městečko
     wind: [
       { alt: 0, speed: 1.2, bearing: 120 },

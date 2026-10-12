@@ -1,7 +1,7 @@
 // Vizuální reprezentace terénu: mřížka s vertexovými barvami, voda, instancované stromy.
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { WORLD, GRASS_DETAIL, TERRAIN_SOFT, TOWNS, HRADEK, BEZDEZ } from '../config/GameConfig.js';
+import { WORLD, GRASS_DETAIL, TERRAIN_SOFT, TOWNS, HRADEK, BEZDEZ, TROSKY } from '../config/GameConfig.js';
 import { COLORS } from '../config/Colors.js';
 import { BIOME } from './Biomes.js';
 
@@ -334,7 +334,7 @@ uniform vec2 uGrassFade;`)
 
   /** Samostatné dominanty mimo města (Biomes.dominants), např. na kopci. */
   buildDominants() {
-    for (const c of this.biomes.dominants) this.group.add({ hradek: this.buildHradek, bezdez: this.buildBezdez }[c.type]?.call(this, c) ?? this.buildChurch(c));
+    for (const c of this.biomes.dominants) this.group.add({ hradek: this.buildHradek, bezdez: this.buildBezdez, trosky: this.buildTrosky }[c.type]?.call(this, c) ?? this.buildChurch(c));
   }
 
   /**
@@ -419,6 +419,50 @@ uniform vec2 uGrassFade;`)
     box(w.len, w.h, w.thick, w.x, 0, w.z, COLORS.bezdezWall);
     box(w.len, 0.6, w.thick + 0.5, w.x, w.h, w.z, COLORS.bezdezRoof);   // tmavé zakončení hradby
     round(B.smallTower.r, B.smallTower.h, B.smallTower.x, B.smallTower.z);
+    g.position.set(c.x, this.meshHeight(c.x, c.z) - 0.2, c.z);
+    g.rotation.y = -c.a;
+    return g;
+  }
+
+  /**
+   * Hrad Trosky: dvě skalní věže (nepravidelné zužující se sloupy se zubatým povrchem) s kamennými věžemi na vrcholech,
+   * dole je spojuje hradba. Skály jsou z modelu, protože výšková mřížka terénu je na ně příliš hrubá.
+   */
+  buildTrosky(c) {
+    const T = TROSKY, g = new THREE.Group();
+    const add = (geo, hex, x, y, z) => { const m = this.buildPart(geo, hex); m.position.set(x, y, z); g.add(m); return m; };
+    const hash = (a, b) => Math.abs(Math.sin(a * 127.1 + b * 311.7) * 43758.5453) % 1;
+    const rock = (k, seed) => {   // zužující se sloup; posun vrcholů závisí jen na poloze, takže spoj válce zůstane celistvý
+      const geo = new THREE.CylinderGeometry(k.r * T.rockTop, k.r * 1.3, k.h, 12, 7);
+      geo.translate(0, k.h / 2, 0);
+      const pos = geo.attributes.position;
+      for (let i = 0; i < pos.count; i++) {
+        const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
+        const bucket = ((Math.round(Math.atan2(z, x) / (Math.PI * 2) * 12) % 12) + 12) % 12;
+        const f = 1 + (hash(bucket + seed, Math.round(y / (k.h / 7))) - 0.5) * 2 * T.rockJitter;
+        pos.setXYZ(i, x * f, y, z * f);
+      }
+      geo.computeVertexNormals();
+      return geo;
+    };
+    const stoneTower = (k) => {   // kamenná věž na vrcholu skály: hranol, plochý vrch a cimbuří
+      const t = k.tower, M = T.merlon;
+      add(new THREE.BoxGeometry(t.s, t.h, t.s).translate(0, t.h / 2, 0), COLORS.troskyStone, k.x, k.h, k.z);
+      add(new THREE.BoxGeometry(t.s + 1, 0.8, t.s + 1).translate(0, 0.4, 0), COLORS.troskyStone, k.x, k.h + t.h, k.z);
+      for (let i = 0; i < 8; i++) {   // zuby cimbuří kolem okraje
+        const a = (i / 8) * Math.PI * 2, e = (t.s + 1) / 2 - M.size / 2;
+        const dx = Math.max(-e, Math.min(e, Math.cos(a) * e * 1.5)), dz = Math.max(-e, Math.min(e, Math.sin(a) * e * 1.5));
+        add(new THREE.BoxGeometry(M.size, M.h, M.size).translate(0, M.h / 2, 0), COLORS.troskyStone, k.x + dx, k.h + t.h + 0.8, k.z + dz);
+      }
+    };
+    [[T.panna, 1], [T.baba, 7]].forEach(([k, seed]) => {
+      add(rock(k, seed), COLORS.trosky, k.x, 0, k.z);
+      stoneTower(k);
+    });
+    const p = T.panna, b = T.baba;   // hradba mezi patami skal
+    const x0 = p.x + p.r * 1.1, x1 = b.x - b.r * 1.1, len = x1 - x0;
+    const w = add(new THREE.BoxGeometry(len, T.wall.h, T.wall.thick).translate(0, T.wall.h / 2, 0), COLORS.troskyStone, (x0 + x1) / 2, 0, (p.z + b.z) / 2);
+    w.rotation.y = -Math.atan2(b.z - p.z, x1 - x0);
     g.position.set(c.x, this.meshHeight(c.x, c.z) - 0.2, c.z);
     g.rotation.y = -c.a;
     return g;

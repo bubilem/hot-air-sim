@@ -46,11 +46,12 @@ export const TERRAIN = {
   rockLine: 100,       // m, nad touto výškou je holá skála
 };
 
-// Samostatné dominanty mimo města (lokalita s `dominants: [{ type, x, z, a }]`), obvykle na kopci; type = 'church' | 'hradek' | 'bezdez'
+// Samostatné dominanty mimo města (lokalita s `dominants: [{ type, x, z, a }]`), obvykle na kopci; type = 'church' | 'hradek' | 'bezdez' | 'trosky'
 export const DOMINANTS = {
   church: { padRadius: 24, clearing: 34 },   // rovná plošina pod stavbou (m) a mýtina v lese kolem (m)
   hradek: { padRadius: 28, clearing: 48 },
   bezdez: { padRadius: 58, clearing: 90 },
+  trosky: { padRadius: 60, clearing: 100, rockR: 62 },   // rockR: poloměr holé skály kolem věží (biom ROCK, bez lesa)
   padFade: 2.4,       // násobek poloměru plošiny, kde je terén zase původní
 };
 
@@ -78,6 +79,18 @@ export const BEZDEZ = {
   smallTower: { x: -50, z: 0, r: 3.4, h: 13 },
   windows: { w: 1.1, h: 2.2, count: 6, step: 5.6 },
   merlon: { h: 1.5, size: 1.3 },   // cimbuří na věžích: zuby kolem okraje plochého zakončení
+};
+
+// Hrad Trosky: dvě skalní věže (čedičové zbytky sopouchů) na vrcholu nejvyšší hory ráje, na každé kamenná věž; dole je spojuje hradba.
+// Lokální souřadnice: x podél hřebene, z k divákovi; y od vrcholu hory (srovnaného).
+// Skály nejsou z výškové mřížky (její krok ~31 m je na ně hrubý), ale z modelu: válec se zúženým vrchem a posunutými vrcholy.
+export const TROSKY = {
+  panna: { x: 0, z: 0, r: 11, h: 55, tower: { s: 8, h: 11 } },      // užší a vyšší věž
+  baba: { x: 46, z: 4, r: 15, h: 45, tower: { s: 10, h: 12 } },     // nižší a širší věž
+  wall: { h: 8, thick: 3 },           // hradba v úrovni paty skal mezi věžemi
+  rockTop: 0.78,                      // poloměr vrchu skály jako podíl poloměru paty (skála se zužuje vzhůru)
+  rockJitter: 0.16,                   // nepravidelnost povrchu skály (podíl poloměru)
+  merlon: { h: 1.4, size: 1.2 },      // cimbuří na kamenných věžích
 };
 
 

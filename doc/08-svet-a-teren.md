@@ -217,9 +217,9 @@ horách jsou dvě vesnice, v Českém ráji jedno městečko, jinde žádné.
 - **Přistání:** překážka je `surface = ground + Biomes.townObstacle(x, z)`: střechy a stromy `WORLD.townRoof` (9 m),
   věž kostela a komíny výš (landmarks). Dotyk ve městě je neúspěch (`KIND.TOWN`, „Přistání na střechách“).
 
-## 8.6c Samostatné dominanty (kostel, Hrádek, Bezděz)
+## 8.6c Samostatné dominanty (kostel, Hrádek, Bezděz, Trosky)
 
-Lokalita může mít `dominants: [{ type, x, z, a }]` (`type` = `'church'`, `'hradek'` nebo `'bezdez'`, poloha v metrech od startu, `a` = natočení v rad).
+Lokalita může mít `dominants: [{ type, x, z, a }]` (`type` = `'church'`, `'hradek'`, `'bezdez'` nebo `'trosky'`, poloha v metrech od startu, `a` = natočení v rad).
 V Lužických horách stojí na kopci severně od Varnsdorfu **Hrádek**, dominanta města (`Biomes.setDominants`):
 
 - pod ním je rovná plošina na výšce místa (`DOMINANTS.<type>.padRadius`), okolní les je vyčištěný mýtinou (`clearing`),
@@ -227,6 +227,12 @@ V Lužických horách stojí na kopci severně od Varnsdorfu **Hrádek**, domina
 - vykresluje ho `ProceduralTerrain.buildHradek` z primitiv podle konfigurace `GameConfig.HRADEK`: kamenný sokl, žlutý hlavní kvádr
   s červenou sedlovou střechou, **tři věže** s červenými jehlanovými střechami (velká, menší před ní, malá vlevo), **vížka přistavěná
   k velké věži**, červené pásy pod střechami a tmavá okna na průčelí. Barvy jsou v `COLORS.hradek*`.
+
+**Trosky** (Český ráj) stojí na nejvyšší hoře mapy (`terrain.peaks` s `level: true`: úbočí se vyrovná na výšku podhůří, takže je kopec
+souměrný a vrchol je nejvyšší bod; masivy na kopec nezasahují). Dvě skalní věže, **Panna** (užší, vyšší) a **Baba** (širší, nižší), nejsou
+z výškové mřížky (její krok ~31 m je na ně hrubý), ale z modelu: zužující se válec s posunutými vrcholy (`TROSKY.rockJitter`, posun závisí jen na poloze,
+takže spoj válce zůstává celistvý) a plochým stínováním. Na každé skále stojí kamenná věž s cimbuřím a dole je spojuje hradba. Kolem věží je holá
+skála (`DOMINANTS.trosky.rockR` → biom `ROCK`, přistání je neúspěch) a mýtina v lese. Rozměry jsou v `GameConfig.TROSKY`.
 
 Rozměry a polohy věží se mění jen v `HRADEK` (bez zásahu do kódu modelu). Typ `'church'` (kostel jako ve městě, `TOWNS.church`) zůstává k dispozici.
 

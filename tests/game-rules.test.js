@@ -4,7 +4,7 @@ import { scoreFlight } from '../src/core/Scoring.js';
 import { FlightPlan, estimateFlight } from '../src/core/FlightPlan.js';
 import { Biomes, BIOME } from '../src/world/Biomes.js';
 import { SITES, getSite, createBiomes } from '../src/world/Sites.js';
-import { WORLD, HRADEK } from '../src/config/GameConfig.js';
+import { WORLD, HRADEK, TROSKY } from '../src/config/GameConfig.js';
 import { titleFor } from '../src/core/Titles.js';
 import { readFileSync } from 'node:fs';
 
@@ -233,6 +233,25 @@ describe('Města a kopečky', () => {
     expect(c.landmarks.length).toBe(1 + HRADEK.towers.length + 1);       // hlavní kvádr, tři věže, vížka
     expect(HRADEK.towers).toHaveLength(3);
     expect(new Biomes(8123).dominants).toHaveLength(0);
+  });
+
+  it('Český ráj: hrad Trosky na nejvyšší hoře, holá skála kolem věží, věže jsou překážka, vlastní masivy na kopec nezasahují', () => {
+    const site = getSite('raj'), b = createBiomes(site), c = b.dominants[0];
+    expect(c.type).toBe('trosky');
+    let top = -Infinity;
+    for (let x = -2400; x <= 2400; x += 60) for (let z = -1600; z <= 3300; z += 60) top = Math.max(top, b.rawHeight(x, z));
+    expect(c.h).toBeGreaterThanOrEqual(top - 1);                    // nejvyšší místo mapy
+    for (let a = 0; a < 360; a += 45) for (const r of [0, 25, 50]) {
+      const s = b.sample(c.x + Math.cos(a * Math.PI / 180) * r, c.z + Math.sin(a * Math.PI / 180) * r);
+      expect(s.type).toBe(BIOME.ROCK);                              // vrchol je holá skála (přistání neúspěch)
+      expect(Math.abs(s.height - c.h)).toBeLessThan(1);
+    }
+    const tallest = c.landmarks.reduce((m, l) => (l.h > m.h ? l : m));
+    expect(tallest.h).toBeGreaterThan(TROSKY.panna.h + TROSKY.panna.tower.h);               // kamenná věž na vyšší skále
+    expect(b.sample(tallest.x, tallest.z).surface - b.sample(tallest.x, tallest.z).ground).toBeGreaterThan(60);
+    expect(TROSKY.panna.h).toBeGreaterThan(TROSKY.baba.h);                                   // Panna je vyšší, Baba širší
+    expect(TROSKY.baba.r).toBeGreaterThan(TROSKY.panna.r);
+    expect(b.massifAt(c.x + 200, c.z)).toBe(0);                     // masivy nepřerůstají kopec
   });
 
   it('kopečky zvyšují terén, výchozí terén zůstává stejný', () => {

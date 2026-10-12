@@ -38,6 +38,8 @@ export const COLORS = {
   hradekWindow: 0x3b2f2a,
   bezdezWall: 0xd3b06c,    // Bezděz: okrové zdivo, tmavá střecha
   bezdezRoof: 0x4a4540,
+  trosky: 0x6f6a62,        // Trosky: tmavá čedičová skála
+  troskyStone: 0x9a968d,   // kamenné věže na skalách
   chimney: 0x8d5a46,
   houseRoofs: [0x8a3b2e, 0x6e2f27, 0x3b3f45, 0x5a4636],
   water: 0x2c7fa8,
