@@ -101,7 +101,9 @@ export class Balloon {
   syncView(groundY) {
     const p = this.physics;
     const v = this.view;
+    v.setSag(p.deflation);
     v.setShape(this.inflation, this.upright, this.unroll, this.envUpright ?? this.upright);
+    v.setScorch(p.holes, p.fire, this.time);
     v.setPose(p.pos.x, p.pos.y, p.pos.z, p.heading);
     v.setBurn(Math.max(p.burning, this.testFlame), this.time);
     // stín se objevuje plynule se vztyčováním a nafouknutím balonu

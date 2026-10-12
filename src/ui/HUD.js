@@ -98,7 +98,7 @@ export class HUD {
     }).join('') + `<div class="lnote">${t('hud.ladder.note')}</div>`;
   }
 
-  update({ agl, vy, tempIn, gasFrac, wind, cameraYaw, target, edge, layers, altStart }) {
+  update({ agl, vy, tempIn, gasFrac, wind, cameraYaw, target, edge, layers, altStart, fire = 0, holes = 0 }) {
     this.set('alt', Math.round(agl));
     this.set('vsi', (vy >= 0 ? '+' : '') + vy.toFixed(1));
     this.set('temp', Math.round(tempIn));
@@ -118,9 +118,11 @@ export class HUD {
     }
 
     let msg = '';
-    if (edge) msg = t('hud.edge');
+    if (fire > 0) msg = t('hud.fire');
+    else if (edge) msg = t('hud.edge');
     else if (tempIn >= PHYSICS.alarmTemp) msg = t('hud.overheat');
     else if (gasFrac <= 0) msg = t('hud.nogas');
+    else if (holes > 0) msg = t('hud.holes');
     this.set('msg', msg);
   }
 }

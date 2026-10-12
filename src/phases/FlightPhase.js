@@ -80,6 +80,8 @@ export class FlightPhase {
       edge,
       layers: w.wind.layers,
       altStart: p.pos.y - w.startY,
+      fire: p.fire,
+      holes: p.holes.length,
     });
     app.audio.update({
       burn: p.burning,

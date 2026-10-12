@@ -122,7 +122,6 @@ this.flightTime += dt;
 
 let burn = input.burn || 0;
 if (this.gas <= 0) burn = 0;                    // bez plynu nelze hořet
-if (this.tempIn >= P.maxEnvelopeTemp) burn = 0; // bezpečnostní pojistka
 this.burning = burn;
 this.gas = Math.max(0, this.gas - P.gasRate * burn * dt);
 ```
@@ -135,11 +134,14 @@ zemi (`flightTime`).
 ```js
 const dTamb = this.tempIn - this.ambient;
 const dT = burn * P.burnHeating * (input.heatBoost || 1)
-         - P.coolK * dTamb
-         - vent * P.ventK * dTamb;
+         - (P.coolK + this.leak) * dTamb          // leak: trvalé díry po přehřátí
+         - vent * P.ventK * this.ventMul * dTamb; // ventMul: klapka se držením rozevírá
 this.tempIn += dT * dt;
 if (this.tempIn < this.ambient) this.tempIn = this.ambient;
 ```
+
+Před teplotou i po ní běží `updateVent` (rozevírání klapky a propadání vrchlíku) a `updateOverheat`
+(popáleniny, požár); viz 3.6a a 3.6b.
 
 Je to **Eulerova metoda** pro rovnici *dT/dt = f(T)*: nová hodnota = stará + derivace · dt. Poslední
 řádek je pojistka: vzduch v plášti nemůže být chladnější než okolí.

@@ -135,8 +135,28 @@ export const PHYSICS = {
   coolK: 0.006,        // 1/s
   ventK: 0.025,        // 1/s
   gasRate: 0.09,       // kg/s při plném zážehu
-  maxEnvelopeTemp: 130,
-  alarmTemp: 120,
+  alarmTemp: 120,      // °C, varování v HUD
+
+  // Paraventil: čím déle je otevřený, tím víc se svršek pláště rozevírá a tím rychleji vzduch uniká.
+  ventRampTime: 12,    // s držení, než je klapka otevřená naplno
+  ventMaxMul: 3.5,     // násobek ventK při plně otevřené klapce
+  ventCloseRate: 8,    // s držení, které klapka "zapomene" za 1 s po uvolnění (zavírá se rychle)
+  // Extrémně dlouhé držení: vrchlík ztrácí tvar a část objemu pláště se propadne (viz PhysicsEngine.collapse)
+  ventCollapseAfter: 18,   // s souvislého držení, odkdy se vrchlík začíná propadat
+  ventCollapseTime: 30,    // s dalšího držení do úplného propadnutí
+  collapseVolumeLoss: 0.45,   // o jaký podíl se zmenší objem při plném propadnutí
+  collapseRecover: 1 / 90,    // 1/s, vrchlík se vzpřimuje, když je plášť zase plný horkého vzduchu
+  collapseRecoverBurn: 1 / 25, // 1/s totéž při zážehu
+
+  // Přehřátí: nad scorchTemp se plášť nevratně pálí (díry), nad fireTemp vzplane
+  scorchTemp: 120,     // °C (shodné s alarmTemp: varování i počátek škod)
+  scorchStep: 60,      // K·s nad scorchTemp na jednu popálenou díru
+  holeLeakK: 0.0025,   // 1/s, dodatečné ochlazování na jednotku velikosti díry (trvalé)
+  holeMax: 8,          // nejvíce děr (dál se zvětšují ty stávající)
+  fireTemp: 140,       // °C
+  fireDelay: 3,        // s nad fireTemp do vzplanutí
+  fireSpread: 20,      // s, za jak dlouho se oheň rozšíří po celém plášti
+  fireLeakK: 0.05,     // 1/s, ztráta tepla při plně hořícím plášti
   windTau: 6,          // s, setrvačnost vůči větru
   rotateRate: 8,       // deg/s
   minBalloonRadius: 9,

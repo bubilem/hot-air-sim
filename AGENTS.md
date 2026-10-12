@@ -165,6 +165,9 @@ doc/                         # Dokumentace pro žáky a učitele
 - `dT_in/dt = burn·k_burn − k_cool·(T_in − T_out) − vent·k_vent·(T_in − T_out)`.
 - Vztlak úměrný rozdílu hustot vzduchu `V·(ρ_out − ρ_in)` mínus hmotnost (včetně ubývajícího paliva).
 - Odpor `F_drag = ½ρ·v|v|·Cd·S`; efektivní hmotnost zahrnuje vzduch v plášti a přidruženou hmotnost.
+- **Paraventil** se držením rozevírá (`ventHold` → `ventMul`); při extrémně dlouhém držení se vrchlík propadá (`collapse`,
+  menší objem). **Přehřátí** nad `scorchTemp` trvale pálí plášť (`holes` zvyšují únik tepla), nad `fireTemp` plášť vzplane
+  (`fire`). Hořák nemá pojistku. Viz `doc/03`, odst. 3.6a–b.
 - Cíl odezvy: viditelné zpoždění několika sekund mezi zážehem a změnou stoupání; hráč nesmí být frustrován.
 - **Pevný krok fyziky 1/60 s** s akumulátorem, nezávislý na FPS.
 

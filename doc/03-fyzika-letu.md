@@ -228,8 +228,37 @@ rychleji, **čím větší je rozdíl teplot** oproti okolí. Řešení pro *b* 
 $$ T_{in}(t) - T_{out} = (T_{in}(0) - T_{out}) \cdot e^{-k_{cool}\, t} $$
 
 Časová konstanta je *τ* = 1/*k_cool* ≈ **167 s**: za necelé tři minuty klesne přebytek teploty na 37 %.
-S otevřeným paraventilem je *k* = 0,006 + 0,025 = 0,031 1/s, tedy *τ* ≈ **32 s**: paraventil ochlazuje
+S právě otevřeným paraventilem je *k* = 0,006 + 0,025 = 0,031 1/s, tedy *τ* ≈ **32 s**: paraventil ochlazuje
 zhruba **pětkrát** rychleji než samotné chladnutí.
+
+### Paraventil se rozevírá a plášť se může propadnout (3.6a)
+
+Paraventil není vypínač: čím **déle** držíte klávesu, tím víc se vrchlík rozevírá a tím rychleji horký vzduch
+uniká. Stav `ventHold` (s držení) roste při držení a po uvolnění rychle klesá (klapka se zavře). Koeficient
+se násobí `ventMul` = 1 + (`ventMaxMul` − 1) · *o*², kde *o* = `ventHold` / `ventRampTime` (0…1):
+po 12 s je klapka otevřená naplno a ochlazování je až 3,5krát silnější. Krátké „cuknutí“ se chová jako dřív.
+
+Při **extrémně dlouhém držení** (od `ventCollapseAfter` = 18 s) se plášť sesedá: `collapse` roste k 1
+a objem pláště klesne až o `collapseVolumeLoss` (45 %), takže ubývá
+vztlak. Vizuálně se plášť **zužuje a zplošťuje odspodu**: přetlak je největší nahoře (tam se hromadí horký
+vzduch), u ústí je nulový, takže vrchlík drží tvar nejdéle. Po uvolnění se plášť zase vzpřímí (pomaleji, rychleji při zážehu).
+
+### Přehřátí: popáleniny a požár (3.6b)
+
+Hořák už nemá pojistku: hlídá se pilot. Při `alarmTemp` = `scorchTemp` = 120 °C hra varuje a plášť se začne
+**nevratně pálit**. Za každých `scorchStep` K·s nad touto mezí vznikne **popálené místo** (díra, nejčastěji
+u vrchlíku, dle seedu deterministicky). Každá díra trvale zvyšuje ochlazování o `holeLeakK` · velikost
+(`leak`), takže hořák musí pracovat víc a plyn dojde dřív; několik děr znamená, že balon už neudrží visení.
+Když teplota drží nad `fireTemp` = 140 °C déle než `fireDelay` = 3 s, plášť **vzplane**: `fire` roste
+za `fireSpread` = 20 s k 1, uniká tepla `fireLeakK` a plášť se propadá. Konec letu je pád (havárie).
+
+**Vizuál (`BalloonView.js`).** Popáleniny nejsou obarvené čtverce, ale **maska** 256 × 128 ve stejných UV jako vzor
+pláště (kanál R = spálení, G = žhnutí). Fyzika dodá jen seznam děr (`u`, `v`, `size`) a míru požáru; pohled je
+vykreslí s rozedranými okraji (šum). Fragment shader podle masky rozlišuje zhnědnutí, zuhelnatění a **skutečnou
+díru** (`discard`, přes ni je vidět dovnitř a na oblohu); čerstvá díra navíc krátce žhne. Požár je čelo, které se
+šíří od vrchlíku dolů; za ním látka zuhelnatí a rozpadá se na díry. Z děr stoupá světlý oblak uniklého horkého
+vzduchu, z čerstvých a hořících míst černý kouř, na čele požáru občas plamen (jeden pool 160 částic `Points`,
+bez dalších draw callů).
 
 > Ve skutečnosti paraventil nechladí „sám“, ale **vypouští horký vzduch z vrcholu pláště** a do ústí
 > se nasává studený. Model to zjednodušuje na efektivní koeficient.
@@ -237,8 +266,8 @@ zhruba **pětkrát** rychleji než samotné chladnutí.
 ### Rovnovážná teplota a „střída“ hořáku
 
 Při trvalém zážehu by teplota rostla, dokud nebude ohřev roven chladnutí:
-*Δ T* = 1,2 / 0,006 = **200 K** (to je mimo realitu, proto je teplota omezená `maxEnvelopeTemp` = 130 °C
-a při 120 °C `alarmTemp` hra varuje „PŘEHŘÁTÍ!“).
+*Δ T* = 1,2 / 0,006 = **200 K** (to je mimo realitu; hra proto při 120 °C `alarmTemp` varuje „PŘEHŘÁTÍ!“
+a dál už pálí plášť, viz 3.6b).
 
 Chceme-li balon **držet** v teplotě *T_hold*, musí hořák pracovat s poměrem zapnutí (**střída** *d*), při
 kterém se ohřev rovná chladnutí:

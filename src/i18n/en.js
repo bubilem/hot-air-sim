@@ -18,6 +18,8 @@ export default {
   'hud.zoomIn': 'Zoom in',
   'hud.zoomOut': 'Zoom out',
   'hud.overheat': 'OVERHEAT!',
+  'hud.fire': 'ENVELOPE ON FIRE! Land now!',
+  'hud.holes': 'Envelope burnt – losing heat',
   'hud.nogas': 'Out of gas!',
   'hud.edge': 'Leaving the map – turn back!',
 

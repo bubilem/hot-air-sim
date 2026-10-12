@@ -18,6 +18,8 @@ export default {
   'hud.zoomIn': 'Přiblížit',
   'hud.zoomOut': 'Oddálit',
   'hud.overheat': 'PŘEHŘÁTÍ!',
+  'hud.fire': 'POŽÁR PLÁŠTĚ! Přistaňte!',
+  'hud.holes': 'Plášť je popálený, uniká teplo',
   'hud.nogas': 'Došel plyn!',
   'hud.edge': 'Opouštíte mapu – vraťte se!',
 

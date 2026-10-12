@@ -16,6 +16,20 @@ const CROWN_PULL = 4;      // m: o kolik lano nadzvedne vrchlík při vztyčová
 const CROWN_FROM = 0.45;   // od jaké části výšky pláště (0..1) se vrchlík nadzvedává
 const SKIRT_ROWS = 3;      // spodní řady pláště tvoří tmavá "plachta" (sukně) u ústí
 const SKIRT_COLOR = 0.07;  // jas sukně (násobí se s texturou)
+// Ztráta vzduchu: přetlak je největší nahoře (tam se hromadí horký vzduch) a u ústí je nulový, proto se plášť
+// sesedá odspodu a ze stran, zužuje se a zplošťuje (víc napříč košem než po jeho délce); vrchlík drží tvar nejdéle.
+const SAG_SQUEEZE_X = 0.28;   // zúžení v ose x rigu při plném sesednutí (nejvíc ve spodní polovině)
+const SAG_SQUEEZE_Z = 0.5;    // zúžení v ose z (plášť se zplošťuje)
+const SAG_FLATTEN = 0.14;     // o kolik klesne celková výška pláště
+const SAG_TOP_KEEP = 0.65;    // jak moc je vrchlík ušetřen (0 = stejně jako střed, 1 = vůbec se nezužuje)
+
+// Popáleniny: maska 256 × 128 ve stejných UV jako vzor pláště (R = spálení, G = žhnutí).
+// Shader podle R rozlišuje zhnědnutí, zuhelnatění a skutečnou díru (discard); G dodá žhnoucí lem.
+const BURN_W = 256, BURN_H = 128;
+const BURN_R0 = 1.8, BURN_R1 = 1.9;    // m: poloměr skvrny = R0 + R1 · velikost díry
+const EMBER_TAU = 6;                   // s, doznívání žhnutí čerstvé díry
+const FIRE_FRONT_MIN = 0.12;           // do jaké výšky (0..1) pláště se oheň nejvýš šíří od vrchlíku
+const SMOKE_N = 160;                   // kapacita částic kouře a plamenů
 
 export const BASKET_BOTTOM = -3.4;
 export const BASKET_TOP = -2.4;
@@ -58,8 +72,13 @@ export class BalloonView {
     this.buildBasket();
     this.buildFlame();
     this.buildShadow();
+    this.buildSmoke();
 
     this.state = { inflation: -1, upright: -1, unroll: -1, envUpright: -1 };
+    this.sag = 0;
+    this.holeSizes = [];    // velikosti děr, které už jsou namalovány v masce
+    this.fireLevel = 0;
+    this.scorchT = 0;
     this.setShape(1, 1);
   }
 
@@ -102,21 +121,32 @@ export class BalloonView {
     this.glow = 0;
     this.glowT = 0;
     this.glowU = { value: 0 };
+    this.buildBurnMask();
     this.envMat.onBeforeCompile = (sh, renderer) => {
       THREE.MeshLambertMaterial.prototype.onBeforeCompile?.call(this.envMat, sh, renderer);   // výšková mlha
       sh.uniforms.uGlow = this.glowU;
       sh.uniforms.uGlowColor = { value: new THREE.Vector3(...ENVELOPE_GLOW.color) };
       sh.uniforms.uGlowTop = { value: ENVELOPE_GLOW.topFalloff };
       sh.uniforms.uGlowH = { value: PROFILE[PROFILE.length - 1][1] };
+      sh.uniforms.uBurn = this.burnU;
+      sh.uniforms.uFlick = this.flickU;
       sh.vertexShader = sh.vertexShader
         .replace('#include <common>', '#include <common>\nvarying float vGlowY;')
         .replace('#include <begin_vertex>', '#include <begin_vertex>\nvGlowY = position.y;');
       sh.fragmentShader = sh.fragmentShader
-        .replace('#include <common>', '#include <common>\nvarying float vGlowY;\nuniform float uGlow, uGlowTop, uGlowH;\nuniform vec3 uGlowColor;')
+        .replace('#include <common>', '#include <common>\nvarying float vGlowY;\nuniform float uGlow, uGlowTop, uGlowH, uFlick;\nuniform vec3 uGlowColor;\nuniform sampler2D uBurn;')
+        .replace('#include <map_fragment>',
+          `#include <map_fragment>
+          vec2 burnMask = texture2D(uBurn, vMapUv).rg;
+          float burnB = burnMask.r;
+          if (burnB > 0.62) discard;
+          diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.2, 0.11, 0.05), smoothstep(0.1, 0.3, burnB) * 0.85);
+          diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.02), smoothstep(0.3, 0.45, burnB));`)
         .replace('#include <emissivemap_fragment>',
           `#include <emissivemap_fragment>
           float gk = uGlow * (1.0 - uGlowTop * clamp(vGlowY / uGlowH, 0.0, 1.0));
-          totalEmissiveRadiance += diffuseColor.rgb * uGlowColor * gk;`);
+          totalEmissiveRadiance += diffuseColor.rgb * uGlowColor * gk;
+          totalEmissiveRadiance += vec3(1.0, 0.36, 0.06) * burnMask.g * smoothstep(0.28, 0.58, burnB) * uFlick;`);
     };
     const mat = this.envMat;
     this.envelope = new THREE.Mesh(this.envGeo, mat);
@@ -194,7 +224,11 @@ export class BalloonView {
     for (let i = 0; i <= RINGS; i++) {
       const r = this.profile[i].x, h = this.profile[i].y;
       const reach = smooth(h / 7);               // u ústí je plášť přichycen ke koši, dál leží na zemi
-      const y0 = h * kl;
+      const y0 = h * kl * (1 - SAG_FLATTEN * this.sag);
+      // Sesedání: u ústí je plášť přichycen, nejvíc se zužuje dole a uprostřed, vrchlík se nejméně
+      const frac = h / H;
+      const sagW = smooth(frac / 0.15) * (1 - SAG_TOP_KEEP * smooth((frac - 0.45) / 0.55)) * this.sag;
+      const sagX = 1 - SAG_SQUEEZE_X * sagW, sagZ = 1 - SAG_SQUEEZE_Z * sagW;
       // Vleže leží střed prstence ve výšce svého poloměru (spodek na zemi), ústí zůstává u koše; špička tedy leží na zemi
       let dY = sup * reach * (r * kt - rigYE);
       // Při vztyčování lano táhne vrchlík vzhůru a ven (nejvíc v polovině zvedání, vzpřímený i ležící plášť je bez vlivu)
@@ -206,9 +240,9 @@ export class BalloonView {
       if (ringMin < GROUND) dY += GROUND - ringMin;
       for (let j = 0; j < SEGS; j++) {
         const a = (j / SEGS) * Math.PI * 2;
-        let x = r * Math.cos(a) * kt;
+        let x = r * sagX * Math.cos(a) * kt;
         let y = y0;
-        const z = r * Math.sin(a) * kw;
+        const z = r * sagZ * Math.sin(a) * kw;
         // posun o dY svisle ve světě = posun v prostoru rigu o R^-1 (0, dY)
         x += -dY * spE;
         y += dY * cpE;
@@ -231,6 +265,246 @@ export class BalloonView {
     this.envGeo.attributes.position.needsUpdate = true;
     this.envGeo.computeBoundingSphere();
 
+  }
+
+  /** Míra sesednutí pláště 0..1 (po dlouhém odvětrání nebo při požáru). */
+  setSag(v) {
+    if (Math.abs(v - this.sag) < 0.005) return;
+    this.sag = v;
+    this.state.inflation = -1;   // vynutí přepočet tvaru
+  }
+
+  // ---------- Popáleniny ----------
+  buildBurnMask() {
+    this.burnData = new Uint8Array(BURN_W * BURN_H * 4);
+    for (let i = 3; i < this.burnData.length; i += 4) this.burnData[i] = 255;
+    const tex = new THREE.DataTexture(this.burnData, BURN_W, BURN_H, THREE.RGBAFormat);
+    tex.wrapS = THREE.RepeatWrapping;
+    tex.minFilter = THREE.LinearFilter;
+    tex.magFilter = THREE.LinearFilter;
+    tex.generateMipmaps = false;
+    tex.needsUpdate = true;
+    this.burnTex = tex;
+    this.burnU = { value: tex };
+    this.flickU = { value: 1 };
+    const n = BURN_W * BURN_H;
+    this.holeLayer = new Float32Array(n);    // spálení od děr (trvalé)
+    this.emberLayer = new Float32Array(n);   // žhnutí děr (doznívá)
+    this.fireLayer = new Float32Array(n);    // spálení od požáru
+    this.fireEmber = new Float32Array(n);    // žhnutí čela požáru
+    this.noise = null;
+    this.emberLive = 0;
+    this.emberAcc = 0;
+    // délka profilu pláště po oblouku (pro převod metrů na pixely ve směru v)
+    let len = 0;
+    for (let i = 1; i < this.profile.length; i++) len += this.profile[i].distanceTo(this.profile[i - 1]);
+    this.arcLen = len;
+  }
+
+  /** Periodický (v ose u) fraktální šum 0..1 pro rozedrané okraje; počítá se až při první potřebě. */
+  makeNoise() {
+    const out = new Float32Array(BURN_W * BURN_H);
+    let seed = 20240611;
+    const rnd = () => { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return seed / 4294967296; };
+    for (const [gx, gy, amp] of [[8, 4, 0.55], [16, 8, 0.3], [32, 16, 0.15]]) {
+      const lat = new Float32Array(gx * (gy + 1));
+      for (let i = 0; i < lat.length; i++) lat[i] = rnd();
+      for (let y = 0; y < BURN_H; y++) {
+        const fy = (y / BURN_H) * gy, y0 = Math.floor(fy), ty = smooth(fy - y0);
+        for (let x = 0; x < BURN_W; x++) {
+          const fx = (x / BURN_W) * gx, x0 = Math.floor(fx), tx = smooth(fx - x0);
+          const xa = x0 % gx, xb = (x0 + 1) % gx;
+          const a = lat[y0 * gx + xa], b = lat[y0 * gx + xb], c = lat[(y0 + 1) * gx + xa], d = lat[(y0 + 1) * gx + xb];
+          out[y * BURN_W + x] += amp * ((a + (b - a) * tx) * (1 - ty) + (c + (d - c) * tx) * ty);
+        }
+      }
+    }
+    this.noise = out;
+  }
+
+  /** Namaluje (nebo zvětší) jednu popálenou díru do vrstvy děr. */
+  paintHole(h, idx) {
+    if (!this.noise) this.makeNoise();
+    const ring = Math.min(RINGS, Math.round(h.v * RINGS));
+    const rM = BURN_R0 + BURN_R1 * h.size;
+    const ru = rM * BURN_W / (2 * Math.PI * Math.max(this.profile[ring].x, 2.5));
+    const rv = rM * BURN_H / this.arcLen;
+    const cx = h.u * BURN_W, cy = h.v * BURN_H, off = (idx * 53) % BURN_W;
+    for (let y = Math.max(0, Math.floor(cy - rv * 1.1)); y <= Math.min(BURN_H - 1, Math.ceil(cy + rv * 1.1)); y++) {
+      for (let x = Math.floor(cx - ru * 1.1); x <= Math.ceil(cx + ru * 1.1); x++) {
+        const d = Math.hypot((x - cx) / ru, (y - cy) / rv);
+        if (d > 1.1) continue;
+        const xi = ((x % BURN_W) + BURN_W) % BURN_W, i = y * BURN_W + xi;
+        const b = 1 - d + (this.noise[y * BURN_W + (xi + off) % BURN_W] - 0.5) * 0.7;
+        if (b > this.holeLayer[i]) this.holeLayer[i] = b;
+        if (b > 0.3) this.emberLayer[i] = 1;
+      }
+    }
+  }
+
+  /** Vrstva požáru: čelo se šíří od vrchlíku dolů, za ním je zuhelnatělá látka s rozpadajícími se místy. */
+  paintFire(level) {
+    if (!this.noise) this.makeNoise();
+    const front = 1 - level * (1 - FIRE_FRONT_MIN);
+    for (let y = 0; y < BURN_H; y++) {
+      const v = y / BURN_H;
+      for (let x = 0; x < BURN_W; x++) {
+        const i = y * BURN_W + x, n = this.noise[i];
+        const depth = v - front + (n - 0.5) * 0.06;
+        let f = 0, e = 0;
+        if (level > 0 && depth > 0) {
+          f = 0.14 + 0.3 * smooth(depth / 0.04) + 0.45 * Math.min(1, Math.max(0, (n - 0.35) * 2.2)) * smooth(depth / 0.2);
+          e = Math.max(0, 1 - depth / 0.05);
+        }
+        this.fireLayer[i] = f; this.fireEmber[i] = e;
+      }
+    }
+  }
+
+  /** Složí vrstvy do textury masky (R = spálení, G = žhnutí). */
+  uploadBurn() {
+    const d = this.burnData, hl = this.holeLayer, fl = this.fireLayer, el = this.emberLayer, fe = this.fireEmber;
+    let live = 0;
+    for (let i = 0; i < hl.length; i++) {
+      const r = Math.max(hl[i], fl[i]), g = Math.max(el[i], fe[i]);
+      d[i * 4] = Math.min(255, Math.max(0, r * 255));
+      d[i * 4 + 1] = Math.min(255, g * 255);
+      if (el[i] > live) live = el[i];
+    }
+    this.emberLive = live;
+    this.burnTex.needsUpdate = true;
+  }
+
+  /**
+   * Popáleniny a kouř. Díry se jen přidávají (nebo zvětšují); požár se šíří podle `fire` 0..1.
+   * @param {{u:number,v:number,size:number}[]} holes
+   * @param {number} time herní čas (s) pro doznívání žhnutí a částice
+   */
+  setScorch(holes, fire, time = 0) {
+    const dt = Math.min(0.1, Math.max(0, time - this.scorchT));
+    this.scorchT = time;
+    let dirty = false;
+    for (let k = 0; k < holes.length; k++) {
+      if (this.holeSizes[k] !== holes[k].size) {
+        this.paintHole(holes[k], k);
+        this.holeSizes[k] = holes[k].size;
+        dirty = true;
+      }
+    }
+    const lvl = Math.round(fire * 50) / 50;
+    if (lvl !== this.fireLevel) {
+      this.fireLevel = lvl;
+      this.paintFire(lvl);
+      dirty = true;
+    }
+    if (this.emberLive > 0.01 && dt > 0) {
+      const k = Math.exp(-dt / EMBER_TAU);
+      for (let i = 0; i < this.emberLayer.length; i++) this.emberLayer[i] *= k;
+      this.emberAcc += dt;
+      if (this.emberAcc > 0.25) { this.emberAcc = 0; dirty = true; }
+    }
+    if (dirty) this.uploadBurn();
+    this.flickU.value = 0.8 + 0.2 * Math.sin(time * 19) * Math.sin(time * 7.3);
+    this.updateSmoke(dt, holes, fire);
+  }
+
+  // ---------- Kouř, únik horkého vzduchu a plameny ----------
+  buildSmoke() {
+    const N = SMOKE_N;
+    this.sm = {
+      pos: new Float32Array(N * 3), vel: new Float32Array(N * 3), col: new Float32Array(N * 3),
+      size: new Float32Array(N), alpha: new Float32Array(N),
+      age: new Float32Array(N), life: new Float32Array(N), s0: new Float32Array(N), grow: new Float32Array(N), a0: new Float32Array(N),
+      next: 0,
+    };
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(this.sm.pos, 3));
+    g.setAttribute('aCol', new THREE.BufferAttribute(this.sm.col, 3));
+    g.setAttribute('aSize', new THREE.BufferAttribute(this.sm.size, 1));
+    g.setAttribute('aAlpha', new THREE.BufferAttribute(this.sm.alpha, 1));
+    this.smokeU = { uRes: { value: 800 } };
+    const mat = new THREE.ShaderMaterial({
+      uniforms: this.smokeU, transparent: true, depthWrite: false,
+      vertexShader: `attribute vec3 aCol; attribute float aSize; attribute float aAlpha; uniform float uRes;
+        varying vec3 vC; varying float vA;
+        void main() {
+          vec4 mv = modelViewMatrix * vec4(position, 1.0);
+          gl_Position = projectionMatrix * mv;
+          gl_PointSize = aSize * projectionMatrix[1][1] * uRes * 0.5 / max(0.1, -mv.z);
+          vC = aCol; vA = aAlpha;
+        }`,
+      fragmentShader: `varying vec3 vC; varying float vA;
+        void main() {
+          vec2 d = gl_PointCoord - 0.5;
+          float r = dot(d, d) * 4.0;
+          if (r > 1.0) discard;
+          float a = (1.0 - r); a *= a;
+          gl_FragColor = vec4(vC, a * vA);
+        }`,
+    });
+    this.smoke = new THREE.Points(g, mat);
+    this.smoke.frustumCulled = false;
+    this.smoke.renderOrder = 2;
+    this.smokeAlive = false;
+    this.smokeTmp = new THREE.Vector3();
+    this.rig.add(this.smoke);
+  }
+
+  /** Poloha bodu pláště (u, v) v prostoru rigu podle aktuálně deformované sítě. */
+  surfacePoint(u, v, out) {
+    const ring = Math.min(RINGS, Math.round(v * RINGS));
+    const seg = ((Math.round((1 - u) * SEGS) % SEGS) + SEGS) % SEGS;
+    const k = (ring * SEGS + seg) * 3;
+    return out.set(this.grid[k], this.grid[k + 1], this.grid[k + 2]);
+  }
+
+  emit(p, col, size, grow, alpha, life, up, spread) {
+    const s = this.sm, i = s.next;
+    s.next = (i + 1) % SMOKE_N;
+    s.pos[i * 3] = p.x + (Math.random() - 0.5) * 0.8; s.pos[i * 3 + 1] = p.y; s.pos[i * 3 + 2] = p.z + (Math.random() - 0.5) * 0.8;
+    s.vel[i * 3] = (Math.random() - 0.5) * spread; s.vel[i * 3 + 1] = up * (0.7 + Math.random() * 0.6); s.vel[i * 3 + 2] = (Math.random() - 0.5) * spread;
+    s.col[i * 3] = col[0]; s.col[i * 3 + 1] = col[1]; s.col[i * 3 + 2] = col[2];
+    s.age[i] = 0; s.life[i] = life * (0.8 + Math.random() * 0.4); s.s0[i] = size; s.grow[i] = grow; s.a0[i] = alpha;
+  }
+
+  updateSmoke(dt, holes, fire) {
+    if (holes.length === 0 && fire <= 0 && !this.smokeAlive) return;
+    const s = this.sm, P = this.smokeTmp;
+    this.smokeU.uRes.value = window.innerHeight * Math.min(window.devicePixelRatio || 1, 1.5);
+    const count = (rate) => { const n = rate * dt; return Math.floor(n) + (Math.random() < n % 1 ? 1 : 0); };
+    if (dt > 0) {
+      // únik horkého vzduchu z děr: řídký světlý oblak; čerstvá díra navíc kouří
+      for (const h of holes) {
+        this.surfacePoint(h.u, h.v, P);
+        for (let n = count(2 + 3 * h.size); n > 0; n--) this.emit(P, [0.62, 0.62, 0.64], 1.4, 2.2, 0.28, 2.6, 2.4, 0.8);
+        if (this.emberLive > 0.15) for (let n = count(4 * this.emberLive); n > 0; n--) this.emit(P, [0.1, 0.09, 0.08], 1.2, 2.5, 0.45, 2.8, 2.8, 0.8);
+      }
+      if (fire > 0) {
+        const front = 1 - fire * (1 - FIRE_FRONT_MIN);
+        for (let n = count(26 * fire + 6); n > 0; n--) {
+          this.surfacePoint(Math.random(), front + Math.random() * (1 - front), P);
+          this.emit(P, [0.1, 0.095, 0.09], 2.2, 2.8, 0.55, 4, 3.2, 1.6);
+        }
+        for (let n = count(24 * fire); n > 0; n--) {
+          this.surfacePoint(Math.random(), front + Math.random() * 0.06, P);
+          this.emit(P, [1, 0.5, 0.12], 1.6, -0.6, 0.85, 0.7, 4, 1.2);
+        }
+      }
+    }
+    let alive = false;
+    for (let i = 0; i < SMOKE_N; i++) {
+      if (s.life[i] <= 0) { s.alpha[i] = 0; continue; }
+      s.age[i] += dt;
+      const t = s.age[i] / s.life[i];
+      if (t >= 1) { s.life[i] = 0; s.alpha[i] = 0; continue; }
+      alive = true;
+      s.pos[i * 3] += s.vel[i * 3] * dt; s.pos[i * 3 + 1] += s.vel[i * 3 + 1] * dt; s.pos[i * 3 + 2] += s.vel[i * 3 + 2] * dt;
+      s.size[i] = s.s0[i] * (1 + s.grow[i] * t);
+      s.alpha[i] = s.a0[i] * Math.min(1, s.age[i] * 5) * (1 - t) * (1 - t);
+    }
+    this.smokeAlive = alive;
+    const g = this.smoke.geometry.attributes;
+    g.position.needsUpdate = g.aSize.needsUpdate = g.aAlpha.needsUpdate = g.aCol.needsUpdate = true;
   }
 
   // ---------- Koš, rám, hořák ----------

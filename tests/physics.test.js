@@ -40,6 +40,70 @@ describe('PhysicsEngine', () => {
   });
 });
 
+describe('Paraventil a přehřátí', () => {
+  const hot = () => { const p = new PhysicsEngine(cfg); p.tempIn = 90; return p; };
+  const run = (p, input, sec) => { for (let i = 0; i < 60 * sec; i++) p.step(1 / 60, input, calm, 0); };
+
+  it('dlouho držený paraventil chladí čím dál víc', () => {
+    const a = hot(); run(a, { vent: 1 }, 4);
+    const drop1 = 90 - a.tempIn;
+    const t1 = a.tempIn; run(a, { vent: 1 }, 4);
+    const drop2 = t1 - a.tempIn;
+    expect(a.ventMul).toBeGreaterThan(1.5);
+    // druhé čtyři vteřiny jsou při stejné teplotě rychlejší než první (klapka je víc otevřená)
+    const b = hot(); b.tempIn = t1; run(b, { vent: 1 }, 4);
+    expect(drop2).toBeGreaterThan(t1 - b.tempIn - 0.01);
+    expect(drop1).toBeGreaterThan(0);
+  });
+
+  it('klapka se po uvolnění rychle zavře, krátké stisky se nezesilují', () => {
+    const p = hot(); run(p, { vent: 1 }, 10);
+    run(p, {}, 3);
+    expect(p.ventMul).toBeCloseTo(1, 1);
+  });
+
+  it('extrémně dlouhé odvětrání propadne vrchlík a sníží objem', () => {
+    const p = hot();
+    run(p, { vent: 1 }, 15);
+    expect(p.collapse).toBe(0);
+    run(p, { vent: 1 }, 60);
+    expect(p.collapse).toBeGreaterThan(0.9);
+    expect(p.volume).toBeLessThan(3000 * 0.6);
+    run(p, {}, 200);
+    expect(p.collapse).toBeLessThan(0.1);   // po uvolnění se vzpřímí
+  });
+
+  it('přehřátí vypálí trvalé díry, které zvyšují ochlazování', () => {
+    const p = new PhysicsEngine(cfg);
+    p.tempIn = 120;
+    run(p, { burn: 1 }, 40);
+    expect(p.tempIn).toBeGreaterThan(125);
+    expect(p.holes.length).toBeGreaterThan(0);
+    const leak = p.leak;
+    expect(leak).toBeGreaterThan(0);
+    run(p, {}, 600);
+    expect(p.leak).toBe(leak);   // nevratné
+  });
+
+  it('dlouho nad fireTemp plášť vzplane a balon ztratí vztlak', () => {
+    const p = new PhysicsEngine({ ...cfg, bottles: 4 });
+    p.tempIn = 140;
+    run(p, { burn: 1 }, 25);
+    expect(p.fire).toBeGreaterThan(0);
+    run(p, {}, 30);
+    expect(p.fire).toBe(1);
+    expect(p.netLiftKg()).toBeLessThan(0);
+  });
+
+  it('bez přehřátí žádné díry', () => {
+    const p = new PhysicsEngine(cfg);
+    p.tempIn = p.hoverTemp(0);
+    run(p, { burn: 0.3 }, 60);
+    expect(p.holes.length).toBe(0);
+    expect(p.fire).toBe(0);
+  });
+});
+
 describe('WindModel', () => {
   it('interpoluje mezi vrstvami', () => {
     const w = new WindModel([{ alt: 0, speed: 2, bearing: 90 }, { alt: 100, speed: 6, bearing: 90 }]);
