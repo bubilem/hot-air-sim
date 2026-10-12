@@ -35,9 +35,12 @@ export class PhysicsEngine {
     const c = this.cfg;
     this.pos = { x: 0, y: 0, z: 0 };
     this.vel = { x: 0, y: 0, z: 0 };
+    this.refY = this.refY ?? 0;   // světová výška startu (y = 0 u lokality)
     this.tempIn = c.ambientC;
     this.gas = c.bottles * P.gasPerBottle;
     this.heading = 0;
+    this.hypoxia = 0;       // 0..1, nedostatek kyslíku u pilota
+    this.unconscious = false;
     this.burning = 0;
     this.venting = 0;
     this.ventHold = 0;      // s, jak dlouho je paraventil otevřený (klapka se rozevírá)
@@ -55,7 +58,13 @@ export class PhysicsEngine {
     this.maxAlt = 0;
   }
 
-  get ambient() { return this.cfg.ambientC; }
+  /** Výška n. m. pro světovou výšku y. */
+  altMsl(y = this.pos.y) { return this.cfg.siteElevation + y - this.refY; }
+
+  /** Okolní teplota ve výšce y: klesá s výškou nad startem (`lapseRate`). */
+  ambientAt(y = this.pos.y) { return this.cfg.ambientC - P.lapseRate * (y - this.refY); }
+
+  get ambient() { return this.ambientAt(); }
 
   /** Míra deformace pláště (propadnutí vrchlíku nebo požár), 0..1. */
   get deflation() { return Math.max(this.collapse, this.fire); }
@@ -83,19 +92,32 @@ export class PhysicsEngine {
 
   /** Vztlak minus tíha v kg (kladné = balon chce stoupat). */
   netLiftKg(y = this.pos.y) {
-    const alt = this.cfg.siteElevation + y;
-    const rOut = airDensity(this.ambient, alt);
+    const alt = this.altMsl(y);
+    const rOut = airDensity(this.ambientAt(y), alt);
     const rIn = airDensity(this.tempIn, alt);
     return this.volume * (rOut - rIn) - this.mass;
   }
 
   /** Teplota uvnitř, při které balon visí (netLift = 0). */
   hoverTemp(y = this.pos.y) {
-    const alt = this.cfg.siteElevation + y;
-    const rOut = airDensity(this.ambient, alt);
+    const alt = this.altMsl(y);
+    const amb = this.ambientAt(y);
+    const rOut = airDensity(amb, alt);
     const rInNeeded = rOut - this.mass / this.volume;
-    return (rOut * (this.ambient + 273.15)) / rInNeeded - 273.15;
+    return (rOut * (amb + 273.15)) / rInNeeded - 273.15;
   }
+
+  /** Nad `oxygenAlt` roste nedostatek kyslíku; při plné úrovni pilot omdlí a probere se až po poklesu pod `hypoxiaWake`. */
+  updateHypoxia(dt) {
+    const over = (this.altMsl() - P.oxygenAlt) / 1000;
+    if (over > 0) this.hypoxia = Math.min(1, this.hypoxia + (over / P.hypoxiaTime) * dt);
+    else this.hypoxia = Math.max(0, this.hypoxia - P.hypoxiaRecover * dt);
+    if (this.hypoxia >= 1) this.unconscious = true;
+    else if (this.hypoxia < P.hypoxiaWake) this.unconscious = false;
+  }
+
+  /** Balon na stropu: ve své výšce by k visení potřeboval teplotu blízkou přehřátí. */
+  get atCeiling() { return this.hoverTemp() >= P.alarmTemp - P.ceilingMargin; }
 
   /** Klapka se při držení rozevírá, po uvolnění rychle zavře; po dlouhém držení se vrchlík propadá. */
   updateVent(dt, vent, burn) {
@@ -219,6 +241,9 @@ export class PhysicsEngine {
     const out = {};
     this.flightTime += dt;
 
+    this.updateHypoxia(dt);
+    if (this.unconscious) input = { burn: 0, vent: 0, rotate: 0 };   // pilot bez vědomí nic neovládá
+
     let burn = input.burn || 0;
     if (this.gas <= 0) burn = 0;
     this.burning = burn;
@@ -228,15 +253,16 @@ export class PhysicsEngine {
     this.venting = vent;
     this.updateVent(dt, vent, burn);
 
-    const dTamb = this.tempIn - this.ambient;
+    const amb = this.ambientAt();
+    const dTamb = this.tempIn - amb;
     const dT = burn * P.burnHeating * (input.heatBoost || 1)
       - (P.coolK + this.leak) * dTamb - vent * P.ventK * this.ventMul * dTamb;
     this.tempIn += dT * dt;
-    if (this.tempIn < this.ambient) this.tempIn = this.ambient;
+    if (this.tempIn < amb) this.tempIn = amb;
     this.updateOverheat(dt);
 
-    const alt = this.cfg.siteElevation + this.pos.y;
-    const rOut = airDensity(this.ambient, alt);
+    const alt = this.altMsl();
+    const rOut = airDensity(amb, alt);
     const rIn = airDensity(this.tempIn, alt);
     const m = this.mass;
     const lift = this.volume * (rOut - rIn) * P.g;

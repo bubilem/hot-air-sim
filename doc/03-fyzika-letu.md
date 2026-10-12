@@ -430,7 +430,7 @@ Ráno je vítr slabší: `windScale: 0.7`, večer `1.0` (konstanta násobí rych
 | Zjednodušení | Skutečnost | Důsledek |
 | :-- | :-- | :-- |
 | Konstantní objem 3 000 m³ | plášť se při zahřátí mírně rozpíná | zanedbatelné |
-| Okolní teplota **nezávisí na výšce** (12 °C / 22 °C) | teplota klesá o ≈ 6,5 K na km | vztlak by s výškou slabě rostl |
+| Okolní teplota klesá s výškou **lineárně** o 6,5 K/km (`lapseRate`) | v inverzi i nad ní se mění | viz odst. 3.9a |
 | Hořák je jen zapnutý/vypnutý | skutečný hořák má regulaci výkonu | jednodušší ovládání |
 | Jeden součinitel odporu *C_d* | závisí na rychlosti a tvaru | stačí pro pocit |
 | Přidružená hmotnost konstantní | mění se s pohybem | stačí pro pocit |
@@ -446,6 +446,24 @@ Ráno je vítr slabší: `windScale: 0.7`, večer `1.0` (konstanta násobí rych
 > **Známá drobnost:** `PhysicsEngine.maxAlt` ukládá největší **světovou** souřadnici *y* balonu, ne výšku
 > nad místem startu. Start na louce leží kolem 22 m (`WORLD.startFlatHeight`), takže údaj „Max. výška“ na
 > osvědčení je o tuto hodnotu větší. Na hře to nic nemění, ale je to dobrá zadání pro cvičení (kap. 14).
+
+---
+
+## 3.9a Výška, teplota a kyslík
+
+Okolní teplota klesá s výškou *h* nad startem: *T_out(h)* = *T_0* − 0,0065 · *h* (`PhysicsEngine.ambientAt`, `PHYSICS.lapseRate`).
+Z 12 °C ráno je tedy v 1 000 m jen 5,5 °C a ve 3 000 m −7,5 °C. Důsledky:
+
+- **Chladnutí je rychlejší**: rozdíl *T_in − T_out* roste, a tak hořák musí pracovat víc (HUD ukazuje i „Venku“).
+- **Visení**: vzduch je řidší (menší tlak), ale studenější (hustší). Oba vlivy se téměř ruší, takže teplota pro visení
+  s výškou roste jen málo (lehký balon dokonce o pár stupňů klesne, těžký se čtyřmi lahvemi dosáhne ve 3 000 m
+  asi 115 °C a je na **stropu**: hlášení „Strop“, `atCeiling`).
+- **Kyslík**: nad `oxygenAlt` = 3 000 m n. m. (pravidla pro balony: 10 000 ft) hrozí hypoxie. Úroveň `hypoxia` roste
+  rychlostí (výška − 3 000) / 1 000 krát 1/`hypoxiaTime` za sekundu; displej se postupně zatmívá. Při 1,0
+  pilot **omdlí**: hořák, paraventil i otáčení se ignorují (balon chladne a sám klesá), dokud se výškou pod 3 000 m
+  úroveň nesníží pod `hypoxiaWake` = 0,5.
+
+Výška n. m. je `siteElevation + (y − refY)`, kde `refY` je světová výška startu (nastaví `GameApp.createBalloon`).
 
 ---
 

@@ -110,7 +110,13 @@ export class FlightPhase {
       layers: w.wind.layers,
       altStart: p.pos.y - w.startY,
       fire: p.fire,
-      holes: p.holes.length,
+      holes: p.holes,
+      contact: p.flightTime - p.contactTime < 1.2,
+      tempOut: p.ambient,
+      hypoxia: p.hypoxia,
+      unconscious: p.unconscious,
+      thin: p.altMsl() > PHYSICS.oxygenAlt,
+      ceiling: p.atCeiling,
     });
     app.audio.update({
       burn: p.burning,

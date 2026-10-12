@@ -137,6 +137,14 @@ export const PHYSICS = {
   gasRate: 0.09,       // kg/s při plném zážehu
   alarmTemp: 120,      // °C, varování v HUD
 
+  // Výška: okolní teplota klesá, pilot potřebuje nad určitou výškou kyslík
+  lapseRate: 0.0065,   // K/m, pokles okolní teploty s výškou (standardní atmosféra)
+  oxygenAlt: 3000,     // m n. m., odtud hrozí nedostatek kyslíku (pravidla pro balony: 10 000 ft)
+  hypoxiaTime: 40,     // s při 1 000 m nad oxygenAlt do ztráty vědomí
+  hypoxiaRecover: 1 / 20,   // 1/s zotavení v dostatečně nízké výšce
+  hypoxiaWake: 0.5,    // úroveň, pod kterou se pilot probere
+  ceilingMargin: 5,    // °C pod alarmTemp: když balon ve výšce visí při této teplotě, je na stropu
+
   // Paraventil: čím déle je otevřený, tím víc se svršek pláště rozevírá a tím rychleji vzduch uniká.
   ventRampTime: 12,    // s držení, než je klapka otevřená naplno
   ventMaxMul: 3.5,     // násobek ventK při plně otevřené klapce

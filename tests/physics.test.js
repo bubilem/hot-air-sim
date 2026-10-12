@@ -77,7 +77,7 @@ describe('Paraventil a přehřátí', () => {
     const p = new PhysicsEngine(cfg);
     p.tempIn = 120;
     run(p, { burn: 1 }, 40);
-    expect(p.tempIn).toBeGreaterThan(125);
+    expect(p.tempIn).toBeGreaterThan(122);   // balon při tom stoupá a okolní vzduch chladne
     expect(p.holes.length).toBeGreaterThan(0);
     const leak = p.leak;
     expect(leak).toBeGreaterThan(0);
@@ -101,6 +101,60 @@ describe('Paraventil a přehřátí', () => {
     run(p, { burn: 0.3 }, 60);
     expect(p.holes.length).toBe(0);
     expect(p.fire).toBe(0);
+  });
+});
+
+describe('Výška a teplota', () => {
+  const run = (p, input, sec) => { for (let i = 0; i < 60 * sec; i++) p.step(1 / 60, input, calm, 0); };
+
+  it('okolní teplota klesá s výškou o 6,5 K/km vůči startu', () => {
+    const p = new PhysicsEngine(cfg);
+    p.refY = 50;
+    expect(p.ambientAt(50)).toBeCloseTo(12, 5);
+    expect(p.ambientAt(1050)).toBeCloseTo(12 - 6.5, 5);
+    expect(p.altMsl(1050)).toBe(220 + 1000);
+  });
+
+  it('hoverTemp dává nulový vztlak i ve výšce', () => {
+    const p = new PhysicsEngine(cfg);
+    for (const y of [0, 800, 2500]) {
+      p.tempIn = p.hoverTemp(y);
+      expect(Math.abs(p.netLiftKg(y))).toBeLessThan(0.5);
+    }
+  });
+
+  it('chladný vzduch nahoře zrychluje chladnutí pláště', () => {
+    const lo = new PhysicsEngine(cfg), hi = new PhysicsEngine(cfg);
+    lo.tempIn = hi.tempIn = 70;
+    hi.pos.y = 2000; hi.onGround = false;
+    run(lo, {}, 1); run(hi, {}, 1);
+    expect(70 - hi.tempIn).toBeGreaterThan(70 - lo.tempIn);
+  });
+
+  it('nad 3 000 m pilot po čase omdlí a ovládání ignoruje; po poklesu se probere', () => {
+    const p = new PhysicsEngine(cfg);
+    p.pos.y = 4000; p.onGround = false; p.tempIn = p.hoverTemp(4000);
+    run(p, {}, 5);
+    expect(p.hypoxia).toBeGreaterThan(0);
+    expect(p.unconscious).toBe(false);
+    run(p, {}, 60);
+    expect(p.unconscious).toBe(true);
+    const gas = p.gas;
+    run(p, { burn: 1 }, 5);
+    expect(p.gas).toBe(gas);   // bez vědomí nehoří
+    p.pos.y = 500; p.vel.y = 0;
+    run(p, {}, 60);
+    expect(p.unconscious).toBe(false);
+  });
+
+  it('těžký balon má strop: ve své výšce visí jen blízko přehřátí', () => {
+    const heavy = new PhysicsEngine({ payloadKg: 400, bottles: 4, ambientC: 12, siteElevation: 300 });
+    expect(heavy.atCeiling).toBe(false);
+    heavy.pos.y = 3200; heavy.onGround = false;
+    expect(heavy.atCeiling).toBe(true);
+    const light = new PhysicsEngine({ payloadKg: 155, bottles: 1, ambientC: 12, siteElevation: 300 });
+    light.pos.y = 3200;
+    expect(light.atCeiling).toBe(false);
   });
 });
 

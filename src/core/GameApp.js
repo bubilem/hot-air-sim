@@ -236,6 +236,7 @@ export class GameApp {
   createBalloon(plan) {
     if (this.balloon) this.removeBalloon();
     const b = new Balloon(plan.physicsConfig(), designCanvas(plan.envelopeId, plan.customCanvas));
+    b.physics.refY = this.world.startY;
     b.place(0, this.world.startY, 0, 0);
     this.scene.add(b.getMesh());
     this.scene.add(b.getShadow());
