@@ -212,7 +212,9 @@ export class PlanScreen {
     });
 
     this.q.name.addEventListener('input', () => { p.name = this.q.name.value; });
-    this.el.addEventListener('click', (e) => {
+    // build() běží i při změně jazyka: starý posluchač se musí odebrat, jinak se každé klepnutí zpracuje víckrát
+    if (this.onClick) this.el.removeEventListener('click', this.onClick);
+    this.onClick = (e) => {
       const b = e.target.closest('button');
       if (!b) return;
       const d = b.dataset;
@@ -232,7 +234,8 @@ export class PlanScreen {
         this.cb.onChange('load');
       }
       this.refresh();
-    });
+    };
+    this.el.addEventListener('click', this.onClick);
     this.q.start.addEventListener('click', () => this.cb.onStart());
   }
 
