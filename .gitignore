@@ -22,3 +22,6 @@ Thumbs.db
 
 # Pracovní kopie a archiv (design systém školy a staré verze; nejsou součástí repozitáře)
 tmp/
+
+# Referenční forky značek (jen k porovnání)
+reference/
