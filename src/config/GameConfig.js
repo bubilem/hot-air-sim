@@ -336,9 +336,6 @@ export const GRASS_DETAIL = {
 };
 
 // Prosvícení pláště plamenem zvenku (emisivní záře, nejsilnější u ústí, k vrchlíku slábne)
-/** Odkaz na obor Informační technologie na webu školy (Encyklopedie, obrazovka Oslava). Jediný externí odkaz ve hře. */
-export const SCHOOL_IT_URL = 'https://www.skolavdf.cz/informacni-technologie';
-
 export const ENVELOPE_GLOW = {
   intensity: 1.0,   // síla záře při plném zážehu
   topFalloff: 0.7,  // o kolik záře ubude až u vrchlíku (0 = stejně všude)

@@ -1,18 +1,6 @@
-// Barvy z design systému VOŠ, SPŠ a SOŠ Varnsdorf (viz doc/09-design-system.md) a barvy materiálů scény.
-// Stejné hodnoty jsou v CSS proměnných v src/ui/styles.css (tam jako #rrggbb), tady jako číslo pro Three.js.
-export const BRAND = {
-  bgTop: 0x003b4b,      // horní barva gradientu pozadí rozhraní
-  bgBottom: 0x006783,   // spodní barva gradientu
-  yellow1: 0xffd400,
-  yellow2: 0xffea80,
-  blue1: 0x41d7ff,
-  blue2: 0x00c0f3,
-  green1: 0xc2dd78,
-  green2: 0xa6ce39,
-  white: 0xffffff,
-  red: 0xb3202e,        // červená do šachovnice pláště (není součástí školní palety)
-  cream: 0xf5efe6,      // krémová do šachovnice pláště
-};
+// Barvy materiálů scény. Barvy značky (trika, polepy, konfety, pláště) dodává brand.colors (viz doc/16-znacky-brand.md);
+// stejné hodnoty jsou v CSS tokenech značky (tam jako #rrggbb), tady jako číslo pro Three.js.
+import brand from '@brand';
 
 export const COLORS = {
   sky: 0x8ec9e8,
@@ -54,9 +42,9 @@ export const COLORS = {
   broadleafLight: 0x5a8c3a,
 
   // balon
-  envelopeRed: BRAND.red,
-  envelopeWhite: BRAND.cream,
-  envelopeBand: BRAND.blue1,
+  envelopeRed: brand.colors.envelopeRed,
+  envelopeWhite: brand.colors.envelopeWhite,
+  envelopeBand: brand.colors.envelopeBand,
   basket: 0xa0742f,
   basketDark: 0x5c4018,
   rope: 0x2b2b2b,

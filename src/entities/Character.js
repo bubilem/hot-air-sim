@@ -1,7 +1,6 @@
 // Voxel postavičky (styl Minecraft) složené z kvádrů. Výška cca 1.8 m.
 import * as THREE from 'three';
-import { BRAND } from '../config/Colors.js';
-import { markPlane } from './SchoolMark.js';
+import brand from '@brand';
 
 const SKIN = [0xf0c9a0, 0xe0ad84, 0xc58c63, 0x8d5a3b];
 const CAP_COLOR = 0x15171a;   // černé kšiltovky pilota a pozemního týmu
@@ -42,21 +41,15 @@ export function createCharacter(role = 'passenger', variant = 0, female = false)
   let vest = null;
   let sleeve = null;   // barva rukávů, pokud se liší od trika
   let hat = null;
-  if (role === 'pilot') { shirt = BRAND.bgTop; vest = null; sleeve = BRAND.blue2; hat = CAP_COLOR; pants = 0x20242f; }
-  if (role === 'crew') { shirt = BRAND.bgTop; vest = null; sleeve = BRAND.blue2; hat = CAP_COLOR; pants = 0x20242f; }  // pozemní tým v modré školní barvě
+  if (role === 'pilot' || role === 'crew') {   // barvy týmu dodává značka
+    ({ shirt, vest, sleeve } = brand.colors[role]);
+    hat = CAP_COLOR; pants = 0x20242f;
+  }
 
   g.add(part(0.2, 0.75, 0.26, pants, -0.12, 0.375, 0));      // nohy
   g.add(part(0.2, 0.75, 0.26, pants, 0.12, 0.375, 0));
   g.add(part(0.5, 0.65, 0.28, shirt, 0, 1.075, 0));           // trup
-  if (role === 'pilot' || role === 'crew') {
-    // jen průhledný trojúhelník školy přímo na triku, zepředu i zezadu
-    for (const s of [1, -1]) {
-      const m = markPlane(0.22);
-      m.position.set(0, 1.18, s * 0.142);
-      if (s < 0) m.rotation.y = Math.PI;
-      g.add(m);
-    }
-  }
+  brand.character?.decorate(THREE, g, role);   // znak značky na triku (může být žádný)
   g.add(part(0.26, 0.26, 0.26, skin, 0, 1.55, 0));            // hlava
   if (hat) {
     // kšiltovka v barvě týmu: čepice + kšilt dopředu (+z); vlasy pod ní nejsou vidět

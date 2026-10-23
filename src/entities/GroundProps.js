@@ -1,6 +1,6 @@
 // Pozemní rekvizity: ventilátor, vak, kotvicí lano, cílová značka, stolek se sektem.
 import * as THREE from 'three';
-import { BRAND } from '../config/Colors.js';
+import brand from '@brand';
 
 const M = (hex) => new THREE.MeshLambertMaterial({ color: hex });
 
@@ -36,7 +36,7 @@ export function createFan() {
 
 /** Transportní vak (ležící válec). */
 export function createBag() {
-  const m = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 1.6, 12), M(BRAND.bgTop));
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 1.6, 12), M(brand.colors.bag));
   m.rotation.z = Math.PI / 2;
   m.position.y = 0.55;
   const g = new THREE.Group();
@@ -92,7 +92,7 @@ export function createTargetMarker() {
     g.add(pivot);
     return pivot;
   };
-  const pivots = [makeFlag(14, 7, 36, BRAND.blue1), makeFlag(8, 3.5, 29.5, 0xffffff)];
+  const pivots = [makeFlag(14, 7, 36, brand.colors.flags[0]), makeFlag(8, 3.5, 29.5, brand.colors.flags[1])];
   let yaw = 0;
   /** t = čas (s), wx/wz = vítr ve výšce vlajky (m/s): vlajky míří po větru a vlají víc při silnějším větru. */
   g.userData.update = (t, wx, wz) => {

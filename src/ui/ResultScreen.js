@@ -1,38 +1,17 @@
 // Závěrečná obrazovka: balonářský křestní list (Canvas → PNG) a tlačítka „stáhnout“ a „letět znovu“.
 import { t, getLang } from '../i18n/index.js';
-import { SCHOOL_IT_URL } from '../config/GameConfig.js';
+import brand from '@brand';
 
 const W = 1400, H = 1190;
 const M = 98;   // m okraj diplomu (volné místo kolem obsahu)
-const FONT = 'Raleway, Arial, sans-serif';
-
-// Symbol školy (viz doc/09-design-system.md): body polygonů ve viewBoxu 1000 × 866.
-const MARK = [
-  ['#ffd400', [0, 0, 500, 0, 500, 188, 326, 188]],
-  ['#ffea80', [0, 0, 326, 188, 413, 339, 250, 433]],
-  ['#41d7ff', [500, 0, 1000, 0, 674, 188, 500, 188]],
-  ['#00c0f3', [674, 188, 1000, 0, 750, 433, 587, 339]],
-  ['#c2dd78', [250, 433, 413, 339, 500, 490, 500, 866]],
-  ['#a6ce39', [500, 490, 587, 339, 750, 433, 500, 866]],
-];
-
-function drawMark(g, x, y, w) {
-  const k = w / 1000;
-  for (const [color, pts] of MARK) {
-    g.beginPath();
-    for (let i = 0; i < pts.length; i += 2) g[i ? 'lineTo' : 'moveTo'](x + pts[i] * k, y + pts[i + 1] * k);
-    g.closePath();
-    g.fillStyle = color;
-    g.fill();
-  }
-}
+const FONT = brand.font.family;
 
 const fmtDist = (m) => (m >= 1000 ? `${(m / 1000).toFixed(1)} km` : `${Math.round(m)} m`);
 const fmtTime = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 
 function fitText(g, text, maxW, size, weight = 800) {
   let s = size;
-  do { g.font = `${weight} ${s}px Raleway, Arial, sans-serif`; s -= 4; } while (g.measureText(text).width > maxW && s > 24);
+  do { g.font = `${weight} ${s}px ${FONT}`; s -= 4; } while (g.measureText(text).width > maxW && s > 24);
 }
 
 function star(g, x, y, r, on) {
@@ -59,7 +38,7 @@ export class ResultScreen {
         <div class="result-btns">
           <button class="btn cta" id="r-dl">${t('result.download')}</button>
           <button class="btn ghost" id="r-share">${t('result.share')}</button>
-          <a class="btn ghost school" href="${SCHOOL_IT_URL}" target="_blank" rel="noopener noreferrer">${t('result.study')}</a>
+          ${brand.links?.study ? `<a class="btn ghost school" href="${brand.links.study}" target="_blank" rel="noopener noreferrer">${t('result.study')}</a>` : ''}
           <button class="btn ghost" id="r-again">${t('result.again')}</button>
         </div>
         <p class="result-school">${t('result.school')}</p>
@@ -72,7 +51,7 @@ export class ResultScreen {
     this.el.querySelector('#r-again').addEventListener('click', () => app.go('PLAN'));
     const draw = () => this.draw();
     draw();
-    document.fonts?.load('700 40px Raleway').then(draw).catch(() => {});
+    document.fonts?.load(brand.font.loadSpec).then(draw).catch(() => {});
   }
 
   destroy() { this.el.remove(); }
@@ -89,7 +68,7 @@ export class ResultScreen {
     const r = this.app.flightResult;
     const text = t('result.shareText').replace('{score}', r.score).replace('{stars}', '★'.repeat(r.stars)).replace('{dist}', fmtDist(r.targetDist));
     const url = `${location.origin}${location.pathname}`;
-    const title = 'HotAirSim';
+    const title = brand.name;
     try {
       const blob = await new Promise((res) => this.canvas.toBlob(res, 'image/png'));
       const file = blob && new File([blob], 'hot-air-sim-diplom.png', { type: 'image/png' });
@@ -121,7 +100,7 @@ export class ResultScreen {
 
     // Nahoře velký symbol školy (trojúhelník hrotem dolů = balon), pod ním název HotAirSim jako koš
     const markW = 240, markY = 84;
-    drawMark(g, (W - markW) / 2, markY, markW);
+    brand.drawLogo(g, (W - markW) / 2, markY, markW);
     g.font = `700 60px ${FONT}`;
     const w1 = g.measureText('HotAir').width, w2 = g.measureText('Sim').width;
     const tx = W / 2 - (w1 + w2) / 2, ty = markY + markW * 0.866 + 74;
@@ -159,7 +138,7 @@ export class ResultScreen {
       const x = x0 + i * (bw + gap), y = 855;
       g.fillStyle = 'rgba(0,27,34,0.45)';
       g.fillRect(x, y, bw, 116);
-      g.fillStyle = '#ffffffb3'; g.font = '700 21px Raleway, Arial, sans-serif';
+      g.fillStyle = '#ffffffb3'; g.font = `700 21px ${FONT}`;
       g.fillText(label.toUpperCase(), x + bw / 2, y + 36);
       g.fillStyle = '#ffffff'; fitText(g, val, bw - 24, 46);
       g.fillText(val, x + bw / 2, y + 88);

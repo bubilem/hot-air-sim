@@ -1,6 +1,8 @@
 // Syntetizovaný zvuk přes WebAudio (bez souborů): hořák, vítr, paraventil, ventilátor, události.
 // Kontext se spouští až po první interakci (autoplay politika prohlížečů).
 
+import brand from '@brand';
+
 function noiseBuffer(ctx, seconds = 2, color = 'white') {
   const len = ctx.sampleRate * seconds;
   const buf = ctx.createBuffer(1, len, ctx.sampleRate);
@@ -18,8 +20,8 @@ function noiseBuffer(ctx, seconds = 2, color = 'white') {
   return buf;
 }
 
-const STORE_VOLUME = 'hotairsim.volume';
-const STORE_MUTED = 'hotairsim.muted';
+const STORE_VOLUME = `${brand.storagePrefix}.volume`;
+const STORE_MUTED = `${brand.storagePrefix}.muted`;
 
 export class SynthAudio {
   constructor() {

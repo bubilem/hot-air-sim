@@ -4,12 +4,12 @@
 import { t, getLang, setLang } from '../i18n/index.js';
 import { SITES, mapCenter, createBiomes } from '../world/Sites.js';
 import { BIOME } from '../world/Biomes.js';
-import { WORLD, TIME_OF_DAY, SCHOOL_IT_URL } from '../config/GameConfig.js';
+import { WORLD, TIME_OF_DAY } from '../config/GameConfig.js';
 import { ICON_SETTINGS, ICON_WIKI } from './SettingsMenu.js';
 import { estimateFlight } from '../core/FlightPlan.js';
 import { bearingToVec } from '../core/WindModel.js';
 import { designCanvas, loadCustomImage, templateCanvas } from '../entities/EnvelopeDesigns.js';
-import { LOGO_HTML } from './brand.js';
+import brand from '@brand';
 import { versionText } from '../config/Version.js';
 
 const MAP_RES = 110;
@@ -83,7 +83,7 @@ export class PlanScreen {
     this.el.innerHTML = `
       <div class="plan-inner">
         <header class="plan-head">
-          <div class="logo">${LOGO_HTML}</div>
+          <div class="logo">${brand.logoHtml}</div>
           <div class="plan-tools">
           <button class="btn round small gear" data-f="settings" aria-label="${t('settings.title')}">${ICON_SETTINGS}</button>
           <button class="btn round small gear" data-f="wiki" aria-label="${t('wiki.title')}">${ICON_WIKI}</button>
@@ -98,7 +98,7 @@ export class PlanScreen {
           <div class="plan-hero">
             <h1>${t('plan.title')}</h1>
             <p>${t('plan.sub')}</p>
-            <a class="school-link" href="${SCHOOL_IT_URL}" target="_blank" rel="noopener noreferrer">${t('plan.school')}</a>
+            ${brand.links?.study ? `<a class="school-link" href="${brand.links.study}" target="_blank" rel="noopener noreferrer">${t('plan.school')}</a>` : ''}
           </div>
 
           <section class="card">
@@ -315,7 +315,7 @@ export class PlanScreen {
     const [sx, sy] = toPx(0, 0);
 
     const wscale = TIME_OF_DAY[this.plan.timeOfDay].windScale;
-    g.font = '700 15px Raleway, sans-serif';
+    g.font = `700 15px ${brand.font.family}`;
     g.lineJoin = 'round';
     site.wind.forEach((l, i) => {
       const v = bearingToVec(l.bearing, 1);
@@ -335,12 +335,12 @@ export class PlanScreen {
       g.fillText(`${l.alt}`, ex + 6, ey - 6);
     });
 
-    g.fillStyle = '#ffffff'; g.strokeStyle = '#003b4b'; g.lineWidth = 3;
+    g.fillStyle = '#ffffff'; g.strokeStyle = brand.canvas.primary; g.lineWidth = 3;
     g.beginPath(); g.arc(sx, sy, 8, 0, 7); g.fill(); g.stroke();
     const [tx, ty] = toPx(target.x, target.z);
-    g.fillStyle = '#41d7ff';
+    g.fillStyle = brand.canvas.light;
     g.beginPath(); g.arc(tx, ty, 11, 0, 7); g.fill(); g.stroke();
-    g.fillStyle = '#003b4b'; g.font = '700 13px Raleway, sans-serif'; g.textAlign = 'center';
+    g.fillStyle = brand.canvas.primary; g.font = `700 13px ${brand.font.family}`; g.textAlign = 'center';
     g.fillText('★', tx, ty + 4);
     g.textAlign = 'left';
   }

@@ -1,21 +1,26 @@
 // Vzory pláště balonu kreslené procedurálně do canvasu 1024×512 + import vlastního obrázku.
 // Mapování: osa x = obvod pláště (32 výsečí), osa y = výška (dole ústí, nahoře vrchlík).
 // Bez závislosti na Three.js (texturu z canvasu vyrábí BalloonView).
+import brand from '@brand';
 
 export const TEX_W = 1024;
 export const TEX_H = 512;
 const GORES = 32;
-const BLUE = '#00c0f3';     // modrá 2 z design systému
-const NAVY = '#003b4b';     // tmavá z pozadí rozhraní
-const FONT = 'Raleway, Arial, sans-serif';
+const BLUE = brand.canvas.accent;
+const NAVY = brand.canvas.primary;
+const FONT = brand.font.family;
 
 export const DESIGNS = [
   { id: 'checker', name: { cs: 'Šachovnice', en: 'Checkerboard' } },
-  { id: 'school', name: { cs: 'Školní barvy', en: 'School colours' } },
+  ...(brand.envelope?.designs ?? []).map(({ id, name }) => ({ id, name })),
   { id: 'rainbow', name: { cs: 'Duha', en: 'Rainbow' } },
   { id: 'sunset', name: { cs: 'Západ slunce', en: 'Sunset' } },
   { id: 'retro', name: { cs: 'Retro pruhy', en: 'Retro stripes' } },
 ];
+
+/** Pomůcky pro vzory značky (štítky s názvem, rozměry textury). */
+const kit = { TEX_W, TEX_H, GORES, drawLogoPatches: (g, o) => drawLogoPatches(g, o) };
+const brandPainters = Object.fromEntries((brand.envelope?.designs ?? []).map((d) => [d.id, (g) => d.paint(g, kit)]));
 
 export const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
 
@@ -25,7 +30,7 @@ function newCanvas() {
   return c;
 }
 
-/** Nápis „HotAirSim“ ve „štítku“ na dvou protilehlých stranách (zepředu i zezadu). */
+/** Nápis s názvem značky ve „štítku“ na dvou protilehlých stranách (zepředu i zezadu). */
 function drawLogoPatches(g, { bg = NAVY, fg = BLUE, y = TEX_H * 0.5, w = 380, h = 120 } = {}) {
   for (const u of [0.25, 0.75]) {
     const x = TEX_W * u - w / 2;
@@ -34,7 +39,7 @@ function drawLogoPatches(g, { bg = NAVY, fg = BLUE, y = TEX_H * 0.5, w = 380, h 
     g.fillStyle = fg;
     g.font = `700 74px ${FONT}`;
     g.textAlign = 'center'; g.textBaseline = 'middle';
-    g.fillText('HotAirSim', TEX_W * u, y + 4);
+    g.fillText(brand.name, TEX_W * u, y + 4);
   }
 }
 
@@ -57,20 +62,6 @@ const painters = {
     }
     g.fillStyle = BLUE; // pás u ústí
     g.fillRect(0, TEX_H - 34, TEX_W, 34);
-  },
-
-  school(g) {
-    // výseče ve třech oborových barvách školy (žlutá, modrá, zelená)
-    const cols = ['#ffd400', '#00c0f3', '#a6ce39'];
-    const cw = TEX_W / GORES;
-    for (let c = 0; c < GORES; c++) {
-      g.fillStyle = cols[c % cols.length];
-      g.fillRect(c * cw, 0, cw + 1, TEX_H);
-    }
-    g.fillStyle = NAVY;
-    g.fillRect(0, TEX_H - 56, TEX_W, 56);
-    g.fillRect(0, 0, TEX_W, 40);
-    drawLogoPatches(g);
   },
 
   rainbow(g) {
@@ -114,11 +105,11 @@ const fleetCanvases = new Map();
 export function designCanvas(id, custom = null) {
   if (id === 'custom' && custom) return custom;
   if (typeof id === 'string' && id.startsWith('fleet:') && fleetCanvases.has(id)) return fleetCanvases.get(id);
-  const key = painters[id] ? id : 'checker';
+  const key = painters[id] || brandPainters[id] ? id : 'checker';
   if (!cache.has(key)) {
     const c = newCanvas();
     const g = c.getContext('2d');
-    painters[key](g);
+    (painters[key] || brandPainters[key])(g);
     drawSeams(g);
     cache.set(key, c);
   }
@@ -213,14 +204,14 @@ export function templateCanvas() {
     g.strokeStyle = BLUE; g.lineWidth = 3; g.strokeRect(TEX_W * u - 190, TEX_H * 0.5 - 60, 380, 120);
   }
   g.fillStyle = NAVY; g.textAlign = 'center'; g.textBaseline = 'middle';
-  g.font = '800 30px Raleway, Arial, sans-serif';
+  g.font = `800 30px ${FONT}`;
   g.fillText('VRCHLÍK / TOP  (nahoře)', TEX_W / 2, 40);
   g.fillText('ÚSTÍ / MOUTH  (dole)', TEX_W / 2, TEX_H - 40);
-  g.font = '700 22px Raleway, Arial, sans-serif';
+  g.font = `700 22px ${FONT}`;
   g.fillText('logo: 25 % a 75 % šířky / logo spots', TEX_W / 2, TEX_H / 2 + 90);
   g.fillText('levý a pravý okraj na sebe navazují / left & right edges join', TEX_W / 2, TEX_H / 2 - 90);
-  g.fillStyle = '#b3202e'; g.textAlign = 'left';
-  g.font = '700 20px Raleway, Arial, sans-serif';
+  g.fillStyle = brand.canvas.warn; g.textAlign = 'left';
+  g.font = `700 20px ${FONT}`;
   g.fillText('1024×512 px (2:1)  ·  PNG / WebP', 16, TEX_H / 2);
   return c;
 }

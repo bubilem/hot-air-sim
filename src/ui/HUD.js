@@ -2,14 +2,14 @@
 import { t } from '../i18n/index.js';
 import { PHYSICS } from '../config/GameConfig.js';
 import { vecToBearing } from '../core/WindModel.js';
-import { LOGO_HTML } from './brand.js';
+import brand from '@brand';
 import { ICON_SETTINGS, ICON_HOME, ICON_WIKI, bindHomeButton } from './SettingsMenu.js';
 import { AlertCenter, ALERTS, ALERT_ICONS } from './Alerts.js';
 
 const HUD_BIOME_AGL = 150;   // m nad terénem, od kdy se ukazuje povrch pod košem
 const BIOME_KIND = { meadow: 'ok', hill: 'ok', field: 'warn', forest: 'bad', water: 'bad', rock: 'bad', town: 'bad' };
 const COMPASS = ['S', 'SV', 'V', 'JV', 'J', 'JZ', 'Z', 'SZ'];
-const STORE_KEY = 'hotairsim.windLadder';
+const STORE_KEY = `${brand.storagePrefix}.windLadder`;
 
 function loadOpen() {
   try {
@@ -27,7 +27,7 @@ export class HUD {
       <div class="hud-vignette" data-f="vig"></div>
       <div class="hud-top">
         <div class="hud-left">
-          <div class="logo">${LOGO_HTML}</div>
+          <div class="logo">${brand.logoHtml}</div>
           <button class="btn round small gear" data-f="gear" aria-label="${t('settings.title')}">${ICON_SETTINGS}</button>
           <button class="btn round small gear" data-f="wiki" aria-label="${t('wiki.title')}">${ICON_WIKI}</button>
           <button class="btn round small gear home" data-f="home">${ICON_HOME}</button>

@@ -2,13 +2,13 @@
 import * as THREE from 'three';
 import { t, getLang } from '../i18n/index.js';
 import { titleFor } from '../core/Titles.js';
-import { BRAND } from '../config/Colors.js';
+import brand from '@brand';
 import { createCharacter, isFemalePassenger, waveArms } from '../entities/Character.js';
 import { createTable } from '../entities/GroundProps.js';
 import { CELEBRATION } from '../config/GameConfig.js';
 import { ResultScreen } from '../ui/ResultScreen.js';
 
-const CONFETTI = [BRAND.blue1, BRAND.yellow1, BRAND.green2, BRAND.white, BRAND.blue2];
+const CONFETTI = brand.colors.confetti;
 
 export class CelebrationPhase {
   constructor(app) {

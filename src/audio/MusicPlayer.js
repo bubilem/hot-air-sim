@@ -1,9 +1,11 @@
 // Hudba na pozadí: smyčka z mp3 (public/music). Vlastní hlasitost a ztlumení, nezávislé na zvucích hry.
 // Hlasitost jde přes WebAudio (GainNode), protože iOS ignoruje HTMLMediaElement.volume.
+import brand from '@brand';
+
 import { MUSIC } from '../config/GameConfig.js';
 
-const STORE_VOLUME = 'hotairsim.musicVolume';
-const STORE_MUTED = 'hotairsim.musicMuted';
+const STORE_VOLUME = `${brand.storagePrefix}.musicVolume`;
+const STORE_MUTED = `${brand.storagePrefix}.musicMuted`;
 
 export class MusicPlayer {
   /** @param {import('./SynthAudio.js').SynthAudio} audio  zvuk hry (sdílí AudioContext) */

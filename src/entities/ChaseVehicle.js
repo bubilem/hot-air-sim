@@ -1,8 +1,7 @@
 // Doprovodná souprava: černý terénní vůz (styl Land Rover Defender) + přívěsný vlek.
 // Lokální osy: délka podél +z (přední část vozu míří do +z).
 import * as THREE from 'three';
-import { BRAND } from '../config/Colors.js';
-import { labelPlane } from './SchoolMark.js';
+import brand from '@brand';
 
 const M = (hex) => new THREE.MeshLambertMaterial({ color: hex });
 
@@ -80,30 +79,19 @@ export class ChaseVehicle {
     g.add(ball);
     // kola
     for (const [x, z] of [[-1.0, 1.4], [1.0, 1.4], [-1.0, -1.4], [1.0, -1.4]]) g.add(wheel(x, 0.5, z, 0.5, 0.34, tire, hub));
-    // polep školy (symbol + název) na obou bocích
-    for (const s of [-1, 1]) {
-      const l = labelPlane(2.4, 0.56, '#ffffff');
-      l.position.set(s * 0.905, 0.9, s > 0 ? -0.3 : 0.25);   // s = +1 je levý bok vozu (pohled po směru jízdy), s = -1 pravý; pravý je zrcadlově otočený, proto se posouvá dopředu
-      l.rotation.y = s * Math.PI / 2;
-      g.add(l);
-    }
+    brand.vehicle?.decorateCar(THREE, g);   // polep značky na obou bocích (zrcadlení pravého boku řeší značka)
     return g;
   }
 
   /** Přívěs s tmavou plachtou a azurovým polepem školy. */
   buildTrailer() {
     const g = new THREE.Group();
-    const bed = M(0x2b2e33), tarp = M(BRAND.bgTop), tire = M(0x0d0d0d), hub = M(0x8a8f96);
+    const bed = M(0x2b2e33), tarp = M(brand.colors.trailerTarp), tire = M(0x0d0d0d), hub = M(0x8a8f96);
     g.add(box(1.9, 0.18, 3.2, bed, 0, 0.55, 0));
     g.add(box(1.8, 1.1, 3.0, tarp, 0, 1.19, 0));
     g.add(wheel(-1.0, 0.4, -0.2, 0.4, 0.28, tire, hub), wheel(1.0, 0.4, -0.2, 0.4, 0.28, tire, hub));
     g.add(box(0.1, 0.1, 1.6, bed, 0, 0.55, 2.4));                   // oj
-    for (const s of [-1, 1]) {
-      const l = labelPlane(2.6, 0.7, '#41d7ff');
-      l.position.set(s * 0.912, 1.2, 0);
-      l.rotation.y = s * Math.PI / 2;
-      g.add(l);
-    }
+    brand.vehicle?.decorateTrailer(THREE, g);
     return g;
   }
 
