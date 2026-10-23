@@ -55,7 +55,39 @@ export default {
   character: { decorate: decorateCharacter },
   vehicle: { decorateCar, decorateTrailer },
 
-  /** Externí odkaz značky (jediný ve hře); null = žádný. */
-  links: { study: 'https://www.skolavdf.cz/informacni-technologie' },
-  features: { externalLink: true },
+  /**
+   * Odkazy značky. `places` říká, kde se odkaz zobrazí (plan, diploma, menu, failed, wiki) a klíč i18n jeho popisku.
+   * `primary` = hlavní tlačítko (cta). Škola má jediný externí odkaz ve hře: na obor IT.
+   */
+  links: [{
+    id: 'study',
+    href: 'https://www.skolavdf.cz/informacni-technologie',
+    places: { plan: 'plan.school', diploma: 'result.study', wiki: 'wiki.moreIt' },
+  }],
+  /** Čísla na obrazovce plánování (např. reference firmy): [{ value, labelKey }]; prázdné = žádný pruh. */
+  stats: [],
+
+  /** Diplom: jedna šablona v jádru, značka dodává barvy, záhlaví a výšku (šířka je vždy 1400 px). */
+  diploma: {
+    height: 1190,
+    headerHeight: 400,   // místo nahoře pro záhlaví (logo, název); obsah diplomu začíná pod ním
+    colors: {
+      bgTop: '#003b4b', bgBottom: '#006783',
+      text: '#ffffff', muted: '#ffffffb3', title: '#ffd400',
+      statBg: 'rgba(0,27,34,0.45)', badge: '#0083a6', badgeText: '#ffffff',
+      star: '#ffd400', starOff: 'rgba(255,255,255,0.15)',
+    },
+    /** Záhlaví: symbol školy nad názvem HotAirSim (jako koš pod balonem). */
+    header(g, { W, FONT }) {
+      const markW = 240, markY = 84;
+      drawMark(g, (W - markW) / 2, markY, markW);
+      g.font = `700 60px ${FONT}`;
+      const w1 = g.measureText('HotAir').width, w2 = g.measureText('Sim').width;
+      const tx = W / 2 - (w1 + w2) / 2, ty = markY + markW * 0.866 + 74;
+      g.textAlign = 'left';
+      g.fillStyle = '#ffffff'; g.fillText('HotAir', tx, ty);
+      g.fillStyle = '#41d7ff'; g.fillText('Sim', tx + w1, ty);
+      g.textAlign = 'center';
+    },
+  },
 };

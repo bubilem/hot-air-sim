@@ -1,6 +1,8 @@
 // Fáze 3b: Přistání. Vyhodnocení dosednutí, převrácení koše, tažení po trávě, vypouštění pláště.
 import * as THREE from 'three';
+import brand from '@brand';
 import { t } from '../i18n/index.js';
+import { linksHtml } from '../ui/links.js';
 import { LANDING, PHYSICS, CHASE } from '../config/GameConfig.js';
 import { classifyTouchdown, KIND } from './LandingResolver.js';
 import { scoreFlight } from '../core/Scoring.js';
@@ -122,6 +124,7 @@ export class LandingPhase {
       ? `${t('landing.impact')}: ${this.collisionSpeed.toFixed(1)} m/s`
       : `${t('landing.speed')}: ${this.touch.vy.toFixed(1)} m/s ↓ · ${this.touch.vxz.toFixed(1)} m/s →`;
     this.ui = document.createElement('div');
+    const failedLinks = linksHtml('failed');   // značka může po neúspěchu nabídnout vlastní odkazy místo výchozí rady
     this.ui.className = `landingui panel interactive ${ok ? 'ok' : 'bad'}`;
     this.ui.innerHTML = `
       <h2>${t(`landing.${this.kind}`)}</h2>
@@ -132,7 +135,9 @@ export class LandingPhase {
           <button class="btn act" data-a="retry">${t('landing.retry')}</button>
           <button class="btn ghost" data-a="replan">${t('landing.replan')}</button>
         </div>
-        <p class="hint" style="display:none" data-f="hint">${t('landing.failed.hint')}</p>`}`;
+        ${failedLinks
+          ? `<div class="promo-failed" style="display:none" data-f="hint"><p>${t(brand.promo.failedTextKey)}</p><div class="promo-links">${failedLinks}</div></div>`
+          : `<p class="hint" style="display:none" data-f="hint">${t('landing.failed.hint')}</p>`}`}`;
     this.app.uiRoot.appendChild(this.ui);
     this.ui.addEventListener('click', (e) => {
       const a = e.target.closest('[data-a]')?.dataset.a;

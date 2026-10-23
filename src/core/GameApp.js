@@ -111,7 +111,7 @@ export class GameApp {
 
   setupSettings() {
     this.settings = new SettingsMenu(this.uiRoot, this.audio, this.music, () => this.go('PLAN'), (open) => { this.paused = open; });
-    this.hud = new HUD(this.uiRoot, (anchor) => this.settings.toggle(anchor), () => this.go('PLAN'), () => this.settings.openWiki());
+    this.hud = new HUD(this.uiRoot, (anchor) => this.settings.toggle(anchor), (anchor) => this.settings.togglePromo(anchor), () => this.go('PLAN'), () => this.settings.openWiki());
   }
 
   setupPointer() {

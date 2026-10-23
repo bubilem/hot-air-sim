@@ -1,6 +1,6 @@
 // Encyklopedie: okno s kategoriemi vlevo a textem vpravo. Otevírá se ikonou vedle nastavení, hra se při čtení pozastaví.
 import { t, getWiki } from '../i18n/index.js';
-import brand from '@brand';
+import { linksFor, linksHtml } from './links.js';
 
 export const ICON_WIKI = `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
   <path d="M4.5 5.5C6.5 4.5 9.5 4.5 12 6c2.5-1.5 5.5-1.5 7.5-.5v13c-2-1-5-1-7.5.5-2.5-1.5-5.5-1.5-7.5-.5z"/><path d="M12 6v13"/></svg>`;
@@ -60,9 +60,11 @@ export class Encyclopedia {
     const paras = c.body.map((p) => (p.startsWith('• ')
       ? `<li>${esc(p.slice(2))}</li>`
       : `</ul><p>${esc(p)}</p><ul>`)).join('');
-    const link = c.link && brand.links?.study ? `<p><a href="${brand.links.study}" target="_blank" rel="noopener noreferrer">${esc(t('wiki.moreIt'))}</a></p>` : '';
+    // odkazy značky: kategorie s `link` (nebo `cta`) je nese na konci textu; hlavní odkaz jako tlačítko, ostatní jako text
+    const link = c.link ? linksFor('wiki').map((l) => `<p><a href="${l.href}" target="_blank" rel="noopener noreferrer">${esc(l.label)}</a></p>`).join('') : '';
+    const cta = c.cta ? linksHtml('wiki') : '';
     this.text.innerHTML = `<h2>${esc(c.title)}</h2><ul>${paras}</ul>`
-      .replace(/<ul>\s*<\/ul>/g, '').replace(/<ul><\/ul>/g, '') + link;
+      .replace(/<ul>\s*<\/ul>/g, '').replace(/<ul><\/ul>/g, '') + link + cta;
     this.text.scrollTop = 0;
     this.navBtns.forEach((b, k) => {
       b.classList.toggle('on', k === this.current);

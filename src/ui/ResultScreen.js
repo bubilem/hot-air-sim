@@ -1,8 +1,11 @@
 // Závěrečná obrazovka: balonářský křestní list (Canvas → PNG) a tlačítka „stáhnout“ a „letět znovu“.
 import { t, getLang } from '../i18n/index.js';
 import brand from '@brand';
+import { linksHtml } from './links.js';
 
-const W = 1400, H = 1190;
+// Jedna šablona diplomu pro všechny značky: rozměr, barvy a záhlaví dodává brand.diploma (viz doc/16-znacky-brand.md).
+const D = brand.diploma;
+const W = 1400, H = D.height;
 const M = 98;   // m okraj diplomu (volné místo kolem obsahu)
 const FONT = brand.font.family;
 
@@ -22,7 +25,7 @@ function star(g, x, y, r, on) {
     g.lineTo(x + Math.cos(a) * rad, y + Math.sin(a) * rad);
   }
   g.closePath();
-  g.fillStyle = on ? '#ffd400' : 'rgba(255,255,255,0.15)';
+  g.fillStyle = on ? D.colors.star : D.colors.starOff;
   g.fill();
 }
 
@@ -38,7 +41,7 @@ export class ResultScreen {
         <div class="result-btns">
           <button class="btn cta" id="r-dl">${t('result.download')}</button>
           <button class="btn ghost" id="r-share">${t('result.share')}</button>
-          ${brand.links?.study ? `<a class="btn ghost school" href="${brand.links.study}" target="_blank" rel="noopener noreferrer">${t('result.study')}</a>` : ''}
+          ${linksHtml('diploma')}
           <button class="btn ghost" id="r-again">${t('result.again')}</button>
         </div>
         <p class="result-school">${t('result.school')}</p>
@@ -92,36 +95,30 @@ export class ResultScreen {
     const g = this.canvas.getContext('2d');
     g.clearRect(0, 0, W, H);
 
-    // Pozadí: gradient z design systému, bez rámečků
+    // Pozadí: gradient značky, bez rámečků
+    const C = D.colors;
     const bg = g.createLinearGradient(0, 0, 0, H);
-    bg.addColorStop(0, '#003b4b'); bg.addColorStop(1, '#006783');
+    bg.addColorStop(0, C.bgTop); bg.addColorStop(1, C.bgBottom);
     g.fillStyle = bg; g.fillRect(0, 0, W, H);
     g.textAlign = 'center';
 
-    // Nahoře velký symbol školy (trojúhelník hrotem dolů = balon), pod ním název HotAirSim jako koš
-    const markW = 240, markY = 84;
-    brand.drawLogo(g, (W - markW) / 2, markY, markW);
-    g.font = `700 60px ${FONT}`;
-    const w1 = g.measureText('HotAir').width, w2 = g.measureText('Sim').width;
-    const tx = W / 2 - (w1 + w2) / 2, ty = markY + markW * 0.866 + 74;
-    g.textAlign = 'left';
-    g.fillStyle = '#ffffff'; g.fillText('HotAir', tx, ty);
-    g.fillStyle = '#41d7ff'; g.fillText('Sim', tx + w1, ty);
-    g.textAlign = 'center';
+    // Záhlaví (logo a název) kreslí značka; obsah diplomu začíná pod ním
+    D.header(g, { W, H, FONT, plan, app });
+    const y0 = D.headerHeight;
 
     // Nadpis, titul a jméno: každý řádek má kolem sebe volné místo
-    g.fillStyle = '#ffffff';
+    g.fillStyle = C.text;
     fitText(g, t('result.heading'), W - 2 * M, 70);
-    g.fillText(t('result.heading'), W / 2, 510);
+    g.fillText(t('result.heading'), W / 2, y0 + 110);
 
     const name = plan.name.trim();
-    g.fillStyle = '#ffd400';
+    g.fillStyle = C.title;
     fitText(g, this.titleText, W - 2 * M, 76);
-    g.fillText(this.titleText, W / 2, name ? 640 : 690);
+    g.fillText(this.titleText, W / 2, y0 + (name ? 240 : 290));
     if (name) {   // bez zadaného jména se nepíše nic
-      g.fillStyle = '#ffffff';
+      g.fillStyle = C.text;
       fitText(g, name, W - 2 * M, 100);
-      g.fillText(name, W / 2, 775);
+      g.fillText(name, W / 2, y0 + 375);
     }
 
     // Statistiky
@@ -135,12 +132,12 @@ export class ResultScreen {
     ];
     const n = boxes.length, gap = 20, bw = (W - 2 * M - gap * (n - 1)) / n, x0 = M;
     boxes.forEach(([label, val], i) => {
-      const x = x0 + i * (bw + gap), y = 855;
-      g.fillStyle = 'rgba(0,27,34,0.45)';
+      const x = x0 + i * (bw + gap), y = H - 335;
+      g.fillStyle = C.statBg;
       g.fillRect(x, y, bw, 116);
-      g.fillStyle = '#ffffffb3'; g.font = `700 21px ${FONT}`;
+      g.fillStyle = C.muted; g.font = `700 21px ${FONT}`;
       g.fillText(label.toUpperCase(), x + bw / 2, y + 36);
-      g.fillStyle = '#ffffff'; fitText(g, val, bw - 24, 46);
+      g.fillStyle = C.text; fitText(g, val, bw - 24, 46);
       g.fillText(val, x + bw / 2, y + 88);
     });
 
@@ -149,14 +146,14 @@ export class ResultScreen {
     const badge = t('result.virtual');
     g.font = `700 24px ${FONT}`;
     const pillW = g.measureText(badge).width + 48;
-    g.fillStyle = '#0083a6';
+    g.fillStyle = C.badge;
     g.fillRect(M, rowY - 38, pillW, 50);
-    g.fillStyle = '#ffffff'; g.textAlign = 'center';
+    g.fillStyle = C.badgeText; g.textAlign = 'center';
     g.fillText(badge, M + pillW / 2, rowY - 4);
 
     for (let i = 0; i < 4; i++) star(g, W / 2 - 90 + i * 60, rowY - 13, 22, i < r.stars);
 
-    g.fillStyle = '#ffffffb3'; g.font = `400 24px ${FONT}`;
+    g.fillStyle = C.muted; g.font = `400 24px ${FONT}`;
     const date = new Date().toLocaleDateString(lang === 'cs' ? 'cs-CZ' : 'en-GB');
     g.textAlign = 'right';
     g.fillText(`${t('result.date')}: ${date}`, W - M, rowY - 4);

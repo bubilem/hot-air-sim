@@ -403,7 +403,20 @@ small { color: var(--muted); font-size: 11px; font-weight: 600; letter-spacing: 
 .result-inner { width: min(960px, 100%); padding: max(14px, env(safe-area-inset-top)) 14px 30px; display: grid; gap: 14px; justify-items: center; }
 #diploma { width: 100%; height: auto; box-shadow: var(--shadow-float); }
 .result-school { margin: 0; font-size: 13px; line-height: 1.5; text-align: center; color: rgba(255,255,255,.7); }
-.btn.ghost.school { color: var(--yellow-1); }
+.btn.ghost.link-study { color: var(--link); }
+
+/* Marketingové prvky značky (brand.links, brand.stats): rozložení, barvy z tokenů */
+.statsbar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; text-align: center; }
+.statsbar b { display: block; font-size: 18px; color: var(--accent); font-weight: 800; }
+.statsbar small { font-size: 9px; letter-spacing: .04em; }
+.btn.gear.standalone.promo { left: calc(max(12px, env(safe-area-inset-left)) + 100px); }
+.btn.gear.promo { color: var(--on-accent); background: var(--accent); }
+.promo-panel { width: min(320px, calc(100% - 24px)); }
+.promo-links { display: grid; gap: 8px; margin-top: 4px; }
+.promo-links .btn { text-align: center; min-height: 48px; font-size: 14px; padding: 0 14px; }
+.promo-failed { margin: 10px 0 0; display: grid; gap: 8px; }
+.promo-failed p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.4; }
+.wiki-text .btn.cta { margin-top: 6px; }
 .result-btns { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
 
 /* Výběr pláště */
@@ -477,6 +490,7 @@ kbd, .kh {
 /* Tlačítka vlevo nahoře (mimo plánování): nastavení, encyklopedie, domů */
 .btn.gear.standalone.wiki-btn { left: calc(max(12px, env(safe-area-inset-left)) + 50px); }
 .btn.gear.standalone.home { left: calc(max(12px, env(safe-area-inset-left)) + 100px); }
+.btn.gear.standalone.home.after-promo { left: calc(max(12px, env(safe-area-inset-left)) + 150px); }
 .btn.gear.home.confirm { background: var(--danger); color: #fff; overflow: visible; z-index: 20; }
 .btn.gear.home.confirm::after {
   content: attr(data-tip); position: absolute; top: calc(100% + 8px); left: 0; white-space: nowrap;

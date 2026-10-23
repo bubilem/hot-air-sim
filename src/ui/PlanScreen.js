@@ -10,6 +10,7 @@ import { estimateFlight } from '../core/FlightPlan.js';
 import { bearingToVec } from '../core/WindModel.js';
 import { designCanvas, loadCustomImage, templateCanvas } from '../entities/EnvelopeDesigns.js';
 import brand from '@brand';
+import { linksFor } from './links.js';
 import { versionText } from '../config/Version.js';
 
 const MAP_RES = 110;
@@ -98,7 +99,7 @@ export class PlanScreen {
           <div class="plan-hero">
             <h1>${t('plan.title')}</h1>
             <p>${t('plan.sub')}</p>
-            ${brand.links?.study ? `<a class="school-link" href="${brand.links.study}" target="_blank" rel="noopener noreferrer">${t('plan.school')}</a>` : ''}
+            ${linksFor('plan').map((l) => `<a class="school-link" href="${l.href}" target="_blank" rel="noopener noreferrer">${l.label}</a>`).join('')}
           </div>
 
           <section class="card">
@@ -163,6 +164,7 @@ export class PlanScreen {
           </section>
 
           <p class="goal">${t('plan.goal')}</p>
+          ${brand.stats?.length ? `<div class="statsbar">${brand.stats.map((s) => `<div><b>${s.value}</b><small>${t(s.labelKey)}</small></div>`).join('')}</div>` : ''}
 
         </div>
 

@@ -2,8 +2,17 @@
 // Tlačítko je buď součástí HUD (let, přistání), nebo samostatné (start, oslava); při plánování se nezobrazuje.
 import { t } from '../i18n/index.js';
 import { Encyclopedia, ICON_WIKI } from './Encyclopedia.js';
+import { linksFor, linksHtml } from './links.js';
+import brand from '@brand';
 
 export { ICON_WIKI };
+
+/** Ikona marketingového menu značky (balon s dárkovou stuhou, linková). */
+export const ICON_PROMO = `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  <rect x="3.5" y="9" width="17" height="11" rx="2"/><path d="M12 9v11M3.5 13.5h17"/><path d="M12 9C9.5 9 8 7.8 8 6.5S9 4.5 10.2 4.5C11.5 4.5 12 6.5 12 9zM12 9c2.5 0 4-1.2 4-2.5s-1-2-2.2-2C12.5 4.5 12 6.5 12 9z"/></svg>`;
+
+/** Má značka marketingové menu? (odkazy pro místo `menu` a texty `brand.promo`) */
+export const hasPromoMenu = () => linksFor('menu').length > 0;
 
 export const ICON_HOME = `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
   <path d="M3.5 11.5L12 4l8.5 7.5"/><path d="M6 10v9.5h12V10"/><path d="M10 19.5v-5h4v5"/></svg>`;
@@ -92,6 +101,25 @@ export class SettingsMenu {
     this.wikiBtn.setAttribute('aria-label', t('wiki.title'));
     this.wikiBtn.addEventListener('click', () => this.openWiki());
     root.append(this.btn, this.wikiBtn, this.homeBtn, this.panel);
+    // Marketingové menu značky (např. objednat skutečný let); bez odkazů pro `menu` vůbec nevznikne
+    this.promoBtn = this.promoPanel = null;
+    if (hasPromoMenu()) {
+      this.promoBtn = document.createElement('button');
+      this.promoBtn.className = 'btn round small gear standalone promo';
+      this.promoBtn.innerHTML = ICON_PROMO;
+      this.promoBtn.setAttribute('aria-label', t(brand.promo.titleKey));
+      this.promoBtn.addEventListener('click', () => this.togglePromo(this.promoBtn));
+      this.promoPanel = document.createElement('div');
+      this.promoPanel.className = 'panel interactive settings promo-panel';
+      this.promoPanel.hidden = true;
+      this.promoPanel.innerHTML = `
+        <div class="set-head"><b>${t(brand.promo.titleKey)}</b><button class="set-close" data-f="pclose" aria-label="${t('settings.close')}">✕</button></div>
+        <p class="set-tip" style="border:0;margin:0;padding:0">${t(brand.promo.textKey)}</p>
+        <div class="promo-links">${linksHtml('menu')}</div>`;
+      this.homeBtn.classList.add('after-promo');   // domů se posune za promo tlačítko
+      root.append(this.promoBtn, this.promoPanel);
+      this.promoPanel.querySelector('[data-f="pclose"]').addEventListener('click', () => this.close());
+    }
 
     this.f = {};
     this.panel.querySelectorAll('[data-f]').forEach((n) => { this.f[n.dataset.f] = n; });
@@ -116,7 +144,7 @@ export class SettingsMenu {
     this.f.vol.addEventListener('change', () => this.audio.click());   // zvuková ukázka nové hlasitosti
 
     this.onDocDown = (e) => {
-      if (this.isOpen && !this.panel.contains(e.target)
+      if (this.isOpen && !this.panel.contains(e.target) && !this.promoPanel?.contains(e.target)
         && !(this.anchor && this.anchor.contains(e.target))) this.close();
     };
     this.onKey = (e) => {
@@ -141,6 +169,7 @@ export class SettingsMenu {
     if (mode !== this.mode) this.close();   // panel patří k tlačítku z předchozí obrazovky
     this.mode = mode;
     this.btn.style.display = this.wikiBtn.style.display = this.homeBtn.style.display = mode === 'standalone' ? '' : 'none';
+    if (this.promoBtn) this.promoBtn.style.display = mode === 'standalone' ? '' : 'none';
   }
 
   openWiki() {
@@ -171,9 +200,19 @@ export class SettingsMenu {
     st.top = `${r.bottom + 8}px`;
   }
 
+  togglePromo(anchor) {
+    const wasOpen = this.isOpen && !this.promoPanel.hidden;
+    this.close();
+    if (wasOpen) return;
+    this.anchor = anchor;
+    this.isOpen = true;
+    this.promoPanel.hidden = false;
+  }
+
   close() {
     this.isOpen = false;
     this.panel.hidden = true;
+    if (this.promoPanel) this.promoPanel.hidden = true;
   }
 
   sync() {
@@ -203,5 +242,7 @@ export class SettingsMenu {
     this.wikiBtn.remove();
     this.homeBtn.remove();
     this.panel.remove();
+    this.promoBtn?.remove();
+    this.promoPanel?.remove();
   }
 }

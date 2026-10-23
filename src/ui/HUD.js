@@ -3,7 +3,7 @@ import { t } from '../i18n/index.js';
 import { PHYSICS } from '../config/GameConfig.js';
 import { vecToBearing } from '../core/WindModel.js';
 import brand from '@brand';
-import { ICON_SETTINGS, ICON_HOME, ICON_WIKI, bindHomeButton } from './SettingsMenu.js';
+import { ICON_SETTINGS, ICON_PROMO, ICON_HOME, ICON_WIKI, hasPromoMenu, bindHomeButton } from './SettingsMenu.js';
 import { AlertCenter, ALERTS, ALERT_ICONS } from './Alerts.js';
 
 const HUD_BIOME_AGL = 150;   // m nad terénem, od kdy se ukazuje povrch pod košem
@@ -20,7 +20,7 @@ function loadOpen() {
 }
 
 export class HUD {
-  constructor(root, onSettings, onHome, onWiki) {
+  constructor(root, onSettings, onPromo, onHome, onWiki) {
     this.el = document.createElement('div');
     this.el.className = 'hud';
     this.el.innerHTML = `
@@ -30,6 +30,7 @@ export class HUD {
           <div class="logo">${brand.logoHtml}</div>
           <button class="btn round small gear" data-f="gear" aria-label="${t('settings.title')}">${ICON_SETTINGS}</button>
           <button class="btn round small gear" data-f="wiki" aria-label="${t('wiki.title')}">${ICON_WIKI}</button>
+          ${hasPromoMenu() ? `<button class="btn round small gear promo" data-f="promo" aria-label="${t(brand.promo.titleKey)}">${ICON_PROMO}</button>` : ''}
           <button class="btn round small gear home" data-f="home">${ICON_HOME}</button>
         </div>
         <div class="hud-right">
@@ -62,6 +63,7 @@ export class HUD {
     this.applyOpen();
     this.f.gear.addEventListener('click', () => onSettings?.(this.f.gear));
     this.f.wiki.addEventListener('click', () => onWiki?.());
+    this.f.promo?.addEventListener('click', () => onPromo?.(this.f.promo));
     bindHomeButton(this.f.home, onHome);
     this.f.windtoggle.addEventListener('click', () => {
       this.open = !this.open;
