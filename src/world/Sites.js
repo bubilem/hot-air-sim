@@ -86,7 +86,7 @@ export const SITES = [
     massifs: { height: 34 },   // nižší skalní plošiny než dřív (55 m), ať se krajina liší od Lužických hor
     // Nejvyšší hora ráje (Trosky): osamělý kopec; les roste vysoko po svazích, skála je až na vrcholu
     terrain: { treeLine: 160, rockLine: 175, peaks: [{ x: 1600, z: 580, r: 420, height: 105, level: true }] },
-    dominants: [{ type: 'trosky', x: 1600, z: 580, a: 0.5 }],   // hrad Trosky: dvě skalní věže s kamennými věžemi
+    dominants: [{ type: 'trosky', x: 1600, z: 580, a: 1.55 }],   // hrad Trosky: dvě skalní věže s kamennými věžemi (natočeno ~60° po směru hodin, ať je panorama vidět z letu)
     towns: [{ x: 1000, z: 900, r: 170 }],   // jediné městečko
     wind: [
       { alt: 0, speed: 1.2, bearing: 120 },
