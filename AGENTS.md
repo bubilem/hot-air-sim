@@ -12,7 +12,7 @@ Podrobný výklad všeho, co zde stojí, najdete v dokumentaci `doc/` (začněte
   horkovzdušného balonu, na kterém žáci studují **létání (fyziku)** i **programování**.
 - **Cíl žáka:** Pochopit, proč balon stoupá, proč nemá kormidlo (směr se volí výškou, tj. vrstvou větru), a
   naučit se, jak je z fyzikálních rovnic postavená 3D aplikace (herní smyčka, architektura, vykreslování, testy).
-- **Nasazení:** statický build (`dist/`) na školním IIS, `https://www.skolavdf.cz/hub/hot-air-sim/`; `public/web.config` (MIME, cache, CSP), SEO/Open Graph v `index.html`, náhled `public/og-image.png` (viz `doc/02`, „Nasazení na IIS“).
+- **Nasazení:** statický build (`dist/`) na školním IIS, `https://www.skolavdf.cz/hub/hot-air-sim/`; `brands/school/public/web.config` (MIME, cache, CSP), SEO/Open Graph v `index.html`, náhled `public/og-image.png` (viz `doc/02`, „Nasazení na IIS“).
 - **Platforma:** Webový prohlížeč, mobil (na výšku i na šířku), tablet, PC (myš/klávesnice). Bez instalace, bez serveru.
 - **Jazyk UI:** čeština (výchozí) + angličtina. Všechny texty jdou přes `src/i18n/` (`cs.js`, `en.js`, funkce
   `t(key)`), žádné texty natvrdo v kódu.
@@ -64,8 +64,8 @@ Postup řídí proměnné `inflation` 0…1, `upright` 0…1, `unroll` 0…1 a t
 ### 4) Oslava (`CELEBRATION`)
 - Křest sektem (korek, částice), titul podle lokality, oslovení a skóre (`public/titles.json`, viz `public/TITLES-README.md`; bez souboru platí vestavěné `title.*` v `i18n/`).
 - **Osvědčení** (Canvas → PNG): jméno, doba letu, max. výška, vzdálenost od cíle, měkkost přistání, titul (nese i místo, např. „Baron Lužických hor“), skóre, datum. Nahoře velký symbol školy (trojúhelník hrotem dolů připomíná balon) a pod ním „HotAirSim“ jako koš; bez vzoru pláště a bez popisků „Místo“ / „Balon“. Diplom je záměrně střídmý a vzdušný, s okrajem kolem obsahu: nadpis, titul, jméno (když ho hráč nezadá, řádek se vynechá), pět údajů a dole řada „Virtuální let“ (vlevo), hvězdy a datum.
-  Označeno jako **virtuální let**.
-- Tlačítka „Stáhnout diplom“, „Sdílet můj let“ (Web Share API s diplomem jako PNG, jinak zkopírování textu a odkazu na hru do schránky; nic se neposílá na naše servery), „Chci studovat IT →“ (odkaz na obor IT, `SCHOOL_IT_URL` v `GameConfig.js`) a „Letět znovu“. Pod nimi jeden nenápadný řádek o projektu školy. **Žádné jiné externí odkazy, reklamy ani sledování.**
+  Označeno jako **virtuální let**. Šablona diplomu je společná všem značkám; záhlaví (logo, název), barvy a odkazy dodává značka (`brand.diploma`, `brand.links`, viz sekce 5.3 a `doc/16`).
+- Tlačítka „Stáhnout diplom“, „Sdílet můj let“ (Web Share API s diplomem jako PNG, jinak zkopírování textu a odkazu na hru do schránky; nic se neposílá na naše servery), odkazy značky z `brand.links` (u školy „Chci studovat IT →“ na obor IT, u firemních značek např. objednání skutečného letu) a „Letět znovu“. Pod nimi volitelný nenápadný řádek značky (`result.note`). **Žádné jiné externí odkazy než odkazy značky, žádné reklamy ani sledování.**
 
 ---
 
@@ -126,8 +126,7 @@ src/
 │   ├── Balloon.js           # Logika balonu (fyzika + vizuál + posádka)
 │   ├── BalloonView.js       # Plášť (deformovatelný), koš, hořák, plamen, stín
 │   ├── EnvelopeDesigns.js   # Vzory pláště (canvas) + import vlastního obrázku
-│   ├── ChaseVehicle.js      # Auto + vlek (polep školy)
-│   ├── SchoolMark.js        # Značka školy jako textura
+│   ├── ChaseVehicle.js      # Auto + vlek (polep dodává značka)
 │   ├── Character.js         # Voxel postavičky
 │   └── GroundProps.js       # Ventilátor, lano, cílová značka, stolek
 ├── world/
@@ -139,13 +138,18 @@ src/
 │   ├── PlanPhase.js, PlanScene.js, LaunchPhase.js, FlightPhase.js,
 │   ├── LandingPhase.js, LandingResolver.js, CelebrationPhase.js
 ├── ui/
-│   ├── brand.js             # Logo (symbol školy) a název aplikace
+│   ├── links.js             # Marketingové odkazy značky podle místa (brand.links, UTM)
 │   ├── HUD.js, Alerts.js, PlanScreen.js, ResultScreen.js, SettingsMenu.js, Encyclopedia.js, TouchControls.js
-│   └── styles.css           # Design systém školy (sekce 7)
+│   └── styles.css           # Strukturální styl; hodnoty tokenů dodává téma značky (sekce 7)
 ├── audio/                   # SynthAudio.js (WebAudio), MusicPlayer.js
-├── i18n/                    # index.js (t, setLang), cs.js, en.js, wiki.cs.js, wiki.en.js
-└── config/                  # Colors.js (barvy), GameConfig.js (VŠECHNY konstanty), Version.js (verze)
-tests/                       # Vitest: fyzika, vítr, pravidla přistání, skóre, plán, biomy
+├── i18n/                    # index.js (t, setLang; sloučí jádro se značkou), cs.js, en.js (neutrální), wiki.cs.js, wiki.en.js
+└── config/                  # Colors.js (barvy materiálů scény), GameConfig.js (VŠECHNY konstanty), Version.js (verze)
+brands/                      # Značky (vrstva vzhledu a marketingu): school (referenční), _minimal (nejmenší platná)
+│   └── <id>/                # index.js, theme.css, brand.head.html, brand.noscript.html, i18n.*.js, wiki.*.js, public/
+vite/brand.js                # Vite preset: alias @brand, public (společné + značky), index.html, verze
+tools/brand-contract.js      # Smlouva jádro ↔ značka (validateBrand, kontrola CSS tokenů)
+public/                      # SPOLEČNÉ soubory jádra (hudba, titles.json); soubory značky jsou v brands/<id>/public
+tests/                       # Vitest: fyzika, vítr, pravidla přistání, skóre, plán, biomy, značky, odkazy, texty
 doc/                         # Dokumentace pro žáky a učitele
 ```
 
@@ -159,6 +163,18 @@ doc/                         # Dokumentace pro žáky a učitele
   na svah (`drape`), ať neleží vodorovně ve vzduchu nebo v kopci.
 - **Plášť** je jedna `BufferGeometry` z profilu; vrcholy se interpolují podle `inflation`, `upright`, `unroll`.
   Žádné shape keys, žádné nové assety.
+
+### 5.3 Značky (brand): jádro a vrstva značky
+- Jádro (`src/`) je **jedno** a nezná žádnou konkrétní značku. Všechno, co je značka (název, logo, barvy, písmo, URL, texty,
+  polepy, trika, vzor pláště, diplom, marketingové odkazy), je ve složce značky (`brands/<id>/` nebo repo značky) a jádro
+  to čte **jen přes alias `@brand`** (objekt s `contract`, viz `tools/brand-contract.js` a `doc/16-znacky-brand.md`).
+- **Do jádra nepatří žádný název, logo, barva, URL ani text konkrétní značky.** Hlídá to `tests/brand.test.js`
+  (zakázané řetězce `HotAirSim`, `HaBalon`, `skolavdf`, `Raleway`, `Nunito`, `habalon.cz`, `VOŠ` v `src/` a `index.html` mimo komentáře).
+- **Nová zakázka = nová značka** (složka `brands/<id>/` nebo samostatné repo s jádrem jako submodulem `core/`), **ne úprava jádra.**
+- Značka mění vzhled (CSS tokeny v `theme.css`, `colors`), obsah (balony, tituly) a marketing (`links`, `utm`, `promo`, `stats`).
+  **Nemění** fyziku, mapy, bodování, herní konstanty ani herní fáze.
+- Změna rozhraní značky zvyšuje `contract` a v `CHANGELOG.md` se označí jako **brand-breaking**.
+- Build: `npm run dev` / `npm run build` = značka `school`; `vite --mode <id>` = `brands/<id>`; repo značky používá preset `vite/brand.js`.
 
 ---
 
@@ -206,25 +222,25 @@ V E1 jedna pevná oblast cca 5 × 5 km kolem lokality s mlhou na okraji; streamo
 
 ---
 
-## 7. Design podle design systému školy
+## 7. Design: značka `school` a design systém školy
 
-Rozhraní se řídí **design systémem VOŠ, SPŠ a SOŠ Varnsdorf** ([repozitář školy](https://github.com/skolavdf-dev/design-system): `docs/DESIGN.md`, `docs/LOGO.md`;
+Tato sekce popisuje **značku `school`** (`brands/school/`), tedy výchozí vzhled HotAirSim. Jiné značky (firemní) mají vlastní téma a tato pravidla pro ně neplatí; jádro (`src/ui/styles.css`) je strukturální a vzhled bere z tokenů (viz sekce 5.3). Školní rozhraní se řídí **design systémem VOŠ, SPŠ a SOŠ Varnsdorf** ([repozitář školy](https://github.com/skolavdf-dev/design-system): `docs/DESIGN.md`, `docs/LOGO.md`;
 výklad v `doc/09-design-system.md`). Závazná pravidla:
 
 - **Paleta:** žlutá `#ffd400`/`#ffea80`, modrá `#41d7ff`/`#00c0f3`, zelená `#c2dd78`/`#a6ce39`; pozadí gradient
   `#003b4b → #006783`; panely `#001b2273` (blur 12 px), plovoucí prvky `rgba(0,20,26,.95)` (blur 20 px);
   primární tlačítko `#0083a6`, hover `#b29400`; nebezpečí `#ef4444`.
-- **Písmo:** výhradně **Raleway** (200/400/600/700), hostované lokálně v `public/fonts/` (žádné Google Fonts, soukromí).
+- **Písmo:** výhradně **Raleway** (200/400/600/700), hostované lokálně v `brands/school/public/fonts/` (žádné Google Fonts, soukromí).
 - **Tvary:** panely, karty, tabulky = `border-radius: 0`; **jen tlačítka a formulářová pole 4 px**.
 - **Bezrámový vzhled:** žádné šedé ani průsvitné rámečky; oddělujte plochou (`--tint`) a odsazením.
 - **Plochý styl:** žádné záře ani barevné stíny tlačítek.
 - **Odkazy** žluté, bez podtržení (podtržení na hover); `strong` zůstává bílý. **Odrážky** jsou polygon z loga.
-- **Barvy v kódu:** CSS proměnné v `src/ui/styles.css`, číselné hodnoty pro Three.js v `src/config/Colors.js` (`BRAND`).
-  Obě místa musí zůstat konzistentní.
+- **Barvy v kódu:** CSS proměnné v `src/ui/styles.css`, číselné hodnoty pro Three.js v `brand.colors` (`brands/<id>/index.js`; barvy materiálů scény zůstávají v `src/config/Colors.js`).
+  Hodnoty tokenů jsou v `brands/<id>/theme.css`; obě místa značky musí zůstat konzistentní.
 - **Logo:** symbol školy se nesmí natahovat, otáčet ani měnit barvy; poměr 1000 : 866, hrot dolů, min. šířka 24 px.
   Loga jsou majetkem školy.
-- Název aplikace je **HotAirSim**. Hra propaguje školu: logo školy je na autě, přívěsu a trikách posádky (`entities/SchoolMark.js`). Ve hře nejsou značky třetích stran, reklamy ani odkazy na komerční služby. Jediný externí odkaz je na obor Informační technologie na webu školy (`SCHOOL_IT_URL`): stálý řádek „Studuj IT u nás →“ na úvodní obrazovce (plánování), položka „O projektu a škole“ v Encyklopedii a tlačítko „Chci studovat IT →“ na obrazovce Oslava; za letu se odkaz nezobrazuje. Otevírá se v nové záložce (`rel="noopener noreferrer"`), bez sledování.
-- **Galerie balonů:** obrázky pláště 2 : 1 v `public/envelopes/` + `manifest.json` (návod v `public/envelopes/README.md`); hra je načte při startu (`loadFleet`).
+- Název aplikace je **HotAirSim**. Hra propaguje školu: logo školy je na autě, přívěsu a trikách posádky (`brands/school/mark.js`). Ve hře nejsou značky třetích stran, reklamy ani odkazy na komerční služby; marketingové odkazy má jen zvolená značka (`brand.links`). Jediný externí odkaz značky `school` je na obor Informační technologie na webu školy (`brand.links`, id `study`): stálý řádek „Studuj IT u nás →“ na úvodní obrazovce (plánování), položka „O projektu a škole“ v Encyklopedii a tlačítko „Chci studovat IT →“ na obrazovce Oslava; za letu se odkaz nezobrazuje. Otevírá se v nové záložce (`rel="noopener noreferrer"`), bez sledování.
+- **Galerie balonů:** obrázky pláště 2 : 1 v `brands/<id>/public/envelopes/` + `manifest.json` (návod v tamním `README.md`); hra je načte při startu (`loadFleet`).
 - **Vzor pláště:** `entities/EnvelopeDesigns.js` kreslí vestavěné vzory do canvasu 1024 × 512 (osa x = obvod ve
   32 výsečích, osa y = od ústí k vrchlíku) a umí načíst vlastní PNG/WebP/JPEG (do 8 MB, ořez na 2:1, jen v prohlížeči).
 
@@ -264,4 +280,5 @@ výklad v `doc/09-design-system.md`). Závazná pravidla:
 6. **Ladění fyziky:** konstanty jsou v `PHYSICS`; za běhu lze zkoušet přes `window.game` v konzoli.
 7. **Dokumentace:** při změně pravidel, fyziky nebo struktury aktualizujte `AGENTS.md`, `README.md` **i kapitoly v `doc/`**.
 8. **Design:** nové UI prvky musí dodržet sekci 7 (kontrolní seznam v `doc/09-design-system.md`, odst. 9.8).
-9. **Verze:** číslo verze je jen v `package.json` (zdroj pravdy), změny zapisujte do `CHANGELOG.md` (test hlídá, že tam je sekce aktuální verze); postup vydání je v `README.md`, kapitola Verzování. Verze se ukazuje na úvodní obrazovce (`src/config/Version.js`).
+9. **Jádro bez značky:** do jádra nepatří žádný název, logo, barva, URL ani text konkrétní značky; nová zakázka = nová značka (sekce 5.3, `doc/16-znacky-brand.md`).
+10. **Verze:** číslo verze je jen v `package.json` (zdroj pravdy), změny zapisujte do `CHANGELOG.md` (test hlídá, že tam je sekce aktuální verze); postup vydání je v `README.md`, kapitola Verzování. Verze se ukazuje na úvodní obrazovce (`src/config/Version.js`).

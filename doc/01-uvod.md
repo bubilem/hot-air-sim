@@ -151,9 +151,12 @@ hot-air-sim/
 ├── index.html            ← jediná HTML stránka (canvas + kontejner pro UI + načtení fontu)
 ├── package.json          ← seznam závislostí a příkazů (npm scripts)
 ├── vite.config.js        ← nastavení Vite (relativní základní cesta)
-├── public/               ← soubory kopírované beze změny (hudba, logo)
-│   ├── music/theme-organic-house.mp3
-│   └── logo-mark.svg
+├── brands/               ← značky (vzhled, texty, marketing); kapitola 16
+│   ├── school/           ←   školní značka (výchozí)
+│   └── _minimal/         ←   nejmenší platná značka
+├── public/               ← společné soubory jádra (hudba, titles.json)
+│   └── music/theme-organic-house.mp3
+├── tools/, vite/         ← smlouva jádro ↔ značka a Vite preset pro značky
 ├── src/                  ← celý zdrojový kód aplikace (kapitola 05)
 ├── tests/                ← automatické testy (kapitola 12)
 ├── AGENTS.md             ← technická pravidla projektu (pro vývojáře a nástroje AI)

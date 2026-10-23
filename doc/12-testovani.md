@@ -117,6 +117,16 @@ Všimněte si: test **nespouští hru**, jen volá `step` stokrát. Díky pevné
 Testujeme **chování**, ne konkrétní čísla: „po zážehu stoupá“ je pravdivé i po drobném doladění konstant.
 Test s přesným číslem (`expect(y).toBe(37.12)`) by se musel přepisovat při každé úpravě.
 
+### Testy značek a textů
+
+- `tests/brand.test.js`: každá složka v `brands/` splňuje smlouvu jádra (`tools/brand-contract.js`: povinné klíče a typy),
+  téma značky nastavuje všechny CSS tokeny, které `styles.css` používá, popisky odkazů mají texty v cs i en a **v jádru
+  (`src/`, `index.html`) nejsou řetězce konkrétní značky** (mimo komentáře). Také kontroluje, že `titles.json` pokrývá všechny lokality.
+- `tests/i18n.test.js`: každý klíč použitý v `t('…')` existuje v češtině i angličtině po sloučení jádra a značky; cs a en mají stejné klíče.
+- `tests/links.test.js`: umístění odkazů značky, UTM, `utm: false` a to, že značka bez odkazů nezobrazí nic.
+
+Značka ve vlastním repu spouští totéž proti své složce (`npm test` v repu značky, viz kapitola 16).
+
 ## 12.6 Jak napsat vlastní test
 
 Úkol: ověřit, že nová funkce `kmhToMs(v)` převádí km/h na m/s.

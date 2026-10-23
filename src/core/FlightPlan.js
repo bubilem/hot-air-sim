@@ -15,7 +15,7 @@ export class FlightPlan {
     this.setPassengers(passengers);
     this.bottles = bottles;
     this.envelopeId = 'checker';     // vzor pláště (viz entities/EnvelopeDesigns.js)
-    this.envelopeTouched = false;    // hráč už vzor vybral sám (jinak je výchozí první balon z public/envelopes)
+    this.envelopeTouched = false;    // hráč už vzor vybral sám (jinak je výchozí první balon z envelopes/ značky)
     this.customCanvas = null;        // vlastní obrázek pláště (jen v paměti prohlížeče)
   }
 

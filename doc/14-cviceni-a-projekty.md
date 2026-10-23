@@ -78,13 +78,12 @@ měkkost přistání) se nejvíc vyplatí?
 
 ## 14.3 Programování – začátečníci [P]
 
-**P1 ★** V `src/config/Colors.js` změňte hodnotu `BRAND.blue1` (např. na `0xff0000`). Co všechno ve scéně změní barvu?
+**P1 ★** V `brands/school/index.js` změňte hodnotu `colors.confetti[0]` nebo `colors.flags[0]` (např. na `0xff0000`). Co všechno ve scéně změní barvu?
 Proč se nezměnilo rozhraní kolem (HUD, tlačítka)? (Nápověda: kapitola 09, odst. 9.3.)
 
 **P2 ★** Přidejte do `cs.js` a `en.js` nový text a zobrazte ho kdekoliv v rozhraní (kapitola 13, odst. 13.5).
 
-**P3 ★** Změňte název aplikace v panelu nahoře (`src/ui/brand.js`). Co se změní na osvědčení? (Pozor: tam je text
-kreslený v `ResultScreen.js` samostatně. Proč by bylo lepší mít název na jednom místě?)
+**P3 ★** Změňte název aplikace (`brands/school/logo.js` a `name` v `brands/school/index.js`). Co se změní na osvědčení a na štítku pláště? (Název je ve značce na dvou místech; zkuste to sjednotit a ověřte `npm test`.)
 
 **P4 ★** Změňte počet pasažérů (maximum) z 5 na 4 (`GameConfig.PLAN.maxPassengers`). Projeví se to v UI? Co na to
 rozvržení v koši (`PAX_SLOTS`)?

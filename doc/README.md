@@ -20,6 +20,7 @@ Dokumentace je psaná tak, abyste **nemuseli nic hádat**: každá kapitola vysv
 | **Žák se zájmem o fyziku** | 03, 04, 15 | rovnice, odvození, příklady výpočtů |
 | **Žák se zájmem o programování** | 05, 06, 07, 08, 10, 11, 12 | architektura a technologie |
 | **Žák, který chce projekt upravovat** | 13, 14 | návody krok za krokem a zadání úloh |
+| **Kdo staví vlastní (např. firemní) verzi** | 05, 09, 16 | značka = vrstva vzhledu a marketingu nad stejným jádrem |
 | **Učitel** | celé, hlavně 14 a poznámky na konci této stránky | |
 
 ---
@@ -43,6 +44,7 @@ Dokumentace je psaná tak, abyste **nemuseli nic hádat**: každá kapitola vysv
 | 13 | [Jak projekt upravovat](13-jak-upravovat.md) | návody: změna konstant, nová lokalita, nový vzor pláště, nový jazyk, nová fáze |
 | 14 | [Cvičení a projekty](14-cviceni-a-projekty.md) | úlohy z fyziky a z programování podle obtížnosti |
 | 15 | [Slovník pojmů](15-slovnik.md) | balonářské, fyzikální a programátorské pojmy |
+| 16 | [Značky (brand)](16-znacky-brand.md) | oddělení jádra od vzhledu a marketingu, jak přidat další značku |
 
 ---
 

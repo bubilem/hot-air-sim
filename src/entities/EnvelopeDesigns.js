@@ -155,7 +155,7 @@ export async function loadCustomImage(file) {
 }
 
 /**
- * Načte balony z `public/envelopes/manifest.json`.
+ * Načte balony z `envelopes/manifest.json` značky (`brands/<id>/public/`).
  * Formát: { "balloons": [ { "id": "skolavdf", "name": { "cs": "…", "en": "…" }, "file": "skolavdf.webp" } ] }
  * Nedostupný manifest nebo obrázek se tiše přeskočí (hra běží i bez nich).
  * @returns {Promise<{id:string, name:{cs:string,en:string}, canvas:HTMLCanvasElement}[]>}

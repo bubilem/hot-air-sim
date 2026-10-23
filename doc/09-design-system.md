@@ -85,9 +85,11 @@ nakreslit čáru, použijte místo toho `--tint` (nebo jiné pozadí).
 
 Barvy rozhraní (DOM, CSS) a barvy **scény** (3D objekty) jsou dvě oddělené věci:
 
-- **CSS** – proměnné v `src/ui/styles.css` (`#rrggbb`),
-- **3D scéna** – `src/config/Colors.js`: objekt `BRAND` (školní barvy jako čísla `0xrrggbb` pro Three.js, např. konfety,
-  oblečení pozemního týmu, cílová značka) a `COLORS` (louky, voda, stromy, balon…).
+- **CSS** – tokeny (proměnné); hodnoty nastavuje téma značky `brands/<id>/theme.css`, `src/ui/styles.css` je strukturální,
+- **3D scéna** – `brand.colors` ve značce (`brands/<id>/index.js`; čísla `0xrrggbb` pro Three.js, např. konfety,
+  oblečení pozemního týmu, vlajky) a `COLORS` v `src/config/Colors.js` (louky, voda, stromy, balon…).
+
+Tato kapitola popisuje **značku `school`**. Jiné značky mají vlastní téma; rozhraní značky viz [kapitola 16](16-znacky-brand.md).
 
 Barvy přírody (zelená louka, modrá obloha) **nepatří do design systému**. Design systém určuje vzhled
 rozhraní, ne obsah krajiny.
@@ -97,8 +99,8 @@ Hodnoty v `Colors.js` jsou **stejné** jako v CSS; při změně školní barvy j
 
 ## 9.4 Typografie
 
-Celá aplikace používá výhradně **Raleway**; je hostované lokálně (`public/fonts/*.woff2`, licence OFL) a deklarované
-v `index.html` pomocí `@font-face` (nic se nenačítá z Google Fonts):
+Celá aplikace používá výhradně **Raleway**; je hostované lokálně (`brands/school/public/fonts/*.woff2`, licence OFL) a deklarované
+v `brands/school/brand.head.html` pomocí `@font-face` (nic se nenačítá z Google Fonts):
 
 ```css
 @font-face { font-family: Raleway; font-weight: 700; font-display: swap;
@@ -243,12 +245,12 @@ Aplikace používá **symbol školy** (barevný trojúhelník s hrotem dolů) sp
 
 | Kde | Soubor | Poznámka |
 | :-- | :-- | :-- |
-| HUD a plánování | `src/ui/brand.js` (`LOGO_HTML`) | symbol jako inline SVG + jednoslovný nápis „HotAirSim“ |
-| Osvědčení | `src/ui/ResultScreen.js` (`drawMark`) | symbol nakreslený do canvasu ze stejných bodů |
-| Ikona karty prohlížeče | `public/logo-mark.svg` | `<link rel="icon">` v `index.html` |
-| Auto, přívěs | `src/entities/ChaseVehicle.js`, `SchoolMark.js` | polep: symbol + „VOŠ \| SPŠ \| SOŠ Varnsdorf“ na bocích |
-| Trika posádky a pilota | `Character.js`, `SchoolMark.js` | průhledný symbol na hrudi a na zádech |
-| Plášť balonu | `EnvelopeDesigns.js` | nápis „HotAirSim“, vzor „Školní barvy“ ve třech barvách |
+| HUD a plánování | `brands/school/logo.js` (`LOGO_HTML`, předává `brand.logoHtml`) | symbol jako inline SVG + jednoslovný nápis „HotAirSim“ |
+| Osvědčení | `brands/school/index.js` (`diploma.header`, `drawLogo`) | symbol nakreslený do canvasu ze stejných bodů |
+| Ikona karty prohlížeče | `brands/school/public/logo-mark.svg` | `<link rel="icon">` v `brands/school/brand.head.html` |
+| Auto, přívěs | `brands/school/mark.js` (`brand.vehicle`) | polep: symbol + „VOŠ \| SPŠ \| SOŠ Varnsdorf“ na bocích |
+| Trika posádky a pilota | `brands/school/mark.js` (`brand.character`) | průhledný symbol na hrudi a na zádech |
+| Plášť balonu | `brands/school/index.js` (`envelope.designs`) | nápis „HotAirSim“, vzor „Školní barvy“ ve třech barvách |
 
 Pravidla z `LOGO.md`, která je nutné dodržet:
 

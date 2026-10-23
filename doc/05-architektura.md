@@ -43,7 +43,6 @@ src/
 │   ├── Balloon.js             spojuje fyziku, vizuál a posádku
 │   ├── BalloonView.js         procedurální geometrie balonu (plášť, koš, plamen)
 │   ├── EnvelopeDesigns.js     vzory pláště kreslené do canvasu
-│   ├── SchoolMark.js          značka školy jako textura (polepy, vesty)
 │   ├── Character.js           „voxelové“ postavy
 │   ├── ChaseVehicle.js        doprovodné auto a přívěs
 │   └── GroundProps.js         ventilátor, lano, vlajka, stolek…
@@ -57,22 +56,22 @@ src/
 │   └── Birds.js               ptáci (instancing + vertex shader)
 │
 ├── ui/                      ROZHRANÍ (HTML/CSS/DOM)
-│   ├── brand.js               logo a název aplikace
+│   ├── links.js               marketingové odkazy značky podle místa (brand.links)
 │   ├── HUD.js                 přístrojová deska za letu
 │   ├── PlanScreen.js          obrazovka plánování
 │   ├── ResultScreen.js        osvědčení (canvas) a tlačítka
 │   ├── SettingsMenu.js        nastavení zvuku, nápověda ovládání, tlačítko „domů“
 │   ├── Encyclopedia.js        encyklopedie
 │   ├── TouchControls.js       klávesnice + dotyková tlačítka
-│   └── styles.css             design systém školy
+│   └── styles.css             strukturální styl; hodnoty tokenů dodává téma značky
 │
 ├── audio/
 │   ├── SynthAudio.js          syntéza zvuků (WebAudio)
 │   └── MusicPlayer.js         hudba na pozadí
 │
 ├── i18n/
-│   ├── index.js               t(klíč), setLang(), getLang(), getWiki()
-│   ├── cs.js / en.js          překlady rozhraní
+│   ├── index.js               t(klíč), setLang(), getLang(), getWiki(); sloučí jádro se značkou
+│   ├── cs.js / en.js          neutrální překlady rozhraní (značka je přepisuje)
 │   └── wiki.cs.js / wiki.en.js  texty encyklopedie
 │
 └── config/

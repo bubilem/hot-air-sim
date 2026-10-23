@@ -62,7 +62,7 @@ export class GameApp {
     const firstInput = () => { this.audio.unlock(); this.music.start(); };
     window.addEventListener('pointerdown', firstInput, { once: true, capture: true });
     window.addEventListener('keydown', firstInput, { once: true, capture: true });
-    this.fleet = [];                                   // balony z public/envelopes
+    this.fleet = [];                                   // balony z envelopes/ značky
     this.fleetReady = loadFleet(import.meta.env.BASE_URL).then((f) => { this.fleet = f; return f; });
     this.titles = {};                                  // tituly z public/titles.json
     this.titlesReady = loadTitles(import.meta.env.BASE_URL).then((d) => { this.titles = d; return d; });

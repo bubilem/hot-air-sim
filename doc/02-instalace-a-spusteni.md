@@ -138,7 +138,7 @@ Všechny příkazy jsou definované v `package.json` v sekci `scripts`:
 npm run build
 ```
 
-Výsledek je ve složce `dist/` (`index.html`, `assets/*.js`, `assets/*.css`, `music/…`, `logo-mark.svg`).
+Výsledek je ve složce `dist/` (`index.html`, `assets/*.js`, `assets/*.css`, `music/…` a soubory značky: favicon, `fonts/`, `envelopes/`, `web.config`).
 Tuto složku lze nahrát na **libovolný statický webhosting** (školní web, GitHub Pages, Netlify…), protože hra
 nepotřebuje žádný server. V `vite.config.js` je nastaveno `base: './'`, takže cesty jsou **relativní**
 a hra funguje i v podsložce, například `https://skola.example/hot-air-sim/`.
@@ -155,7 +155,7 @@ pro naši hru je to v pořádku (na místní síti se načte okamžitě).
 Ostrá verze běží na `https://www.skolavdf.cz/hub/hot-air-sim/` (hosting Foprsi, Windows + IIS).
 
 1. `npm run build`, pak nahrajte **obsah** složky `dist/` (ne složku samotnou) do `/hub/hot-air-sim/`.
-2. Ve složce `dist/` je i `web.config` (zdroj `public/web.config`). Nastavuje:
+2. Ve složce `dist/` je i `web.config` (zdroj `brands/school/public/web.config`; každá značka má vlastní). Nastavuje:
    - **MIME typy** `.webp`, `.mp3`, `.json`, `.svg`, `.woff2`, `.js` (starší IIS je nezná a vrací 404); každý je zapsán jako
      `<remove>` + `<mimeMap>`, aby nevznikla chyba 500.19 kvůli duplicitě;
    - **výchozí dokument** `index.html` a **statickou kompresi** js/json/svg (JS má 750 kB, po gzipu 207 kB);
@@ -174,7 +174,7 @@ Co ověřit u správce webu, pokud něco nefunguje:
 - nadřazený `web.config` nepřidává hlavičky, které se střetávají s CSP (např. `X-Frame-Options`).
 
 `robots.txt` a `sitemap.xml` se čtou jen z kořene domény; o zařazení stránky do sitemapy školy požádejte správce webu.
-Náhled pro sociální sítě je `public/og-image.png` (1200 × 630), ikony `public/apple-touch-icon.png` a `public/favicon-32.png`.
+Náhled pro sociální sítě je `brands/school/public/og-image.png` (1200 × 630), ikony `brands/school/public/apple-touch-icon.png` a `favicon-32.png`; metaúdaje jsou v `brands/school/brand.head.html`.
 
 ## 2.6 Použité knihovny
 
@@ -209,9 +209,9 @@ Testovací nástroj kompatibilní s Vite. Soubory `tests/*.test.js` spouští p�
 
 ### Písmo Raleway
 
-Písmo je **hostované lokálně** ve složce `public/fonts/` (`woff2`, řezy 200, 400, 600, 700 v rozsazích `latin` a
-`latin-ext`, tedy včetně české diakritiky) a deklarované pomocí `@font-face` v `index.html`. Hra tak nevolá žádné cizí servery
-(soukromí, funguje i offline). Licence písma (SIL OFL) je v `public/fonts/LICENSE-Raleway-OFL.txt`.
+Písmo je **hostované lokálně** ve složce `brands/school/public/fonts/` (`woff2`, řezy 200, 400, 600, 700 v rozsazích `latin` a
+`latin-ext`, tedy včetně české diakritiky) a deklarované pomocí `@font-face` v `brands/school/brand.head.html`. Hra tak nevolá žádné cizí servery
+(soukromí, funguje i offline). Licence písma (SIL OFL) je v `brands/school/public/fonts/LICENSE-Raleway-OFL.txt`.
 
 ## 2.7 Doporučené nastavení editoru (VS Code)
 

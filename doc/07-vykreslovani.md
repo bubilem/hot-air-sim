@@ -373,7 +373,7 @@ nad zemí a na „fade“ (stín se objevuje spolu se vztyčováním balonu).
   Paže jsou v **pivotech** (skupina v rameni), takže se otáčejí kolem ramene: funkce `waveArms`, `armsForward`,
   `armsUp` jim nastavují úhel.
 - **Auto a vlek** (`ChaseVehicle.js`): kvádry, válce (kola) a krychle; tažné zařízení je na konci auta (`hitch`),
-  odtud vede lano k balonu. Auto a přívěs nesou polep školy (`SchoolMark.js`: symbol a nápis nakreslené do canvasu a nalepené na plochu `PlaneGeometry`).
+  odtud vede lano k balonu. Auto a přívěs nesou polep značky (`brand.vehicle` ve značce, u školy `brands/school/mark.js`: symbol a nápis nakreslené do canvasu a nalepené na plochu `PlaneGeometry`; zrcadlení pravého boku řeší značka).
 - **Rekvizity** (`GroundProps.js`): ventilátor s otáčející se vrtulí, vak, lano (`Rope` – válec natažený mezi
   dvěma body), vlajky na cíli (vlají ve vertex shaderu podle větru), stolek se sektem.
 - **Cíl**: tyč s vlajkami a světle modrý kruh (`RingGeometry`) o poloměru 46–60 m.

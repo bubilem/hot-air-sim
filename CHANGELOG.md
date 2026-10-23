@@ -6,9 +6,29 @@ v `README.md` (kapitola Verzování).
 
 ## [Nepublikováno]
 
+## [0.3.0] – 2026-10-23
+
+Vyměnitelná vrstva značky (brand): jádro hry je oddělené od vzhledu a marketingu, takže z jednoho kódu lze stavět školní i firemní verze. Hra pro školu vypadá a chová se beze změny.
+
 ### Přidáno
+- **Vrstva značky** `brands/<id>/` (rozhraní `contract: 1`, kapitola `doc/16-znacky-brand.md`): název, `localStorage` prefix, písmo, barvy 3D scény, logo, polepy vozu, trika, vzory pláště, texty cs/en, kategorie encyklopedie, diplom, marketingové odkazy (`links`, `utm`, `promo`, `stats`), `theme.css`, `public/`.
+- Značky `school` (referenční, výchozí) a `_minimal` (nejmenší platná, testovací fixture).
+- Vite preset `vite/brand.js` (`brandConfig`): alias `@brand`, spojení společného a značkového `public/`, skládání `index.html` z `brand.head.html` a `brand.noscript.html`, verze z git jádra. Skripty `dev:school` a `build:school`; `vite --mode <id>` pro značku v jádru. Značka může mít vlastní repo s jádrem jako git submodulem `core/`.
+- `tools/brand-contract.js`: kontrola značky (`validateBrand`) a CSS tokenů, které téma musí nastavit.
+- Testy `tests/brand.test.js` (smlouva, tokeny, texty odkazů, **čistota jádra**), `tests/i18n.test.js` (úplnost klíčů, shoda cs a en), `tests/links.test.js` (umístění odkazů, UTM).
+- Marketingové odkazy značky podle místa (`plan`, `diploma`, `menu`, `failed`, `wiki`), promo tlačítko a panel v HUD, pruh statistik na plánování, blok po neúspěšném přistání a tlačítko hlavního odkazu v encyklopedii; vše jen když to značka má.
+- Vesta týmu (`colors.<role>.vest`) na postavách pilota a posádky.
 - Stálý odkaz „Studuj IT u nás →“ na úvodní obrazovce a tlačítko „Chci studovat IT →“ na obrazovce Oslava (odkaz na obor IT na webu školy).
 - Tlačítko „Sdílet můj let“: nativní sdílení (s diplomem jako obrázkem), jinak zkopírování textu a odkazu na hru do schránky.
+
+### Změněno
+- **Diplom** je jedna šablona v jádru; značka dodává barvy, výšku a záhlaví (logo, rámeček, balon). Školní diplom je pixel po pixelu shodný s předchozí verzí.
+- `src/ui/styles.css` je strukturální a používá jen CSS tokeny (nově `--highlight`, `--accent-2`, `--radius-panel`, `--link`, `--shadow-float`, …); hodnoty jsou v `brands/school/theme.css`.
+- `src/i18n/cs.js` a `en.js` jsou neutrální; školní texty a kategorie „O projektu a škole“ jsou v `brands/school/`. Odstraněn nepoužitý klíč `result.moreIt`; `result.school` je volitelné `result.note`.
+- Soubory značky (favicon, fonty, `og-image`, `envelopes/`, `web.config`) jsou v `brands/school/public/`; společné `public/` obsahuje hudbu a `titles.json`.
+- Popis lokality Lužické hory je univerzální (bez zmínky o škole).
+- `SchoolMark.js` a `ui/brand.js` přesunuty do `brands/school/`; `BRAND` z `Colors.js` a `SCHOOL_IT_URL` z `GameConfig.js` odstraněny (**brand-breaking** pro vlastní forky: nahrazuje je `brand.colors`, `brand.links`).
+- Testy se spouštějí jen ze složky `tests/` aktuálního repa.
 
 ## [0.2.0] – 2026-10-23
 

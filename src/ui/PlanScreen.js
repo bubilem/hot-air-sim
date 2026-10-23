@@ -250,7 +250,7 @@ export class PlanScreen {
     const box = this.el.querySelector('#plan-designs');
     box.innerHTML = '';
     const fleet = (this.cb.getFleet?.() || []).map((f) => ({ id: f.id, label: f.name[lang], canvas: f.canvas }));
-    // jen balony z public/envelopes; bez nich nouzově jeden výchozí vzor
+    // jen balony z envelopes/ značky; bez nich nouzově jeden výchozí vzor
     const items = fleet.length ? fleet : [{ id: 'checker', label: t('plan.default'), canvas: designCanvas('checker') }];
     if (p.customCanvas) items.push({ id: 'custom', label: t('plan.custom'), canvas: p.customCanvas });
 

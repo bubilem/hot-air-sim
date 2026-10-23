@@ -143,13 +143,15 @@ Vzory se kreslí do canvasu 1024 × 512 (osa x = obvod, 32 výsečí; osa y = od
 - funkce `drawSeams` dokreslí jemné švy mezi výsečemi automaticky,
 - stáhnout šablonu s mřížkou lze tlačítkem „Stáhnout šablonu pláště“ v plánování.
 
-**Hotové obrázky balonů (galerie)** se přidávají bez zásahu do kódu: obrázek 2 : 1 (WebP/PNG) uložte do `public/envelopes/` a doplňte položku do `public/envelopes/manifest.json` (návod je v `public/envelopes/README.md`). Hra je při startu načte (`loadFleet`), nabídne v kartě „Balon“ (jiné pláště než ty ze složky ve hře nejsou; bez nich se použije nouzový výchozí vzor), první v seznamu je výchozí a jeho název se uvede na osvědčení. Chybějící soubor se tiše přeskočí.
+**Hotové obrázky balonů (galerie)** se přidávají bez zásahu do kódu: obrázek 2 : 1 (WebP/PNG) uložte do `public/envelopes/` **své značky** (`brands/<id>/public/envelopes/`) a doplňte položku do `manifest.json` (návod je v tamním `README.md`). Hra je při startu načte (`loadFleet`), nabídne v kartě „Balon“ (jiné pláště než ty ze složky ve hře nejsou; bez nich se použije nouzový výchozí vzor), první v seznamu je výchozí a jeho název se uvede na osvědčení. Chybějící soubor se tiše přeskočí.
 
 **Vlastní obrázek hráče** podporuje PNG/WebP/JPEG do 8 MB; kód v `loadCustomImage` ho ořízne do poměru 2:1.
 
 ---
 
 ## 13.5 Nový text a překlad
+
+Texty značky (jiný název, marketingové věty) patří do `brands/<id>/i18n.cs.js` / `i18n.en.js`; přepíšou neutrální text jádra (kapitola 16).
 
 1. Do `src/i18n/cs.js` přidejte řádek, např. `'hud.altitude.max': 'Max. výška',`.
 2. Totéž do `en.js`: `'hud.altitude.max': 'Max. altitude',`.
