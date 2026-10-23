@@ -11,8 +11,8 @@ export const SITES = [
     id: 'luzicke',
     name: { cs: 'Lužické hory – nad Varnsdorfem', en: 'Lusatian Mountains – above Varnsdorf' },
     desc: {
-      cs: 'Domov naší školy. Startujete z louky nad Varnsdorfem, kolem se vlní zalesněné kopce s rybníky a v dálce se tyčí skalnaté vrcholky. Vítr se s výškou stáčí z jihovýchodu přes jih až na jihozápad; cíl za návrším najdete jen ve správné vrstvě.',
-      en: 'Our school’s home. You launch from a meadow above Varnsdorf, with forested hills and ponds rolling around you and rocky summits in the distance. The wind turns from southeast through south to southwest with height; the target beyond the ridge is reachable only in the right layer.',
+      cs: 'Startujete z louky nad Varnsdorfem, kolem se vlní zalesněné kopce s rybníky a v dálce se tyčí skalnaté vrcholky. Vítr se s výškou stáčí z jihovýchodu přes jih až na jihozápad; cíl za návrším najdete jen ve správné vrstvě.',
+      en: 'You launch from a meadow above Varnsdorf, with forested hills and ponds rolling around you and rocky summits in the distance. The wind turns from southeast through south to southwest with height; the target beyond the ridge is reachable only in the right layer.',
     },
     seed: 8123,
     elevation: 360,
