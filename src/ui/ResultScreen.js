@@ -2,6 +2,7 @@
 import { t, hasKey, getLang } from '../i18n/index.js';
 import brand from '@brand';
 import { linksHtml } from './links.js';
+import { designCanvas } from '../entities/EnvelopeDesigns.js';
 
 // Jedna šablona diplomu pro všechny značky: rozměr, barvy a záhlaví dodává brand.diploma (viz doc/16-znacky-brand.md).
 const D = brand.diploma;
@@ -103,7 +104,7 @@ export class ResultScreen {
     g.textAlign = 'center';
 
     // Záhlaví (logo a název) kreslí značka; obsah diplomu začíná pod ním
-    D.header(g, { W, H, FONT, plan, app });
+    D.header(g, { W, H, FONT, plan, app, envelopeCanvas: designCanvas(plan.envelopeId, plan.customCanvas) });
     const y0 = D.headerHeight;
 
     // Nadpis, titul a jméno: každý řádek má kolem sebe volné místo

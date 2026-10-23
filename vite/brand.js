@@ -92,6 +92,8 @@ export function brandConfig({ brandDir, coreDir = CORE_DIR, outDir }) {
     resolve: { alias: { '@brand': join(brand, 'index.js') } },
     server: { fs: { allow: [coreDir, brand] } },
     build: { outDir: outDir ? resolve(outDir) : resolve(process.cwd(), 'dist'), emptyOutDir: true },
+    // testy hledá vitest ve složce tests/ tam, odkud se spouští (jádro: core/tests, repo značky: tests/ značky)
+    test: { dir: resolve(process.cwd(), 'tests') },
     plugins: [brandHtml(brand), brandPublic(coreDir, brand)],
   };
 }

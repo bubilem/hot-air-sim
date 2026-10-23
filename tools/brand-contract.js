@@ -25,7 +25,8 @@ export function validateBrand(b) {
   const c = b.colors ?? {};
   for (const k of ['primary', 'accent', 'bag', 'trailerTarp', 'envelopeRed', 'envelopeWhite', 'envelopeBand']) need(isColorNum(c[k]), `colors.${k} (číslo 0xRRGGBB)`);
   for (const role of ['pilot', 'crew']) {
-    need(isColorNum(c[role]?.shirt) && isColorNum(c[role]?.sleeve), `colors.${role}.shirt a .sleeve`);
+    need(isColorNum(c[role]?.shirt), `colors.${role}.shirt`);
+    need(c[role]?.sleeve == null || isColorNum(c[role]?.sleeve), `colors.${role}.sleeve (číslo nebo null: pak má rukáv barvu trika)`);
     need(c[role]?.vest === null || isColorNum(c[role]?.vest), `colors.${role}.vest (číslo nebo null)`);
   }
   need(Array.isArray(c.flags) && c.flags.length >= 2 && c.flags.every(isColorNum), 'colors.flags: aspoň 2 barvy');

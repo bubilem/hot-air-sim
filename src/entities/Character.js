@@ -49,6 +49,7 @@ export function createCharacter(role = 'passenger', variant = 0, female = false)
   g.add(part(0.2, 0.75, 0.26, pants, -0.12, 0.375, 0));      // nohy
   g.add(part(0.2, 0.75, 0.26, pants, 0.12, 0.375, 0));
   g.add(part(0.5, 0.65, 0.28, shirt, 0, 1.075, 0));           // trup
+  if (vest != null) g.add(part(0.52, 0.5, 0.3, vest, 0, 1.12, 0));   // vesta týmu (volitelná, barvu dodává značka)
   brand.character?.decorate(THREE, g, role);   // znak značky na triku (může být žádný)
   g.add(part(0.26, 0.26, 0.26, skin, 0, 1.55, 0));            // hlava
   if (hat) {
