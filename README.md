@@ -50,6 +50,20 @@ V konzoli prohlížeče je hra dostupná jako `window.game`.
 
 ---
 
+## Verzování
+
+Verze hry se řídí [SemVer](https://semver.org/lang/cs/) (`MAJOR.MINOR.PATCH`): **MINOR** = nová funkce nebo obsah, **PATCH** =
+oprava nebo ladění, **MAJOR** = velký milník (`1.0.0` po dokončení E1 a testu na telefonech). Číslo je v `package.json`;
+Vite k němu při buildu přidá hash a datum posledního commitu (`vite.config.js`) a hra je ukazuje vlevo dole na úvodní
+obrazovce (`src/config/Version.js`, např. `v0.2.0 · b2fbccf · 2026-10-23`; hash s `+` = necommitnuté změny, při
+`npm run dev` je za číslem `-dev`). Změny se zapisují do `CHANGELOG.md`.
+
+Postup vydání:
+
+1. Do `CHANGELOG.md` přidejte sekci `## [x.y.z] – datum` (Přidáno / Změněno / Opraveno).
+2. `npm version minor` (nebo `patch`) zvýší číslo a vytvoří commit a tag `vx.y.z`; změnu čísla případně spojte s commitem changelogu.
+3. `git push --follow-tags`, `npm test`, `npm run build` a nasazení `dist/` na IIS.
+
 ## Dokumentace
 
 Kompletní, velmi podrobná dokumentace pro žáky a učitele je ve složce **[`doc/`](doc/README.md)**:

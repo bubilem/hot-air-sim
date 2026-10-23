@@ -6,6 +6,7 @@ import { Biomes, BIOME } from '../src/world/Biomes.js';
 import { SITES, getSite, createBiomes } from '../src/world/Sites.js';
 import { WORLD, HRADEK, TROSKY } from '../src/config/GameConfig.js';
 import { titleFor } from '../src/core/Titles.js';
+import { VERSION, versionText } from '../src/config/Version.js';
 import { readFileSync } from 'node:fs';
 
 const meadow = { type: BIOME.MEADOW, slope: 2 };
@@ -331,5 +332,19 @@ describe('Cíl', () => {
         expect(s.type, `${site.id} r=${r}`).not.toBe(BIOME.FOREST);
       }
     }
+  });
+});
+
+describe('Verze hry', () => {
+  it('číslo verze v kódu odpovídá package.json a CHANGELOG.md', () => {
+    const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
+    expect(VERSION.number).toBe(pkg.version);
+    expect(pkg.version).toMatch(/^\d+\.\d+\.\d+$/);
+    const log = readFileSync(new URL('../CHANGELOG.md', import.meta.url), 'utf8');
+    expect(log).toContain(`## [${pkg.version}]`);
+  });
+  it('text verze: číslo, hash a datum', () => {
+    expect(versionText({ number: '1.2.3', hash: 'abc1234', date: '2026-01-02', dev: false })).toBe('v1.2.3 · abc1234 · 2026-01-02');
+    expect(versionText({ number: '1.2.3', hash: '', date: '', dev: true })).toBe('v1.2.3-dev');
   });
 });

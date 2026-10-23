@@ -10,6 +10,7 @@ import { estimateFlight } from '../core/FlightPlan.js';
 import { bearingToVec } from '../core/WindModel.js';
 import { designCanvas, loadCustomImage, templateCanvas } from '../entities/EnvelopeDesigns.js';
 import { LOGO_HTML } from './brand.js';
+import { versionText } from '../config/Version.js';
 
 const MAP_RES = 110;
 const MAP_COLORS = {
@@ -174,6 +175,7 @@ export class PlanScreen {
           <button id="plan-start" class="btn cta">${t('plan.start')} →</button>
         </footer>
       </div>
+      <div class="app-version" aria-hidden="true">${versionText()}</div>
       <input id="plan-upload" type="file" accept="image/png,image/webp,image/jpeg" hidden />`;
 
     const $ = (s) => this.el.querySelector(s);

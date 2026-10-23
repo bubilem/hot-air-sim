@@ -144,7 +144,7 @@ src/
 │   └── styles.css           # Design systém školy (sekce 7)
 ├── audio/                   # SynthAudio.js (WebAudio), MusicPlayer.js
 ├── i18n/                    # index.js (t, setLang), cs.js, en.js, wiki.cs.js, wiki.en.js
-└── config/                  # Colors.js (barvy), GameConfig.js (VŠECHNY konstanty)
+└── config/                  # Colors.js (barvy), GameConfig.js (VŠECHNY konstanty), Version.js (verze)
 tests/                       # Vitest: fyzika, vítr, pravidla přistání, skóre, plán, biomy
 doc/                         # Dokumentace pro žáky a učitele
 ```
@@ -264,3 +264,4 @@ výklad v `doc/09-design-system.md`). Závazná pravidla:
 6. **Ladění fyziky:** konstanty jsou v `PHYSICS`; za běhu lze zkoušet přes `window.game` v konzoli.
 7. **Dokumentace:** při změně pravidel, fyziky nebo struktury aktualizujte `AGENTS.md`, `README.md` **i kapitoly v `doc/`**.
 8. **Design:** nové UI prvky musí dodržet sekci 7 (kontrolní seznam v `doc/09-design-system.md`, odst. 9.8).
+9. **Verze:** číslo verze je jen v `package.json` (zdroj pravdy), změny zapisujte do `CHANGELOG.md` (test hlídá, že tam je sekce aktuální verze); postup vydání je v `README.md`, kapitola Verzování. Verze se ukazuje na úvodní obrazovce (`src/config/Version.js`).

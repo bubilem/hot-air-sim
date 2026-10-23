@@ -331,6 +331,16 @@ small { color: var(--muted); font-size: 11px; font-weight: 600; letter-spacing: 
 .plan-foot .warn { margin: 0; text-align: center; font-size: 13px; }
 .plan-foot .btn.cta { width: 100%; }
 
+/* Verze hry vlevo dole na úvodní obrazovce (malé a nenápadné) */
+.app-version {
+  position: absolute; left: 12px; bottom: max(6px, env(safe-area-inset-bottom)); z-index: 1;
+  font-size: 11px; font-weight: 400; letter-spacing: .04em; color: rgba(255,255,255,.45); pointer-events: none;
+}
+@media (max-width: 899px) { .plan-foot { padding-bottom: max(28px, calc(env(safe-area-inset-bottom) + 16px)); } }   /* místo pro verzi pod tlačítkem */
+@media (min-width: 900px) {
+  .app-version { color: rgba(255,255,255,.7); text-shadow: 0 1px 3px rgba(0,20,26,.8); }
+}
+
 @media (min-width: 900px) {
   .screen.plan { background: none; pointer-events: none; }
   .plan-inner {
