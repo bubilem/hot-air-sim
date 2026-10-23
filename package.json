@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:school": "vite --mode school",
     "build": "vite build",
+    "build:school": "vite build --mode school",
     "preview": "vite preview",
     "test": "vitest run"
   },

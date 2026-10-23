@@ -1,0 +1,50 @@
+/* Minimální téma: nastavuje všechny tokeny, které strukturální CSS jádra používá (hodnoty převzaté ze školy, značka si je změní). */
+:root {
+  /* paleta značky */
+  --yellow-1: #ffd400;
+  --yellow-2: #ffea80;
+  --blue-1: #41d7ff;
+  --blue-2: #00c0f3;
+  --green-1: #c2dd78;
+  --green-2: #a6ce39;
+
+  /* motiv */
+  --bg-top: #003b4b;
+  --bg-bottom: #006783;
+  --panel-bg: rgba(0, 27, 34, 0.45);        /* #001b2273 */
+  --float-bg: rgba(0, 20, 26, 0.95);        /* plovoucí prvky a modály (úroveň 2) */
+  --text: #ffffff;
+  --muted: rgba(255, 255, 255, 0.55);       /* #ffffff8c */
+  --accent: var(--blue-1);
+  --accent-2: var(--blue-2);                    /* druhý akcent: číslování kroků, úvodní prvky */
+  --highlight: var(--yellow-1);                 /* zvýraznění: hořák, plyn, hlavní volby */
+  --highlight-hover: var(--yellow-2);
+
+  /* stavy */
+  --success: var(--green-2);
+  --info: var(--blue-1);
+  --warning: var(--yellow-1);
+  --danger: #ef4444;
+
+  /* komponenty */
+  --btn-primary: #0083a6;
+  --btn-primary-hover: #b29400;
+  --btn-secondary: rgba(255, 255, 255, 0.08);   /* #ffffff14 */
+  --btn-overlay: rgba(0, 20, 26, 0.78);         /* tlačítka přímo nad 3D scénou: tmavá, aby byla čitelná i na světlém nebi */
+  --input-glass: rgba(0, 15, 20, 0.5);          /* #000f1480 */
+  --tint: rgba(0, 15, 20, 0.35);                /* tmavší výplň uvnitř panelů (místo rámečků) */
+
+  /* tvary a mezery */
+  --radius-btn: 4px;
+  --sp-xs: 4px; --sp-sm: 8px; --sp-md: 16px; --sp-lg: 24px; --sp-xl: 32px;
+  --radius-panel: 0;                            /* panely, karty, tabulky: ostré hrany */
+  --link: var(--yellow-1);
+  --link-hover: #ffe14d;
+  --btn-ghost-hover: rgba(255, 255, 255, 0.2);
+  --tint-hover: rgba(0, 15, 20, 0.55);          /* hover na kartách uvnitř panelů */
+  --on-accent: var(--bg-top);                   /* text na akcentní barvě */
+  --screen-plan-bg: linear-gradient(180deg, rgba(0, 59, 75, 0.95), rgba(0, 103, 131, 0.92));
+  --screen-result-bg: rgba(0, 20, 26, 0.9);
+  --shadow-float: 0 8px 32px rgba(0, 0, 0, 0.25);
+  --font: Arial, sans-serif;
+}

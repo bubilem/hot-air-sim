@@ -2,6 +2,7 @@
 // Rozhraní značky popisuje doc/16-znacky-brand.md. Jádro tuto složku nikdy nezná jménem, importuje ji jen přes alias @brand.
 import { APP_NAME, LOGO_HTML } from './logo.js';
 import { FONT_FAMILY, FONT_LOAD } from './font.js';
+import './theme.css';
 import csTexts from './i18n.cs.js';
 import enTexts from './i18n.en.js';
 import wikiCs from './wiki.cs.js';

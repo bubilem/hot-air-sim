@@ -3,82 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-  <meta name="theme-color" content="#003b4b" />
-  <title>HotAirSim – simulátor horkovzdušného balonu</title>
-  <meta name="description" content="Interaktivní 3D simulátor horkovzdušného balonu přímo v prohlížeči: naplánujte let, nafoukněte balon, vzlétněte, najděte správný vítr a přistaňte. Výukový projekt VOŠ, SPŠ a SOŠ Varnsdorf." />
-  <meta name="robots" content="index, follow" />
-  <link rel="canonical" href="https://www.skolavdf.cz/hub/hot-air-sim/" />
-  <meta property="og:type" content="website" />
-  <meta property="og:site_name" content="VOŠ, SPŠ a SOŠ Varnsdorf" />
-  <meta property="og:title" content="HotAirSim – simulátor horkovzdušného balonu" />
-  <meta property="og:description" content="Zkuste si let horkovzdušným balonem v 3D přímo v prohlížeči, na mobilu i počítači. Výukový projekt VOŠ, SPŠ a SOŠ Varnsdorf." />
-  <meta property="og:url" content="https://www.skolavdf.cz/hub/hot-air-sim/" />
-  <meta property="og:locale" content="cs_CZ" />
-  <meta property="og:locale:alternate" content="en_US" />
-  <meta property="og:image" content="https://www.skolavdf.cz/hub/hot-air-sim/og-image.png" />
-  <meta property="og:image:type" content="image/png" />
-  <meta property="og:image:width" content="1200" />
-  <meta property="og:image:height" content="630" />
-  <meta property="og:image:alt" content="Logo školy a nápis HotAirSim – simulátor horkovzdušného balonu" />
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="HotAirSim – simulátor horkovzdušného balonu" />
-  <meta name="twitter:description" content="Zkuste si let horkovzdušným balonem v 3D přímo v prohlížeči. Výukový projekt VOŠ, SPŠ a SOŠ Varnsdorf." />
-  <meta name="twitter:image" content="https://www.skolavdf.cz/hub/hot-air-sim/og-image.png" />
-  <link rel="icon" type="image/svg+xml" href="./logo-mark.svg" />
-  <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png" />
-  <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
-  <link rel="preload" href="./fonts/raleway-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin />
-  <link rel="preload" href="./fonts/raleway-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin />
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "WebApplication",
-    "name": "HotAirSim",
-    "alternateName": "HotAirSim – simulátor horkovzdušného balonu",
-    "url": "https://www.skolavdf.cz/hub/hot-air-sim/",
-    "description": "Interaktivní 3D simulátor horkovzdušného balonu v prohlížeči. Výukový projekt pro fyziku a programování.",
-    "applicationCategory": "EducationalApplication",
-    "operatingSystem": "Web (prohlížeč, mobil, tablet, počítač)",
-    "inLanguage": ["cs", "en"],
-    "isAccessibleForFree": true,
-    "image": "https://www.skolavdf.cz/hub/hot-air-sim/og-image.png",
-    "publisher": {
-      "@type": "EducationalOrganization",
-      "name": "VOŠ, SPŠ a SOŠ Varnsdorf",
-      "url": "https://www.skolavdf.cz/"
-    }
-  }
-  </script>
-  <style>
-    /* Písmo Raleway (SIL OFL) hostované lokálně: žádné požadavky na cizí servery */
-    @font-face { font-family: Raleway; font-style: normal; font-weight: 200; font-display: swap; src: url('./fonts/raleway-latin-ext-200-normal.woff2') format('woff2'); unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
-    @font-face { font-family: Raleway; font-style: normal; font-weight: 400; font-display: swap; src: url('./fonts/raleway-latin-ext-400-normal.woff2') format('woff2'); unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
-    @font-face { font-family: Raleway; font-style: normal; font-weight: 600; font-display: swap; src: url('./fonts/raleway-latin-ext-600-normal.woff2') format('woff2'); unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
-    @font-face { font-family: Raleway; font-style: normal; font-weight: 700; font-display: swap; src: url('./fonts/raleway-latin-ext-700-normal.woff2') format('woff2'); unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
-    @font-face { font-family: Raleway; font-style: normal; font-weight: 200; font-display: swap; src: url('./fonts/raleway-latin-200-normal.woff2') format('woff2'); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
-    @font-face { font-family: Raleway; font-style: normal; font-weight: 400; font-display: swap; src: url('./fonts/raleway-latin-400-normal.woff2') format('woff2'); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
-    @font-face { font-family: Raleway; font-style: normal; font-weight: 600; font-display: swap; src: url('./fonts/raleway-latin-600-normal.woff2') format('woff2'); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
-    @font-face { font-family: Raleway; font-style: normal; font-weight: 700; font-display: swap; src: url('./fonts/raleway-latin-700-normal.woff2') format('woff2'); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
-    /* Načítací obrazovka: styl je přímo v HTML, aby byla vidět dřív, než se načte zbytek aplikace */
-    html, body { margin: 0; background: #003b4b; }
-    #loading { position: fixed; inset: 0; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px;
-      background: linear-gradient(#003b4b, #006783); color: #fff; font: 600 18px Raleway, Arial, sans-serif; letter-spacing: .04em; transition: opacity .3s; }
-    #loading.done { opacity: 0; pointer-events: none; }
-    #loading .spin { width: 52px; height: 52px; border: 5px solid #ffffff2e; border-top-color: #ffd400; border-radius: 50%; animation: loading-spin 0.9s linear infinite; }
-    @keyframes loading-spin { to { transform: rotate(360deg); } }
-    @media (prefers-reduced-motion: reduce) { #loading .spin { animation-duration: 3s; } }
-  </style>
+  <!--brand:head-->
 </head>
 <body>
   <div id="loading" role="status"><div class="spin"></div><span id="loading-text">Načítání…</span></div>
   <script>if (!/^cs|^sk/i.test(navigator.language || 'cs')) document.getElementById('loading-text').textContent = 'Loading…';</script>
-  <noscript>
-    <main style="position:fixed;inset:0;display:grid;place-content:center;gap:12px;padding:24px;text-align:center;background:#003b4b;color:#fff;font:400 18px Raleway,Arial,sans-serif">
-      <h1 style="margin:0;font-weight:700">HotAirSim</h1>
-      <p style="margin:0">Simulátor horkovzdušného balonu vyžaduje zapnutý JavaScript a prohlížeč s podporou WebGL.</p>
-      <p style="margin:0"><a href="https://www.skolavdf.cz/informacni-technologie" style="color:#ffd400">VOŠ, SPŠ a SOŠ Varnsdorf – obor Informační technologie</a></p>
-    </main>
-  </noscript>
+  <!--brand:noscript-->
   <canvas id="game"></canvas>
   <div id="ui"></div>
   <script type="module" src="/src/main.js"></script>
