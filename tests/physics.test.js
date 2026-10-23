@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { PhysicsEngine } from '../src/core/PhysicsEngine.js';
 import { WindModel } from '../src/core/WindModel.js';
+import { PHYSICS as P } from '../src/config/GameConfig.js';
 
 const cfg = { payloadKg: 230, bottles: 2, ambientC: 12, siteElevation: 220 };
 const calm = { x: 0, z: 0 };
@@ -79,8 +80,9 @@ describe('Paraventil a přehřátí', () => {
     run(p, { burn: 1 }, 40);
     expect(p.tempIn).toBeGreaterThan(122);   // balon při tom stoupá a okolní vzduch chladne
     expect(p.holes.length).toBeGreaterThan(0);
+    expect(p.leak).toBeGreaterThan(0);
+    run(p, {}, 600);   // vychladne pod scorchTemp, další díry nevznikají
     const leak = p.leak;
-    expect(leak).toBeGreaterThan(0);
     run(p, {}, 600);
     expect(p.leak).toBe(leak);   // nevratné
   });
@@ -93,6 +95,51 @@ describe('Paraventil a přehřátí', () => {
     run(p, {}, 30);
     expect(p.fire).toBe(1);
     expect(p.netLiftKg()).toBeLessThan(0);
+  });
+
+  it('několik malých děr jen ochlazuje, objem zůstává', () => {
+    const p = new PhysicsEngine(cfg);
+    for (let i = 0; i < 4; i++) p.addHole();
+    run(p, {}, 60);
+    expect(p.holeArea).toBeLessThan(2);
+    expect(p.holeSag).toBe(0);
+    expect(p.volume).toBe(3000);
+    expect(p.leak).toBeGreaterThan(0);
+  });
+
+  it('mnoho děr rychle odebere objem a vztlak (nevratně)', () => {
+    const p = new PhysicsEngine(cfg);
+    p.tempIn = p.hoverTemp(0) + 15;
+    const before = p.netLiftKg();
+    for (let i = 0; i < 40; i++) p.addHole();
+    expect(p.holeArea).toBeGreaterThan(P.holeSagFull);
+    run(p, {}, 30);
+    expect(p.holeSag).toBeGreaterThan(0.9);
+    expect(p.volume).toBeLessThan(3000 * 0.4);
+    expect(p.netLiftKg()).toBeLessThan(before - 300);
+    const sag = p.holeSag;
+    run(p, { burn: 1 }, 20);
+    expect(p.holeSag).toBeGreaterThanOrEqual(sag);
+  });
+
+  it('s 8 dírami hořák ještě dosáhne teploty přehřátí, s 15 už ne', () => {
+    const teq = (n) => {
+      const p = new PhysicsEngine(cfg);
+      for (let i = 0; i < n; i++) p.addHole();
+      return cfg.ambientC + P.burnHeating / (P.coolK + p.leak);   // rovnováha při plném zážehu
+    };
+    expect(teq(8)).toBeGreaterThan(P.scorchTemp);
+    expect(teq(15)).toBeLessThan(P.scorchTemp);
+  });
+
+  it('hořící plášť prožírá další díry', () => {
+    const p = new PhysicsEngine({ ...cfg, bottles: 4 });
+    p.tempIn = 140;
+    run(p, { burn: 1 }, 25);
+    const n = p.holes.length;
+    run(p, {}, 20);
+    expect(p.holes.length).toBeGreaterThan(n + 5);
+    expect(p.holeSag).toBeGreaterThan(0.5);
   });
 
   it('bez přehřátí žádné díry', () => {

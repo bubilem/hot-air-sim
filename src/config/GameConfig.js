@@ -172,12 +172,22 @@ export const PHYSICS = {
   // Přehřátí: nad scorchTemp se plášť nevratně pálí (díry), nad fireTemp vzplane
   scorchTemp: 120,     // °C (shodné s alarmTemp: varování i počátek škod)
   scorchStep: 60,      // K·s nad scorchTemp na jednu popálenou díru
-  holeLeakK: 0.0025,   // 1/s, dodatečné ochlazování na jednotku velikosti díry (trvalé)
-  holeMax: 8,          // nejvíce děr (dál se zvětšují ty stávající)
+  // Díra má plochu `size` (m²). Horký vzduch jí uniká tlakem sloupce (Torricelli), úměrně ploše a výšce nad ústím.
+  holeLeakK: 0.0012,   // 1/s na m² díry u vrchlíku (váha výšky 0,5 + v); odpovídá výtoku Torricelli (0,0018 1/s·m² u koruny)
+  holeMax: 40,         // nejvíce děr (dál se zvětšují ty stávající)
+  burnHoleSize: [0.15, 0.5],   // m², plocha jedné popáleniny
+  // Ztráta objemu: malé díry jen ochlazují, od `holeSagFrom` m² celkové plochy se plášť přestává plnit a sesedá
+  holeSagFrom: 2,      // m², celková plocha děr, od které začíná ubývat objem
+  holeSagFull: 12,     // m², plocha děr, při které je ztráta objemu největší
+  holeVolumeLoss: 0.75,    // největší podíl objemu ztracený dírami
+  holeSagTime: 12,     // s, za jak dlouho plášť dosedne na cílový objem (rychlý únik)
   fireTemp: 140,       // °C
   fireDelay: 3,        // s nad fireTemp do vzplanutí
   fireSpread: 20,      // s, za jak dlouho se oheň rozšíří po celém plášti
   fireLeakK: 0.05,     // 1/s, ztráta tepla při plně hořícím plášti
+  fireVolumeLoss: 0.6, // podíl objemu ztracený při plně hořícím plášti
+  fireHoleEvery: 0.9,  // s, jak často hořící plášť prožere novou díru
+  fireHoleSize: [0.4, 0.9],    // m², plocha díry prožrané ohněm
   windTau: 6,          // s, setrvačnost vůči větru
   rotateRate: 8,       // deg/s
   minBalloonRadius: 9,
@@ -236,6 +246,14 @@ export const TIME_OF_DAY = {
     fog: { above: 22, density: 0.0055, color: 0xdfe4e8 } },   // stejná barva jako horizont oblohy (bez ostrého přechodu)
   evening: { ambient: 22, label: 'evening', windScale: 1.0, sky: 'skyEvening', fogNear: 500, fogFar: 2800,
     fog: { above: 10, density: 0.0015, color: 0xffd2a8 } },
+};
+
+// Oblačná vrstva (lokalita s `cloudLayer: { morning: { base, top, density? } }`, výšky v m nad startem): vodorovný pás hustého
+// vlhkého vzduchu (inverze), kterým balon proletí; uvnitř je vidět jen desítky metrů (viz world/HeightFog.js)
+export const CLOUD_LAYER = {
+  density: 0.03,       // 1/m (viditelnost uvnitř ≈ 1 / density ≈ 33 m)
+  color: 0xf2f4f6,
+  reach: 4000,         // m, do jaké vodorovné vzdálenosti zespodu vrstvu na obloze ještě vidíme (dál zmizí v dálce)
 };
 
 // Ptactvo (nenápadné): vzdálená hejna + občas větší pták, který přeletí kolem balonu

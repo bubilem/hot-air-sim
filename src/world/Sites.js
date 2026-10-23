@@ -61,6 +61,7 @@ export const SITES = [
       { alt: 650, speed: 8.0, bearing: 215 },
     ],
     target: { bearing: 180, dist: 1900 },   // louka za Labem
+    cloudLayer: { morning: { base: 360, top: 480 } },   // ranní inverze: vrstva oblačnosti nad údolím (střih větru ve 450 m je uvnitř)
     towns: [{ x: -700, z: 450, r: 380, chimneyCount: 2 }],   // Děčín pod horami, jihozápadně od startu; Labe jím protéká (město leží na obou březích)
     // Labe teče napříč celou mapou ze západu na východ a protéká městem (asi 450 m jižně od startu); width = šířka hladiny v m
     river: {

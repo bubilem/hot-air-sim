@@ -22,7 +22,7 @@ const SAG_TOP_KEEP = 0.65;    // jak moc je vrchlík ušetřen (0 = stejně jako
 // Popáleniny: maska 256 × 128 ve stejných UV jako vzor pláště (R = spálení, G = žhnutí).
 // Shader podle R rozlišuje zhnědnutí, zuhelnatění a skutečnou díru (discard); G dodá žhnoucí lem.
 const BURN_W = 256, BURN_H = 128;
-const BURN_R0 = 1.8, BURN_R1 = 1.9;    // m: poloměr skvrny = R0 + R1 · velikost díry
+const BURN_R0 = 0.4, BURN_R1 = 1.0;    // m: poloměr skvrny = R0 + R1 · √plocha díry (m²)
 const EMBER_TAU = 6;                   // s, doznívání žhnutí čerstvé díry
 const FIRE_FRONT_MIN = 0.12;           // do jaké výšky (0..1) pláště se oheň nejvýš šíří od vrchlíku
 const SMOKE_N = 160;                   // kapacita částic kouře a plamenů
@@ -384,7 +384,7 @@ export class BalloonView {
   paintHole(h, idx) {
     if (!this.noise) this.makeNoise();
     const ring = Math.min(RINGS, Math.round(h.v * RINGS));
-    const rM = BURN_R0 + BURN_R1 * h.size;
+    const rM = BURN_R0 + BURN_R1 * Math.sqrt(h.size);
     const ru = rM * BURN_W / (2 * Math.PI * Math.max(this.profile[ring].x, 2.5));
     const rv = rM * BURN_H / this.arcLen;
     const cx = h.u * BURN_W, cy = h.v * BURN_H, off = (idx * 53) % BURN_W;
@@ -550,7 +550,7 @@ export class BalloonView {
       // únik horkého vzduchu z děr: řídký světlý oblak; čerstvá díra navíc kouří
       for (const h of holes) {
         this.surfacePoint(h.u, h.v, P);
-        for (let n = count(2 + 3 * h.size); n > 0; n--) this.emit(P, [0.62, 0.62, 0.64], 1.4, 2.2, 0.28, 2.6, 2.4, 0.8);
+        for (let n = count(1 + 3 * h.size); n > 0; n--) this.emit(P, [0.62, 0.62, 0.64], 1.4, 2.2, 0.28, 2.6, 2.4, 0.8);
         if (h.kind !== 'tear' && this.emberLive > 0.15) for (let n = count(4 * this.emberLive); n > 0; n--) this.emit(P, [0.1, 0.09, 0.08], 1.2, 2.5, 0.45, 2.8, 2.8, 0.8);
       }
       if (fire > 0) {

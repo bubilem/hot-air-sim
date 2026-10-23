@@ -1,6 +1,6 @@
 // Hlavní třída: renderer, scéna, kamera, relace (svět + balon), automat herních stavů.
 import * as THREE from 'three';
-import { WORLD, CAMERA, TIME_OF_DAY } from '../config/GameConfig.js';
+import { WORLD, CAMERA, TIME_OF_DAY, CLOUD_LAYER } from '../config/GameConfig.js';
 import { ProceduralTerrain } from '../world/ProceduralTerrain.js';
 import { getSite, createBiomes } from '../world/Sites.js';
 import { loadTitles } from './Titles.js';
@@ -190,7 +190,9 @@ export class GameApp {
     const layers = site.wind.map((l) => ({ ...l, speed: l.speed * tod.windScale }));
     const wind = new WindModel(layers, site.seed);
     const startY = biomes.groundHeight(0, 0);
-    setHeightFog({ top: startY + tod.fog.above, density: tod.fog.density, color: tod.fog.color });
+    const layer = site.cloudLayer?.[timeOfDay];   // oblačná vrstva (jen některé lokality a denní doby)
+    const cloud = layer ? { lo: startY + layer.base, hi: startY + layer.top, density: layer.density ?? CLOUD_LAYER.density, color: CLOUD_LAYER.color } : null;
+    setHeightFog({ top: startY + tod.fog.above, density: tod.fog.density, color: tod.fog.color, cloud });
     const t = biomes.findMeadow(site.target.bearing, site.target.dist);
     const target = { x: t.x, z: t.z, y: biomes.groundHeight(t.x, t.z) };
     const marker = createTargetMarker();

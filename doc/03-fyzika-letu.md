@@ -247,10 +247,21 @@ vzduch), u ústí je nulový, takže vrchlík drží tvar nejdéle. Po uvolněn�
 
 Hořák už nemá pojistku: hlídá se pilot. Při `alarmTemp` = `scorchTemp` = 120 °C hra varuje a plášť se začne
 **nevratně pálit**. Za každých `scorchStep` K·s nad touto mezí vznikne **popálené místo** (díra, nejčastěji
-u vrchlíku, dle seedu deterministicky). Každá díra trvale zvyšuje ochlazování o `holeLeakK` · velikost
-(`leak`), takže hořák musí pracovat víc a plyn dojde dřív; několik děr znamená, že balon už neudrží visení.
+u vrchlíku, dle seedu deterministicky). Popálenina je malá (`burnHoleSize` = 0,15–0,5 m²); `size` díry je
+její **plocha v m²**. Horký vzduch jí uniká tlakem sloupce (Torricelli), proto každá díra trvale zvyšuje
+ochlazování o `holeLeakK` · plocha · (0,5 + `v`) (`leak`; díra výš u vrchlíku pouští víc). Několik malých děr
+jen ztíží udržení teploty. Od celkové plochy `holeSagFrom` = 2 m² se ale plášť přestává plnit: objem
+postupně klesá (`holeSag`, nevratně) až o `holeVolumeLoss` = 75 % při ploše `holeSagFull` = 12 m², za
+`holeSagTime` ≈ 12 s, a s ním mizí vztlak. `holeLeakK` vychází z výtoku Torricelli: v koruně (18 m nad ústím, ΔT = 66 K) je tlak asi 41 Pa a otvorem
+vytéká ≈ 5,4 m/s, tj. 0,0018 1/s na m² díry. Rovnovážná teplota při plném zážehu je
+`T_okolí + burnHeating / (coolK + leak)`: bez děr 208 °C, se 6 dírami 143 °C, s 10 dírami 124 °C, s 15 dírami
+105 °C (pod `scorchTemp`: další popáleniny už nevzniknou a balon nedoletí do visení). Už 6 děr zvedne podíl času
+zážehu potřebný k visení z 33 % na ≈ 50 % a zkrátí let ze 2 láhví z 22 na ≈ 14 min; s 15 dírami je to ≈ 80 % a balon
+nemá rezervu na stoupání. Poločas chladnutí bez hořáku klesá ze 116 s (bez děr) na 76 s (6 děr) a 54 s (15 děr).
 Když teplota drží nad `fireTemp` = 140 °C déle než `fireDelay` = 3 s, plášť **vzplane**: `fire` roste
-za `fireSpread` = 20 s k 1, uniká tepla `fireLeakK` a plášť se propadá. Konec letu je pád (havárie).
+za `fireSpread` = 20 s k 1, uniká tepla `fireLeakK`, plášť přichází o `fireVolumeLoss` = 60 % objemu a oheň
+každých `fireHoleEvery` = 0,9 s prožere novou díru (`fireHoleSize`), takže se ztráta objemu ještě zrychlí.
+Objem je součin: `volume = V·(1 − collapse·0,45)·(1 − holeSag·0,75)·(1 − fire·0,6)`. Konec letu je pád (havárie).
 
 **Vizuál (`BalloonView.js`).** Popáleniny nejsou obarvené čtverce, ale **maska** 256 × 128 ve stejných UV jako vzor
 pláště (kanál R = spálení, G = žhnutí). Fyzika dodá jen seznam děr (`u`, `v`, `size`) a míru požáru; pohled je
@@ -517,7 +528,7 @@ středem při vodorovném pohybu do zdi nebo lesa jen „vyskočil“ na střech
 | **les** (tolerantní) | koš se zbrzdí (odraz 0, brzdění větvemi `forestDrag`) a zůstane přitlačený, dokud pilot nestoupne; **zachycení v korunách** (neúspěch, `KIND.FOREST`) až při rychlosti proti okraji nad `forestSnagSpeed` = 5 m/s |
 | **stavba, skála** | odraz (`basketRestitution`); při energii *v* · *k* > `crashEnergy` **havárie** (`KIND.COLLISION`) |
 
-Trhliny a popáleniny se počítají společně (`holeMax` = 8) a každá snižuje skóre o 25 bodů (nejvýš o 150).
+Trhliny a popáleniny se počítají společně (`holeMax` = 40) a každá snižuje skóre o 25 bodů (nejvýš o 150).
 
 ## 3.11 Souhrn vzorců
 

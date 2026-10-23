@@ -157,6 +157,17 @@ Fyzikální smysl: útlum světla v mlze řídí **Beer–Lambertův zákon** (*
 vzdálenost, kterou paprsek urazí **pod hladinou mlhy**. Proto balon po vzletu „vystoupí z mlhy“. Parametry
 (`above`, `density`, `color`) jsou v `TIME_OF_DAY[...].fog`.
 
+**Oblačná vrstva (inverze).** Stejným shaderem se kreslí druhá mlha: vodorovný **pás** mezi `uCloudLo` a
+`uCloudHi` s hustotou `uCloudDensity`. Místo „podílu pod hladinou“ se počítá **délka průniku** paprsku
+s pásem (`min(hfHi, hi) − max(hfLo, lo)`) a ta se dělí délkou paprsku. Nad pásem i pod ním je vzduch čistý,
+uvnitř je vidět jen asi `1 / density` = 33 m a z výšky vypadá vrstva jako moře mraků nad údolím. Lokalita ji zapne
+vlastností `cloudLayer: { morning: { base, top, density? } }` (výšky nad startem, ve `Sites.js`; zatím Polabí ráno,
+350–480 m, takže uvnitř leží i střih větru ve 450 m); společné hodnoty jsou v `CLOUD_LAYER` (`GameConfig.js`).
+Zespodu vrstvu vidíme i na **obloze**: shader kupole (`Sky.js`) pro směr s výškovým úhlem `sinE` spočítá zakrytí
+`(1 − exp(−density · tloušťka / sinE)) · exp(−d / reach)`, kde `d = (lo − výška kamery) / sinE` je vzdálenost k vrstvě.
+Téměř celá obloha je tedy šedá (spodek vrstvy je ztmavený), jen u horizontu vrstva zmizí v dálce (`CLOUD_LAYER.reach`).
+Uvnitř vrstvy je zakryto vše, nad ní je obloha čistá. Slunce a sprity mraků se zakrytím ztlumí (`cloudCover`).
+
 ### Obloha (`world/Sky.js`)
 
 - **Kupole**: koule (`SphereGeometry`, poloměr 6 000) vykreslená zevnitř (`side: BackSide`) s **barvami ve

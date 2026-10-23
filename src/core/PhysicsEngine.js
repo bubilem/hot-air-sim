@@ -51,6 +51,8 @@ export class PhysicsEngine {
     this.scrape = 0;        // m tření po povrchu od poslední trhliny (× tvrdost)
     this.contactTime = -Infinity;   // flightTime posledního dotyku pláště s překážkou
     this.fireTimer = 0;
+    this.fireHoleT = 0;     // s od poslední díry prožrané ohněm
+    this.holeSag = 0;       // 0..1, ztráta objemu způsobená dírami
     this.fire = 0;          // 0..1, rozsah požáru pláště
     this.rand = rng(c.seed ?? 1);
     this.onGround = true;
@@ -67,16 +69,33 @@ export class PhysicsEngine {
   get ambient() { return this.ambientAt(); }
 
   /** Míra deformace pláště (propadnutí vrchlíku nebo požár), 0..1. */
-  get deflation() { return Math.max(this.collapse, this.fire); }
+  get deflation() { return Math.max(this.collapse, this.fire, this.holeSag); }
 
-  /** Skutečný objem horkého vzduchu v plášti. */
-  get volume() { return P.volume * (1 - P.collapseVolumeLoss * this.deflation); }
+  /** Celková plocha děr v plášti (m²). */
+  get holeArea() {
+    let a = 0;
+    for (const h of this.holes) a += h.size;
+    return a;
+  }
 
-  /** Trvalý únik tepla dírami a požárem (1/s). */
+  /** Skutečný objem horkého vzduchu v plášti (propadnutí vrchlíku, díry a požár se násobí). */
+  get volume() {
+    return P.volume * (1 - P.collapseVolumeLoss * this.collapse)
+      * (1 - P.holeVolumeLoss * this.holeSag) * (1 - P.fireVolumeLoss * this.fire);
+  }
+
+  /** Trvalý únik tepla dírami a požárem (1/s); díra výš v plášti (větší v) pouští víc vzduchu. */
   get leak() {
     let k = this.fire * P.fireLeakK;
-    for (const h of this.holes) k += h.size * P.holeLeakK;
+    for (const h of this.holes) k += h.size * P.holeLeakK * (0.5 + h.v);
     return k;
+  }
+
+  /** Větší plocha děr: plášť se nestačí plnit a sesedá k cílovému objemu (nevratně, látka je protržená). */
+  updateHoles(dt) {
+    const x = clamp01((this.holeArea - P.holeSagFrom) / (P.holeSagFull - P.holeSagFrom));
+    const target = x * x * (3 - 2 * x);
+    if (target > this.holeSag) this.holeSag = Math.min(target, this.holeSag + (dt / P.holeSagTime) * Math.max(0.25, x));
   }
 
   /** Násobek ventK podle otevření klapky. */
@@ -144,15 +163,23 @@ export class PhysicsEngine {
     }
     if (this.tempIn >= P.fireTemp) this.fireTimer += dt;
     else this.fireTimer = Math.max(0, this.fireTimer - dt);
-    if (this.fire > 0 || this.fireTimer >= P.fireDelay) this.fire = Math.min(1, this.fire + dt / P.fireSpread);
+    if (this.fire > 0 || this.fireTimer >= P.fireDelay) {
+      this.fire = Math.min(1, this.fire + dt / P.fireSpread);
+      this.fireHoleT += dt;   // oheň za čelem prožírá látku: další a další díry
+      while (this.fireHoleT >= P.fireHoleEvery) {
+        this.fireHoleT -= P.fireHoleEvery;
+        this.addHole(P.fireHoleSize, Math.max(0.3, 1 - this.fire));
+      }
+    }
+    this.updateHoles(dt);
   }
 
-  /** Nová popálená díra: nejčastěji ve vrchní části pláště, kde je nejhorkější vzduch. */
-  addHole() {
+  /** Nová popálená díra: nejčastěji ve vrchní části pláště, kde je nejhorkější vzduch (`vMin` posouvá ji níž při požáru). */
+  addHole(range = P.burnHoleSize, vMin = 0.55) {
     const r = this.rand;
-    const size = 0.5 + 0.5 * r();
+    const size = range[0] + (range[1] - range[0]) * r();
     const u = r();
-    const v = 0.55 + 0.45 * r();
+    const v = vMin + (1 - vMin) * r();
     this.pushHole({ u, v, size, kind: 'burn' });
   }
 

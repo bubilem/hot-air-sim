@@ -1,5 +1,7 @@
 // Obloha: gradientní kupole, slunce a řídké mraky (sprity). Sleduje kameru.
 import * as THREE from 'three';
+import { heightFog } from './HeightFog.js';
+import { CLOUD_LAYER } from '../config/GameConfig.js';
 // sunDir [x, výška, z]: +x = východ, +z = jih (sever je -z, stejně jako mapa v plánování). Ráno slunce na východě, večer na západě.
 
 const PRESETS = {
@@ -34,6 +36,18 @@ function cloudTexture() {
   return new THREE.CanvasTexture(c);
 }
 
+/**
+ * Podíl oblohy ve směru s výškovým úhlem `sinE` zakrytý oblačnou vrstvou (ta samá vrstva jako v HeightFog.js).
+ * Zespodu se paprsek k vrstvě dostane po `d` metrech (vzdálená část vrstvy se ztrácí v dálce, `reach`), uvnitř vrstvy je zakryto vše.
+ */
+export function cloudCover(camY, sinE, lo, hi, density, reach) {
+  if (density <= 0 || camY >= hi) return 0;
+  if (camY >= lo) return 1;
+  if (sinE <= 0) return 0;
+  const s = Math.max(sinE, 0.02);
+  return (1 - Math.exp(-density * (hi - lo) / s)) * Math.exp(-((lo - camY) / s) / reach);
+}
+
 export class Sky {
   constructor() {
     this.group = new THREE.Group();
@@ -41,7 +55,35 @@ export class Sky {
     const geo = new THREE.SphereGeometry(6000, 24, 16);
     const n = geo.attributes.position.count;
     geo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(n * 3), 3));
-    this.dome = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.BackSide, fog: false, depthWrite: false }));
+    const mat = new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.BackSide, fog: false, depthWrite: false });
+    this.camY = { value: 0 };
+    this.cloudReach = { value: CLOUD_LAYER.reach };
+    // oblačná vrstva zakrývá oblohu zespodu (stejný vzorec jako `cloudCover`)
+    mat.onBeforeCompile = (shader) => {
+      shader.uniforms.uCamY = this.camY;
+      shader.uniforms.uCloudReach = this.cloudReach;
+      shader.uniforms.uCloudLo = heightFog.cloudLo;
+      shader.uniforms.uCloudHi = heightFog.cloudHi;
+      shader.uniforms.uCloudDensity = heightFog.cloudDensity;
+      shader.uniforms.uCloudColor = heightFog.cloudColor;
+      shader.vertexShader = shader.vertexShader
+        .replace('#include <common>', '#include <common>\nvarying float vSkyS;')
+        .replace('#include <begin_vertex>', '#include <begin_vertex>\nvSkyS = normalize( position ).y;');
+      shader.fragmentShader = shader.fragmentShader
+        .replace('#include <common>', '#include <common>\nvarying float vSkyS;\nuniform float uCamY;\nuniform float uCloudReach;\nuniform float uCloudLo;\nuniform float uCloudHi;\nuniform float uCloudDensity;\nuniform vec3 uCloudColor;')
+        .replace('#include <dithering_fragment>', `#include <dithering_fragment>
+          if ( uCloudDensity > 0.0 && uCamY < uCloudHi ) {
+            float f = 1.0;
+            vec3 cc = uCloudColor;
+            if ( uCamY < uCloudLo ) {
+              float s = max( vSkyS, 0.02 );
+              f = vSkyS <= 0.0 ? 0.0 : ( 1.0 - exp( -uCloudDensity * ( uCloudHi - uCloudLo ) / s ) ) * exp( -( ( uCloudLo - uCamY ) / s ) / uCloudReach );
+              cc *= 0.82;   // spodek vrstvy je ve stínu
+            }
+            gl_FragColor.rgb = mix( gl_FragColor.rgb, cc, f );
+          }`);
+    };
+    this.dome = new THREE.Mesh(geo, mat);
     this.dome.renderOrder = -10;
     this.group.add(this.dome);
 
@@ -94,6 +136,12 @@ export class Sky {
 
   update(dt, cameraPos) {
     this.group.position.copy(cameraPos);
+    this.camY.value = cameraPos.y;
+    // slunce a sprity mraků jsou zakryté tam, kde je nad námi souvislá vrstva
+    const hf = heightFog;
+    const cover = (sinE) => cloudCover(cameraPos.y, sinE, hf.cloudLo.value, hf.cloudHi.value, hf.cloudDensity.value, CLOUD_LAYER.reach);
+    this.sun.material.opacity = this.preset.sunGlow * (1 - cover(this.sunDirection.y));
+    for (const s of this.clouds) s.material.opacity = 0.85 * (1 - cover(s.position.y / Math.hypot(s.position.x, s.position.y, s.position.z)));
     for (const s of this.clouds) {
       s.position.x += dt * 3;
       if (s.position.x > 4800) s.position.x = -4800;
