@@ -209,6 +209,23 @@ skvrny kreslené do `canvasu` 256 × 256) mapovanou podle **světových souřadn
 od kamery vytrácí (`fadeNear` 90 m → `fadeFar` 380 m). Atribut `aGrass` určuje, kde se tráva používá
 (ne ve vodě a na skále).
 
+### Pole a les: aby se nepletly s loukou
+
+**Pole** (`FIELD_DETAIL` v `GameConfig.js`, shader v `ProceduralTerrain.js`) nejsou zelená: parcely mají barvy
+`COLORS.fieldTypes` (strniště, orba, řepka, zralé obilí) a na pole se nekreslí textura trávy. Parcely a jejich typ plodiny
+počítá **fragment shader** ze světových souřadnic (`a = (x + shear·z)/u`, `b = (z − shear2·x)/v`, typ = `(⌊a⌋+⌊b⌋) mod 4`),
+takže mají ostré hranice, i když se barvy vrcholů rozmazávají. Zblízka (do ~230 m) se přidají **rýhy** (sinusový vzor
+s náhodným směrem podle parcely, hluboké u orby, jemné u strniště) a mezi parcelami **zelený mezník** (stromořadí).
+`Biomes.fieldStripe` používá stejné konstanty jako shader.
+
+**Les** (`FOREST_LOOK`): tmavší a méně „travnatá“ země (`COLORS.forest`, menší `grassAmount`), jehličnany **různé výšky**
+(`sizeMin + sizeSpan·rnd^1,5`, nerovná silueta) a asi 30 % **listnáčů** s kulatou korunou (druhá `InstancedMesh`).
+Na louce vedle lesa stojí **keře** (stejná geometrie listnáče, zmenšená a světlejší), které tvoří lem lesa. Země kolem stromů
+se mírně ztmaví (`shadeAroundTrees`: stín vpečený do vertexových barev, bez dynamických stínů).
+
+**HUD „Pod košem“** ukazuje povrch pod košem od 150 m nad terénem: zelená louka a svah, žlutá pole (penalizace skóre),
+červená les, voda, skála a zástavba (neúspěch).
+
 ### Voda
 
 Průhledná plocha (`opacity: 0.82`) ve výšce `WORLD.waterLevel`. Dvě drobnosti:

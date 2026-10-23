@@ -337,24 +337,28 @@ posouvá koš po zemi rychlostí `slideV`, kterou zpomaluje `LANDING.dragFrictio
 
 ## 4.7 Skóre
 
-`scoreFlight(r)` v `src/core/Scoring.js` vrátí `{ score, stars, parts, tier }`.
+`scoreFlight(r)` v `src/core/Scoring.js` vrátí `{ score, stars, parts, tier, progress }`. Cíl hry je **přežít a dostat se k cíli**,
+proto nejvíc bodů dává **postup k cíli**, ne přistání samo o sobě.
 
 ```
-neúspěch / havárie                         → 0 bodů
+neúspěch / havárie                              → 0 bodů
 
-landing = 600 (soft) nebo 350 (hard)
-effort  = min(1, doba / 90 s) · min(1, výška / 60 m)          ← snaha
-landing × (0,2 + 0,8 · effort)
-fuel    = 200 · gasFrac · effort                               ← úspora plynu
-target  = 200 · clamp(1 − (vzdálenost − 60) / (1500 − 60))     ← blízkost k cíli
-pole    = −120
-score   = max(0, landing + fuel + target + penalty)
+progress = clamp((startDist − dist) / (startDist − 60))     ← postup: 0 = jako na startu, 1 = v kruhu cíle (60 m)
+gate     = 0,1 + 0,9 · min(1, progress / 0,5)               ← „brána“ postupu
+target   = 500 · progress
+landing  = (250 soft | 150 hard) · gate
+fuel     = 100 · gasFrac · gate
+bonus    = +150, když přistanete do 60 m od cíle
+pole     = −120, díry −25 za kus (nejvýš −150)
+score    = max(0, target + landing + fuel + bonus + penalty)    (nejvýš 1000)
 ```
 
-- **Faktor snahy** (`effort`) brání „podvádění“: kdo vzlétne na pár metrů a hned přistane, nedostane
-  skoro plné body.
-- `tier` (úroveň titulu) = 3 pro ≥ 850 bodů, 2 pro ≥ 650, 1 pro ≥ 450, jinak 0; **počet hvězd** je
-  `tier + 1` (maximálně 4). Titul na diplomu bere `Titles.titleFor` z `public/titles.json` podle lokality, oslovení, jazyka a `tier` (např. „Baron Lužických hor“); když soubor nebo položka chybí, použije se vestavěné `title.<m|f>.<tier>` z překladů.
+- **Brána postupu** (`gate`) brání „podvádění“: kdo vzlétne a hned přistane bez postupu k cíli, dostane jen zlomek
+  bodů za přistání a palivo (typicky pod 150 bodů, 1 hvězda). Doba letu a výška se už nepočítají.
+- `startDist` je vzdálenost startu od cíle (start je v počátku souřadnic), `dist` vzdálenost přistání od cíle.
+- `tier` (úroveň titulu) = počet překonaných hranic 300 / 600 / 850 bodů (0..3); **počet hvězd** je
+  `tier + 1` (1 = přežil a přistál, 4 = přistál u cíle). Titul na diplomu bere `Titles.titleFor` z `public/titles.json` podle lokality, oslovení, jazyka a `tier` (např. „Baron Lužických hor“); když soubor nebo položka chybí, použije se vestavěné `title.<m|f>.<tier>` z překladů.
+- Diplom ukazuje i **vzdálenost od cíle** (`ResultScreen`, pole „Od cíle“).
 - Všechny konstanty jsou v objektu `SCORE` na začátku souboru.
 
 ## 4.8 Jak fyziku volá herní fáze

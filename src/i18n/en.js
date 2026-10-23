@@ -3,6 +3,14 @@ export default {
 
   'hud.altitude': 'Above ground',
   'hud.ladder.note': 'Wind heights are measured from the launch site.',
+  'hud.below': 'Below basket',
+  'biome.meadow': 'meadow',
+  'biome.hill': 'slope',
+  'biome.field': 'field',
+  'biome.forest': 'forest',
+  'biome.water': 'water',
+  'biome.rock': 'rock',
+  'biome.town': 'town',
   'hud.vsi': 'Climb',
   'hud.temp': 'Temp',
   'hud.gas': 'Gas',
@@ -174,6 +182,7 @@ export default {
 
   'result.heading': 'Balloonist Baptism Certificate',
   'result.duration': 'Flight time',
+  'result.target': 'To target',
   'result.maxAlt': 'Max altitude',
   'result.landing': 'Landing',
   'result.score': 'Score',

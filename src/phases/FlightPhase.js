@@ -111,6 +111,7 @@ export class FlightPhase {
       altStart: p.pos.y - w.startY,
       fire: p.fire,
       holes: p.holes,
+      biome: s.type,
       contact: p.flightTime - p.contactTime < 1.2,
       tempOut: p.ambient,
       hypoxia: p.hypoxia,

@@ -67,8 +67,9 @@ export class LandingPhase {
       maxAlt: p.maxAlt,
       gasFrac: p.gas / gasMax,
       targetDist: Math.hypot(w.target.x - p.pos.x, w.target.z - p.pos.z),
+      startDist: Math.hypot(w.target.x, w.target.z),   // start je v počátku souřadnic
     };
-    this.score = scoreFlight({ kind: this.kind, field: this.result.field, gasFrac: this.stats.gasFrac, targetDist: this.stats.targetDist, flightTime: this.stats.flightTime, maxAlt: this.stats.maxAlt, damage: p.holes.length });
+    this.score = scoreFlight({ kind: this.kind, field: this.result.field, gasFrac: this.stats.gasFrac, targetDist: this.stats.targetDist, startDist: this.stats.startDist, damage: p.holes.length });
     app.flightResult = { kind: this.kind, touch, ...this.stats, ...this.score, field: this.result.field };
 
     app.audio.update({});

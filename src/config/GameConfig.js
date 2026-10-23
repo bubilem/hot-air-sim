@@ -297,6 +297,35 @@ export const TERRAIN_SOFT = {
   passes: 2,           // kolikrát se barvy zprůměrují se sousedy (víc = měkčí)
 };
 
+// Pole (biom FIELD): parcely se kreslí v shaderu terénu (ostré hranice, rýhy), ne jen v barvách vrcholů.
+// Souřadnice parcely: a = (x + shear·z) / u, b = (z − shear2·x) / v; typ plodiny = (⌊a⌋ + ⌊b⌋) mod 4
+export const FIELD_DETAIL = {
+  parcel: { u: 90, v: 160, shear: 0.35, shear2: 0.2 },   // m, velikost a zkosení parcel (Biomes.fieldStripe používá totéž)
+  furrowFade: [40, 160],   // m od kamery: rýhy slábnou a mizí
+  hedgeFade: [350, 1000],  // m od kamery: stromořadí mezi parcelami slábne
+  hedgeWidth: [0.8, 2.4],  // m od hranice parcely: plná barva mezníku až přechod do pole
+  hedgeMix: 0.45,
+  // pořadí odpovídá COLORS.fieldTypes: strniště, orba, řepka, zralé obilí; amount = hloubka rýh (0..1), spacing = rozteč rýh v m
+  types: [
+    { amount: 0.08, spacing: 1.1 },
+    { amount: 0.2, spacing: 2.6 },
+    { amount: 0.03, spacing: 0.8 },
+    { amount: 0.07, spacing: 0.9 },
+  ],
+};
+
+// Les: odlišení od louky při pohledu shora (viz ProceduralTerrain.buildTrees)
+export const FOREST_LOOK = {
+  broadleafShare: 0.3,     // podíl listnatých stromů mezi stromy v lese
+  sizeMin: 0.7, sizeSpan: 0.95,   // měřítko stromu = min + span · rnd^1,5 (větší rozptyl výšek = nerovná silueta)
+  bushChance: 0.55,        // pravděpodobnost keře v mřížce vedle lesa (lem lesa)
+  bushScale: [0.28, 0.45],
+  shadowRadius: 17,        // m, dosah ztmavení země kolem stromů
+  shadowStrength: 0.11,    // ztmavení na jeden strom (sčítá se, nejvýš maxShadow)
+  maxShadow: 0.32,
+  grassAmount: 0.25,       // podíl detailní textury trávy v lese (jinde 1)
+};
+
 // Detail trávy na terénu (textura ve světových souřadnicích, jen v blízkosti kamery)
 export const GRASS_DETAIL = {
   fineScale: 4.5,     // m, opakování jemné vrstvy

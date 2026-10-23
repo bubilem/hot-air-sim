@@ -6,6 +6,8 @@ import { LOGO_HTML } from './brand.js';
 import { ICON_SETTINGS, ICON_HOME, ICON_WIKI, bindHomeButton } from './SettingsMenu.js';
 import { AlertCenter, ALERTS, ALERT_ICONS } from './Alerts.js';
 
+const HUD_BIOME_AGL = 150;   // m nad terénem, od kdy se ukazuje povrch pod košem
+const BIOME_KIND = { meadow: 'ok', hill: 'ok', field: 'warn', forest: 'bad', water: 'bad', rock: 'bad', town: 'bad' };
 const COMPASS = ['S', 'SV', 'V', 'JV', 'J', 'JZ', 'Z', 'SZ'];
 const STORE_KEY = 'hotairsim.windLadder';
 
@@ -43,6 +45,7 @@ export class HUD {
       <div class="hud-side panel">
         <div><small>${t('hud.altitude')}</small><b><span data-f="alt">0</span> m</b></div>
         <div><small>${t('hud.vsi')}</small><b><span data-f="vsi">0.0</span> m/s</b></div>
+        <div class="biome" data-f="biomerow" style="display:none"><small>${t('hud.below')}</small><b data-f="biome">–</b></div>
         <div data-f="temprow"><small>${t('hud.temp')}</small><b><span data-f="temp">0</span> °C</b></div>
         <div><small>${t('hud.tempOut')}</small><b><span data-f="tempout">0</span> °C</b></div>
         <div class="dmg" data-f="dmg" style="display:none"><small>${t('hud.hull')}</small><b>${ALERT_ICONS.tear}<span data-f="dmgn">0</span></b></div>
@@ -103,7 +106,7 @@ export class HUD {
     }).join('') + `<div class="lnote">${t('hud.ladder.note')}</div>`;
   }
 
-  update({ agl, vy, tempIn, gasFrac, wind, cameraYaw, target, edge, layers, altStart, fire = 0, holes = [], contact = false, tempOut = 0, hypoxia = 0, unconscious = false, thin = false, ceiling = false }) {
+  update({ agl, vy, tempIn, gasFrac, wind, cameraYaw, target, edge, layers, altStart, fire = 0, holes = [], biome = null, contact = false, tempOut = 0, hypoxia = 0, unconscious = false, thin = false, ceiling = false }) {
     this.set('alt', Math.round(agl));
     this.set('vsi', (vy >= 0 ? '+' : '') + vy.toFixed(1));
     this.set('temp', Math.round(tempIn));
@@ -122,6 +125,14 @@ export class HUD {
       const d = target.dist;
       this.set('tdist', d >= 1000 ? `${(d / 1000).toFixed(1)} km` : `${Math.round(d)} m`);
       this.f.tarrow.style.transform = `rotate(${(target.bearing - cameraYaw - 90).toFixed(0)}deg)`;
+    }
+
+    // Povrch pod košem (jen při přiblížení k zemi): zelená = bezpečné přistání, žlutá = pole (penalizace), červená = neúspěch
+    const showBiome = biome && agl < HUD_BIOME_AGL;
+    this.f.biomerow.style.display = showBiome ? '' : 'none';
+    if (showBiome) {
+      this.set('biome', t(`biome.${biome}`));
+      this.f.biomerow.dataset.kind = BIOME_KIND[biome] || 'bad';
     }
 
     // Stav přístrojů: přehřátá teplota a počet poškození pláště

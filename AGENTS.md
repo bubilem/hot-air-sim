@@ -54,7 +54,7 @@ Postup řídí proměnné `inflation` 0…1, `upright` 0…1, `unroll` 0…1 a t
 ### 3a) Let (`FLIGHT`)
 - Hořák, paraventil, rotace koše, unášení větrem ve vrstvách, spotřeba plynu.
 - **Kamery:** třetí osoba (výchozí, orbit tažením) a pohled z koše (`C`).
-- HUD: výška nad terénem, stoupání, teplota, plyn, vítr (+ rozbalovací žebříček po vrstvách), šipka k cíli.
+- HUD: výška nad terénem, stoupání, teplota, plyn, vítr (+ rozbalovací žebříček po vrstvách), šipka k cíli, povrch pod košem (od 150 m nad terénem).
 
 ### 3b) Přistání (`LANDING`)
 - Vyhodnocení podle vertikální a horizontální rychlosti (sekce 6.3, `LandingResolver`).
@@ -63,7 +63,7 @@ Postup řídí proměnné `inflation` 0…1, `upright` 0…1, `unroll` 0…1 a t
 
 ### 4) Oslava (`CELEBRATION`)
 - Křest sektem (korek, částice), titul podle lokality, oslovení a skóre (`public/titles.json`, viz `public/TITLES-README.md`; bez souboru platí vestavěné `title.*` v `i18n/`).
-- **Osvědčení** (Canvas → PNG): jméno, doba letu, max. výška, měkkost přistání, titul (nese i místo, např. „Baron Lužických hor“), skóre, datum. Nahoře velký symbol školy (trojúhelník hrotem dolů připomíná balon) a pod ním „HotAirSim“ jako koš; bez vzoru pláště a bez popisků „Místo“ / „Balon“. Diplom je záměrně střídmý a vzdušný, s okrajem kolem obsahu: nadpis, titul, jméno (když ho hráč nezadá, řádek se vynechá), čtyři údaje a dole řada „Virtuální let“ (vlevo), hvězdy a datum.
+- **Osvědčení** (Canvas → PNG): jméno, doba letu, max. výška, vzdálenost od cíle, měkkost přistání, titul (nese i místo, např. „Baron Lužických hor“), skóre, datum. Nahoře velký symbol školy (trojúhelník hrotem dolů připomíná balon) a pod ním „HotAirSim“ jako koš; bez vzoru pláště a bez popisků „Místo“ / „Balon“. Diplom je záměrně střídmý a vzdušný, s okrajem kolem obsahu: nadpis, titul, jméno (když ho hráč nezadá, řádek se vynechá), pět údajů a dole řada „Virtuální let“ (vlevo), hvězdy a datum.
   Označeno jako **virtuální let**.
 - Tlačítka „Stáhnout diplom“ a „Letět znovu“. Pod nimi jeden nenápadný řádek o projektu školy s odkazem na obor Informační technologie (`SCHOOL_IT_URL` v `GameConfig.js`). **Žádné jiné externí odkazy, reklamy ani sledování.**
 

@@ -1,7 +1,7 @@
 // Vizuální reprezentace terénu: mřížka s vertexovými barvami, voda, instancované stromy.
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { WORLD, GRASS_DETAIL, TERRAIN_SOFT, TOWNS, HRADEK, BEZDEZ, TROSKY } from '../config/GameConfig.js';
+import { WORLD, GRASS_DETAIL, FIELD_DETAIL, FOREST_LOOK, TERRAIN_SOFT, TOWNS, HRADEK, BEZDEZ, TROSKY } from '../config/GameConfig.js';
 import { COLORS } from '../config/Colors.js';
 import { BIOME } from './Biomes.js';
 
@@ -18,7 +18,7 @@ function meadowColor(biomes, x, z, hexA, hexB) {
 }
 
 // Podíl detailní textury trávy podle biomu (0 = bez textury)
-const GRASS_AMOUNT = { [BIOME.WATER]: 0, [BIOME.ROCK]: 0, [BIOME.TOWN]: 0, [BIOME.FOREST]: 0.45 };
+const GRASS_AMOUNT = { [BIOME.WATER]: 0, [BIOME.ROCK]: 0, [BIOME.TOWN]: 0, [BIOME.FIELD]: 0, [BIOME.FOREST]: FOREST_LOOK.grassAmount };
 
 function biomeColor(biomes, x, z, s) {
   const v = biomes.variation(x, z) * 0.06;
@@ -29,8 +29,7 @@ function biomeColor(biomes, x, z, s) {
     case BIOME.FOREST: tmp.setHex(COLORS.forest); break;
     case BIOME.HILL: meadowColor(biomes, x, z, COLORS.hill, COLORS.meadowAlt); break;
     case BIOME.FIELD: {
-      const i = biomes.fieldStripe(x, z);
-      tmp.setHex(i === 0 ? COLORS.field1 : i === 1 ? COLORS.field2 : i === 2 ? COLORS.field3 : COLORS.meadowAlt);
+      tmp.setHex(0xffffff);   // barvu parcely kreslí shader (FIELD_DETAIL); zde jen odstín (jas, stín stromů, přechod do louky)
       break;
     }
     default: meadowColor(biomes, x, z, COLORS.meadow, COLORS.meadowAlt);
@@ -78,6 +77,25 @@ function buildTreeGeometry() {
     paint(c1, COLORS.pine),
     paint(c2, COLORS.pineLight),
   ]);
+}
+
+/** Listnatý strom (a po zmenšení keř): kmen a dvě kulovité koruny. */
+function buildBroadleafGeometry() {
+  const trunk = new THREE.CylinderGeometry(0.4, 0.55, 3.2, 5);
+  trunk.translate(0, 1.6, 0);
+  const c1 = new THREE.IcosahedronGeometry(3.4, 0);
+  c1.translate(0, 5.6, 0);
+  const c2 = new THREE.IcosahedronGeometry(2.4, 0);
+  c2.translate(1.2, 8.2, -0.6);
+  const paint = (geo, hex) => {
+    const n = geo.attributes.position.count;
+    const col = new Float32Array(n * 3);
+    const c = new THREE.Color(hex);
+    for (let i = 0; i < n; i++) { col[i * 3] = c.r; col[i * 3 + 1] = c.g; col[i * 3 + 2] = c.b; }
+    geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    return geo.index ? geo.toNonIndexed() : geo;
+  };
+  return mergeGeometries([paint(trunk, COLORS.trunk), paint(c1, COLORS.broadleaf), paint(c2, COLORS.broadleafLight)]);
 }
 
 /** Dlaždicová textura (256², bezešvá): jemné stébla a skvrny; hodnoty kolem 1, násobí barvu terénu. */
@@ -140,6 +158,8 @@ export class ProceduralTerrain {
     const pos = geo.attributes.position;
     const colors = new Float32Array(pos.count * 3);
     const grass = new Float32Array(pos.count);
+    const field = new Float32Array(pos.count);
+    this.vForest = new Uint8Array(pos.count);   // vrcholy v lese (pro stíny stromů na okolní zemi)
     this.heights = new Float32Array(pos.count);   // výšky vrcholů mřížky (pro meshHeight)
     for (let i = 0; i < pos.count; i++) {
       const x = pos.getX(i) + this.biomes.cx, z = pos.getZ(i) + this.biomes.cz;   // mapa je vystředěná na střed mapy, ne na start
@@ -149,13 +169,18 @@ export class ProceduralTerrain {
       const c = biomeColor(this.biomes, x, z, s);
       colors[i * 3] = c.r; colors[i * 3 + 1] = c.g; colors[i * 3 + 2] = c.b;
       grass[i] = GRASS_AMOUNT[s.type] ?? 1;
+      field[i] = s.type === BIOME.FIELD ? 1 : 0;
+      this.vForest[i] = s.type === BIOME.FOREST ? 1 : 0;
     }
     // Změkčení přechodů mezi biomy: barvy (a podíl trávy) se zprůměrují se sousedy v mřížce
     const n1 = segments + 1;
     blurGrid(colors, 3, n1, TERRAIN_SOFT.passes);
     blurGrid(grass, 1, n1, TERRAIN_SOFT.passes);
-    geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    blurGrid(field, 1, n1, TERRAIN_SOFT.passes);
+    this.colorAttr = new THREE.BufferAttribute(colors, 3);
+    geo.setAttribute('color', this.colorAttr);
     geo.setAttribute('aGrass', new THREE.BufferAttribute(grass, 1));
+    geo.setAttribute('aField', new THREE.BufferAttribute(field, 1));
     geo.computeVertexNormals();
     const mat = new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: !TERRAIN_SOFT.smoothShading });
     this.grassTex = createGrassTexture();
@@ -167,21 +192,38 @@ export class ProceduralTerrain {
       sh.uniforms.uGrassCoarse = { value: GRASS_DETAIL.coarseScale };
       sh.uniforms.uGrassFade = { value: new THREE.Vector2(GRASS_DETAIL.fadeNear, GRASS_DETAIL.fadeFar) };
       sh.uniforms.uGrassStrength = { value: GRASS_DETAIL.strength };
+      const F = FIELD_DETAIL;
+      sh.uniforms.uFieldCol = { value: COLORS.fieldTypes.map((h) => new THREE.Color(h)) };
+      sh.uniforms.uFieldAmt = { value: F.types.map((x) => x.amount) };
+      sh.uniforms.uFieldSp = { value: F.types.map((x) => x.spacing) };
+      sh.uniforms.uFieldParcel = { value: new THREE.Vector4(F.parcel.u, F.parcel.v, F.parcel.shear, F.parcel.shear2) };
+      sh.uniforms.uFieldFade = { value: new THREE.Vector4(...F.furrowFade, ...F.hedgeFade) };
+      sh.uniforms.uFieldHedge = { value: new THREE.Vector4(...F.hedgeWidth, F.hedgeMix, 0) };
+      sh.uniforms.uHedgeCol = { value: new THREE.Color(COLORS.fieldHedge) };
       sh.vertexShader = sh.vertexShader
         .replace('#include <common>', `#include <common>
 attribute float aGrass;
+attribute float aField;
 varying float vGrass;
+varying float vField;
 varying vec2 vGrassXZ;`)
         .replace('#include <begin_vertex>', `#include <begin_vertex>
 vGrass = aGrass;
+vField = aField;
 vGrassXZ = ( modelMatrix * vec4( transformed, 1.0 ) ).xz;`);
       sh.fragmentShader = sh.fragmentShader
         .replace('#include <common>', `#include <common>
 varying float vGrass;
+varying float vField;
 varying vec2 vGrassXZ;
 uniform sampler2D uGrassTex;
 uniform float uGrassFine, uGrassCoarse, uGrassStrength;
-uniform vec2 uGrassFade;`)
+uniform vec2 uGrassFade;
+uniform vec3 uFieldCol[4];
+uniform float uFieldAmt[4];
+uniform float uFieldSp[4];
+uniform vec4 uFieldParcel, uFieldFade, uFieldHedge;
+uniform vec3 uHedgeCol;`)
         .replace('#include <color_fragment>', `#include <color_fragment>
           float grFade = 1.0 - smoothstep( uGrassFade.x, uGrassFade.y, length( vViewPosition ) );
           float grAmt = vGrass * grFade * uGrassStrength;
@@ -190,6 +232,24 @@ uniform vec2 uGrassFade;`)
             vec3 grC = texture2D( uGrassTex, vGrassXZ / uGrassCoarse + 0.37 ).rgb;
             vec3 grD = ( grF * grC ) / 0.62;   // střed textur ~0,78 → součin ~0,6, takže průměrná jasnost zůstane
             diffuseColor.rgb *= mix( vec3( 1.0 ), grD, grAmt );
+          }
+          // pole: parcely s ostrými hranicemi, rýhy (jen zblízka) a zelený mezník mezi parcelami
+          if ( vField > 0.02 ) {
+            float fa = ( vGrassXZ.x + vGrassXZ.y * uFieldParcel.z ) / uFieldParcel.x;
+            float fb = ( vGrassXZ.y - vGrassXZ.x * uFieldParcel.w ) / uFieldParcel.y;
+            vec2 cell = vec2( floor( fa ), floor( fb ) );
+            int fi = int( mod( cell.x + cell.y, 4.0 ) );
+            vec3 fc = uFieldCol[ fi ];
+            float fh = fract( sin( dot( cell, vec2( 12.9898, 78.233 ) ) ) * 43758.5453 );   // směr rýh podle parcely
+            vec2 fdir = vec2( cos( fh * 3.14159 ), sin( fh * 3.14159 ) );
+            float fur = 0.5 + 0.5 * sin( dot( vGrassXZ, fdir ) / uFieldSp[ fi ] * 6.2832 );
+            float fd = length( vViewPosition );
+            fc *= 1.0 - uFieldAmt[ fi ] * fur * ( 1.0 - smoothstep( uFieldFade.x, uFieldFade.y, fd ) );
+            vec2 fe = min( fract( vec2( fa, fb ) ), 1.0 - fract( vec2( fa, fb ) ) ) * uFieldParcel.xy;   // vzdálenost k hranici parcely v m
+            float fedge = 1.0 - smoothstep( uFieldHedge.x, uFieldHedge.y, min( fe.x, fe.y ) );
+            fc *= diffuseColor.rgb;   // jas a přechod do okolní louky z barev vrcholů
+            fc = mix( fc, uHedgeCol, fedge * uFieldHedge.z * ( 1.0 - smoothstep( uFieldFade.z, uFieldFade.w, fd ) ) );
+            diffuseColor.rgb = mix( diffuseColor.rgb, fc, smoothstep( 0.2, 0.9, vField ) );
           }`);
     };
     this.ground = new THREE.Mesh(geo, mat);
@@ -498,44 +558,96 @@ uniform vec2 uGrassFade;`)
     return mesh;
   }
 
+  /** Stromy: jehličnaté a listnaté (2 instancované sítě), keře na okraji lesa a stíny stromů vpečené do barev země. */
   buildTrees() {
-    const geo = buildTreeGeometry();
+    const L = FOREST_LOOK;
+    const pineGeo = buildTreeGeometry(), broadGeo = buildBroadleafGeometry();
     const mat = new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true });
     const half = WORLD.size / 2 - 40;
     const step = WORLD.treeSpacing;
-    const spots = [];
-    let seed = 12345;
+    const pines = [], broads = [], bushes = [];
+    let seed = 12345, seed2 = 777;
     const rnd = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
+    const rnd2 = () => { seed2 = (seed2 * 1664525 + 1013904223) >>> 0; return seed2 / 4294967296; };
+    const edgeDirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
     for (let gx = -half; gx < half; gx += step) {
       for (let gz = -half; gz < half; gz += step) {
         const x = this.biomes.cx + gx + (rnd() - 0.5) * step * 0.9;
         const z = this.biomes.cz + gz + (rnd() - 0.5) * step * 0.9;
         const s = this.biomes.sample(x, z);
-        if (s.type !== BIOME.FOREST) continue;
-        spots.push([x, this.meshHeight(x, z) - 0.1, z, 0.8 + rnd() * 0.6, rnd() * Math.PI * 2]);
+        if (s.type !== BIOME.FOREST) {
+          // lem lesa: keře na louce nebo svahu vedle lesa (pole a ostatní povrchy zůstávají čisté)
+          if ((s.type === BIOME.MEADOW || s.type === BIOME.HILL) && rnd2() < L.bushChance
+            && edgeDirs.some(([dx, dz]) => this.biomes.sample(x + dx * step, z + dz * step).type === BIOME.FOREST)) {
+            const sc = L.bushScale[0] + rnd2() * (L.bushScale[1] - L.bushScale[0]);
+            bushes.push([x, this.meshHeight(x, z) - 0.1, z, sc, rnd2() * Math.PI * 2]);
+          }
+          continue;
+        }
+        const size = L.sizeMin + L.sizeSpan * Math.pow(rnd(), 1.5);
+        const spot = [x, this.meshHeight(x, z) - 0.1, z, size, rnd() * Math.PI * 2];
+        (rnd() < L.broadleafShare ? broads : pines).push(spot);
       }
     }
+    const trees = [...pines, ...broads];
     for (const t of this.biomes.towns) {   // stromy mezi domky
-      for (const tr of t.trees) spots.push([tr.x, this.meshHeight(tr.x, tr.z) - 0.1, tr.z, tr.s, tr.a]);
+      for (const tr of t.trees) pines.push([tr.x, this.meshHeight(tr.x, tr.z) - 0.1, tr.z, tr.s, tr.a]);
     }
-    const mesh = new THREE.InstancedMesh(geo, mat, spots.length);
+    this.shadeAroundTrees(trees);
+
     const m = new THREE.Matrix4();
     const q = new THREE.Quaternion();
     const up = new THREE.Vector3(0, 1, 0);
     const scale = new THREE.Vector3();
     const col = new THREE.Color();
-    spots.forEach((p, i) => {
-      q.setFromAxisAngle(up, p[4]);
-      scale.set(p[3], p[3] * (0.9 + (i % 3) * 0.1), p[3]);
-      m.compose(new THREE.Vector3(p[0], p[1], p[2]), q, scale);
-      mesh.setMatrixAt(i, m);
-      col.setScalar(0.85 + ((i * 37) % 100) / 100 * 0.3);
-      mesh.setColorAt(i, col);
-    });
-    mesh.instanceMatrix.needsUpdate = true;
-    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
-    this.trees = mesh;
-    this.treeCount = spots.length;
-    this.group.add(mesh);
+    const pos = new THREE.Vector3();
+    const make = (geo, list, tint) => {
+      const mesh = new THREE.InstancedMesh(geo, mat, Math.max(1, list.length));
+      mesh.count = list.length;
+      list.forEach((p, i) => {
+        q.setFromAxisAngle(up, p[4]);
+        scale.set(p[3], p[3] * (0.9 + (i % 3) * 0.1), p[3]);
+        m.compose(pos.set(p[0], p[1], p[2]), q, scale);
+        mesh.setMatrixAt(i, m);
+        col.setScalar(tint * (0.85 + ((i * 37) % 100) / 100 * 0.3));
+        mesh.setColorAt(i, col);
+      });
+      mesh.instanceMatrix.needsUpdate = true;
+      if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+      this.group.add(mesh);
+      return mesh;
+    };
+    this.trees = make(pineGeo, pines, 1);
+    const broadAll = [...broads, ...bushes];   // keře sdílejí geometrii listnáče (jen menší a světlejší)
+    this.broadleaf = make(broadGeo, broadAll, 1);
+    for (let i = broads.length; i < broadAll.length; i++) this.broadleaf.setColorAt(i, col.setScalar(1.3 + (i % 5) * 0.04));
+    if (this.broadleaf.instanceColor) this.broadleaf.instanceColor.needsUpdate = true;
+    this.treeCount = pines.length + broads.length;
+    this.bushCount = bushes.length;
+  }
+
+  /** Stín stromů: země kolem nich (mimo les samotný) se mírně ztmaví, takže okraj lesa je na louce vidět jako tmavý lem. */
+  shadeAroundTrees(trees) {
+    const L = FOREST_LOOK, { size, segments } = WORLD;
+    const n1 = segments + 1, cell = size / segments, ox = this.biomes.cx - size / 2, oz = this.biomes.cz - size / 2;
+    const shade = new Float32Array(n1 * n1);
+    const r = L.shadowRadius, reach = Math.ceil(r / cell);
+    for (const t of trees) {
+      const ci = Math.round((t[0] - ox) / cell), cj = Math.round((t[2] - oz) / cell);
+      for (let j = cj - reach; j <= cj + reach; j++) {
+        for (let i = ci - reach; i <= ci + reach; i++) {
+          if (i < 0 || j < 0 || i >= n1 || j >= n1) continue;
+          const d = Math.hypot(ox + i * cell - t[0], oz + j * cell - t[2]);
+          if (d < r) shade[j * n1 + i] += L.shadowStrength * (1 - d / r);
+        }
+      }
+    }
+    const c = this.colorAttr;
+    for (let k = 0; k < shade.length; k++) {
+      if (this.vForest[k] || shade[k] <= 0) continue;
+      const f = 1 - Math.min(L.maxShadow, shade[k]);
+      c.setXYZ(k, c.getX(k) * f, c.getY(k) * f, c.getZ(k) * f);
+    }
+    c.needsUpdate = true;
   }
 }

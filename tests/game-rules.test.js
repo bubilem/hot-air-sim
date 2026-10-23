@@ -82,10 +82,30 @@ describe('Biomes', () => {
   });
 
   it('krátký hop hned po vzletu nedává skoro plné body', () => {
-    const hop = scoreFlight({ kind: KIND.SOFT, field: false, gasFrac: 1, targetDist: 1900, flightTime: 8, maxAlt: 5 });
-    const real = scoreFlight({ kind: KIND.SOFT, field: false, gasFrac: 0.6, targetDist: 40, flightTime: 400, maxAlt: 200 });
+    const hop = scoreFlight({ kind: KIND.SOFT, field: false, gasFrac: 1, targetDist: 1900, startDist: 1900 });
+    const real = scoreFlight({ kind: KIND.SOFT, field: false, gasFrac: 0.6, targetDist: 40, startDist: 1900 });
     expect(hop.score).toBeLessThan(200);
     expect(real.score).toBeGreaterThan(hop.score + 500);
+  });
+
+  it('hlavní body dává postup k cíli: krátký přelet po větru dostane jednu hvězdu', () => {
+    const near = scoreFlight({ kind: KIND.SOFT, field: false, gasFrac: 0.9, targetDist: 1800, startDist: 1900 });
+    expect(near.progress).toBeLessThan(0.1);
+    expect(near.score).toBeLessThan(150);
+    expect(near.stars).toBe(1);
+    const half = scoreFlight({ kind: KIND.SOFT, field: false, gasFrac: 0.5, targetDist: 950, startDist: 1900 });
+    const close = scoreFlight({ kind: KIND.SOFT, field: false, gasFrac: 0.5, targetDist: 200, startDist: 1900 });
+    expect(half.score).toBeLessThan(close.score);
+    expect(half.stars).toBeLessThan(close.stars);
+  });
+
+  it('přistání v kruhu cíle dá bonus a čtyři hvězdy', () => {
+    const hit = scoreFlight({ kind: KIND.SOFT, field: false, gasFrac: 0.4, targetDist: 30, startDist: 1900 });
+    const miss = scoreFlight({ kind: KIND.SOFT, field: false, gasFrac: 0.4, targetDist: 90, startDist: 1900 });
+    expect(hit.parts.bonus).toBeGreaterThan(0);
+    expect(miss.parts.bonus).toBe(0);
+    expect(hit.stars).toBe(4);
+    expect(hit.score).toBeGreaterThan(miss.score + 100);
   });
 
   it('řeka protéká napříč mapou a je to voda, daleko od ní se terén nemění', () => {

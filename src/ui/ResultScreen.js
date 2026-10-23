@@ -27,6 +27,7 @@ function drawMark(g, x, y, w) {
   }
 }
 
+const fmtDist = (m) => (m >= 1000 ? `${(m / 1000).toFixed(1)} km` : `${Math.round(m)} m`);
 const fmtTime = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 
 function fitText(g, text, maxW, size, weight = 800) {
@@ -122,15 +123,16 @@ export class ResultScreen {
     const boxes = [
       [t('result.duration'), fmtTime(r.flightTime)],
       [t('result.maxAlt'), `${Math.round(r.maxAlt)} m`],
+      [t('result.target'), fmtDist(r.targetDist)],
       [t('result.landing'), `${kindLabel} · ${r.touch.vy.toFixed(1)} m/s`],
       [t('result.score'), `${r.score}`],
     ];
-    const bw = 280, gap = 28, x0 = (W - (bw * 4 + gap * 3)) / 2;
+    const n = boxes.length, gap = 20, bw = (W - 2 * M - gap * (n - 1)) / n, x0 = M;
     boxes.forEach(([label, val], i) => {
       const x = x0 + i * (bw + gap), y = 855;
       g.fillStyle = 'rgba(0,27,34,0.45)';
       g.fillRect(x, y, bw, 116);
-      g.fillStyle = '#ffffffb3'; g.font = '700 22px Raleway, Arial, sans-serif';
+      g.fillStyle = '#ffffffb3'; g.font = '700 21px Raleway, Arial, sans-serif';
       g.fillText(label.toUpperCase(), x + bw / 2, y + 36);
       g.fillStyle = '#ffffff'; fitText(g, val, bw - 24, 46);
       g.fillText(val, x + bw / 2, y + 88);

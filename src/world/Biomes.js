@@ -1,7 +1,7 @@
 // Jediný zdroj pravdy o terénu: výška, sklon a biom (pro vizuál i herní logiku).
 // Bez závislosti na Three.js.
 import { createNoise2D } from 'simplex-noise';
-import { WORLD, MASSIFS, TERRAIN, TOWNS, PONDS, TARGET_CLEARING, DOMINANTS, HRADEK, BEZDEZ, TROSKY } from '../config/GameConfig.js';
+import { WORLD, MASSIFS, TERRAIN, TOWNS, PONDS, TARGET_CLEARING, DOMINANTS, FIELD_DETAIL, HRADEK, BEZDEZ, TROSKY } from '../config/GameConfig.js';
 
 function mulberry32(a) {
   return function () {
@@ -454,7 +454,8 @@ export class Biomes {
 
   /** Index pruhu pole (0..3) pro střídání odstínů. */
   fieldStripe(x, z) {
-    return (Math.floor((x + z * 0.35) / 90) + Math.floor((z - x * 0.2) / 160)) & 3;
+    const P = FIELD_DETAIL.parcel;
+    return (Math.floor((x + z * P.shear) / P.u) + Math.floor((z - x * P.shear2) / P.v)) & 3;
   }
 
   /**

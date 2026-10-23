@@ -22,10 +22,10 @@ export const COLORS = {
   meadow: 0x85a850,
   meadowAlt: 0x779c46,
   hill: 0x688b3f,
-  field1: 0xcdb468,
-  field2: 0xb0895a,
-  field3: 0x9aaa5c,
-  forest: 0x35592e,
+  // pole nikdy nejsou zelená (aby se nepletla s loukou): strniště, orba, řepka, zralé obilí
+  fieldTypes: [0xc2b27a, 0x8c7352, 0xcbbd68, 0xb5a272],
+  fieldHedge: 0x5d7d3e,     // zelený mezník (stromořadí, křoví) mezi parcelami
+  forest: 0x264826,
   rock: 0x70726e,
   town: 0x4b4e54,           // město: tmavší šedá než skála, aby se obě nezaměnily
   houseWalls: [0xe9e2d0, 0xd9c9a6, 0xe6d9a0, 0xc9d3d6, 0xd8b9a0],
@@ -50,6 +50,8 @@ export const COLORS = {
   trunk: 0x6b4a2b,
   pine: 0x2b5430,
   pineLight: 0x3d6a3d,
+  broadleaf: 0x3f7230,       // listnaté stromy a keře u okraje lesa
+  broadleafLight: 0x5a8c3a,
 
   // balon
   envelopeRed: BRAND.red,

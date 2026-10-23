@@ -3,6 +3,14 @@ export default {
 
   'hud.altitude': 'Nad terénem',
   'hud.ladder.note': 'Výšky větru měříme od místa startu.',
+  'hud.below': 'Pod košem',
+  'biome.meadow': 'louka',
+  'biome.hill': 'svah',
+  'biome.field': 'pole',
+  'biome.forest': 'les',
+  'biome.water': 'voda',
+  'biome.rock': 'skála',
+  'biome.town': 'zástavba',
   'hud.vsi': 'Stoupání',
   'hud.temp': 'Teplota',
   'hud.gas': 'Plyn',
@@ -174,6 +182,7 @@ export default {
 
   'result.heading': 'Balonářský křestní list',
   'result.duration': 'Doba letu',
+  'result.target': 'Od cíle',
   'result.maxAlt': 'Max. výška',
   'result.landing': 'Přistání',
   'result.score': 'Skóre',

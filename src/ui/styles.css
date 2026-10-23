@@ -116,6 +116,9 @@ small { color: var(--muted); font-size: 11px; font-weight: 600; letter-spacing: 
 .hud-side .hot b { color: var(--danger); animation: alert-blink 1s ease-in-out infinite; }
 .hud-side .dmg b { display: flex; align-items: center; gap: 6px; color: var(--yellow-1); }
 .hud-side .dmg svg { width: 18px; height: 18px; }
+.hud-side .biome[data-kind='ok'] b { color: var(--success); }
+.hud-side .biome[data-kind='warn'] b { color: var(--warning); }
+.hud-side .biome[data-kind='bad'] b { color: var(--danger); }
 
 /* ---------- Hlášení pilotovi (ui/Alerts.js) ----------
    Ploché karty úrovně 2: barevný blok s ikonou, titulek a jedna věta. Vpravo od přístrojů (na výšku telefonu),
