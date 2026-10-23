@@ -21,10 +21,13 @@ export class FlightPhase {
     app.controls.enabled = true;
     app.controls.onZoom = (dir) => app.zoomBy(dir * CAMERA.zoomStep);
     app.controls.onCamera = () => {
+      // směr pohledu (yaw) se při přepnutí zachová; sklon a přiblížení si každý pohled pamatuje zvlášť
+      this.views[this.mode] = { pitch: app.user.pitch, dist: app.user.dist };
       this.mode = this.mode === 'chase' ? 'cockpit' : 'chase';
       app.controls.setCamMode(this.mode);
-      app.resetUserCamera();
-      if (this.mode === 'cockpit') app.user.pitch = 0.45;   // výchozí pohled mírně vzhůru k hořáku a plamenům
+      const v = this.views[this.mode];
+      app.user.pitch = v.pitch; app.user.dist = v.dist;
+      app.camSnap = true;
     };
 
     if (!app.balloon || data.fresh) {
@@ -41,6 +44,7 @@ export class FlightPhase {
     b.testFlame = 0;
     this.touchLock = 0;
     this.mode = 'chase';
+    this.views = { chase: { pitch: 0, dist: 0 }, cockpit: { pitch: 0.45, dist: 0 } };   // kokpit: výchozí pohled mírně vzhůru k hořáku a plamenům
     app.controls.setCamMode('chase');
     app.resetUserCamera();
     this.stats = { edge: false };
