@@ -2,6 +2,10 @@
 // Rozhraní značky popisuje doc/16-znacky-brand.md. Jádro tuto složku nikdy nezná jménem, importuje ji jen přes alias @brand.
 import { APP_NAME, LOGO_HTML } from './logo.js';
 import { FONT_FAMILY, FONT_LOAD } from './font.js';
+import csTexts from './i18n.cs.js';
+import enTexts from './i18n.en.js';
+import wikiCs from './wiki.cs.js';
+import wikiEn from './wiki.en.js';
 import { drawMark, decorateCharacter, decorateCar, decorateTrailer } from './mark.js';
 
 export default {
@@ -48,6 +52,10 @@ export default {
       },
     }],
   },
+
+  /** Texty značky: přepisují jádro (i18n) a přidávají kategorie encyklopedie (wiki). */
+  i18n: { cs: csTexts, en: enTexts },
+  wiki: { cs: wikiCs, en: wikiEn },
 
   logoHtml: LOGO_HTML,
   /** Symbol značky do canvasu (diplom, štítky): drawLogo(g, x, y, šířka). */

@@ -1,5 +1,5 @@
 // Závěrečná obrazovka: balonářský křestní list (Canvas → PNG) a tlačítka „stáhnout“ a „letět znovu“.
-import { t, getLang } from '../i18n/index.js';
+import { t, hasKey, getLang } from '../i18n/index.js';
 import brand from '@brand';
 import { linksHtml } from './links.js';
 
@@ -44,7 +44,7 @@ export class ResultScreen {
           ${linksHtml('diploma')}
           <button class="btn ghost" id="r-again">${t('result.again')}</button>
         </div>
-        <p class="result-school">${t('result.school')}</p>
+        ${hasKey('result.note') ? `<p class="result-school">${t('result.note')}</p>` : ''}
       </div>`;
     app.uiRoot.appendChild(this.el);
     this.canvas = this.el.querySelector('#diploma');
