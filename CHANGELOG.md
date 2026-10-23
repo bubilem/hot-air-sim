@@ -30,6 +30,9 @@ Vyměnitelná vrstva značky (brand): jádro hry je oddělené od vzhledu a mark
 - `SchoolMark.js` a `ui/brand.js` přesunuty do `brands/school/`; `BRAND` z `Colors.js` a `SCHOOL_IT_URL` z `GameConfig.js` odstraněny (**brand-breaking** pro vlastní forky: nahrazuje je `brand.colors`, `brand.links`).
 - Testy se spouštějí jen ze složky `tests/` aktuálního repa.
 
+### Opraveno
+- Mobil na šířku (výška do 480 px): panel přístrojů je ve dvou sloupcích a nepřekrývá ovládání vlevo dole; hlášení pilotovi jsou vedle něj.
+
 ## [0.2.0] – 2026-10-23
 
 ### Přidáno

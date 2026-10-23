@@ -160,7 +160,13 @@ small { color: var(--muted); font-size: 11px; font-weight: 600; letter-spacing: 
   .btn.vent { height: 52px; width: 140px; }
   .ctl-left { bottom: max(8px, env(safe-area-inset-bottom)); gap: 6px; }
   .ctl-right { bottom: max(8px, env(safe-area-inset-bottom)); }
-  .hud-side { top: 60px; }
+  /* Přístroje ve dvou sloupcích, aby panel nepřekrýval ovládání vlevo dole (nízký displej na šířku) */
+  .hud-side { top: 60px; min-width: 250px; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px 16px; padding: 6px 12px; }
+  .hud-side b { font-size: 17px; }
+  .hud-side .gasbar { grid-column: 1 / -1; }
+}
+@media (max-height: 480px) and (max-width: 899px) {
+  .hud-alerts { top: max(60px, env(safe-area-inset-top)); left: 280px; }   /* vedle dvousloupcového panelu přístrojů */
 }
 
 /* ---------- Společné prvky ---------- */
