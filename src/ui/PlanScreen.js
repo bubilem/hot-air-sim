@@ -4,7 +4,7 @@
 import { t, getLang, setLang } from '../i18n/index.js';
 import { SITES, mapCenter, createBiomes } from '../world/Sites.js';
 import { BIOME } from '../world/Biomes.js';
-import { WORLD, TIME_OF_DAY } from '../config/GameConfig.js';
+import { WORLD, TIME_OF_DAY, SCHOOL_IT_URL } from '../config/GameConfig.js';
 import { ICON_SETTINGS, ICON_WIKI } from './SettingsMenu.js';
 import { estimateFlight } from '../core/FlightPlan.js';
 import { bearingToVec } from '../core/WindModel.js';
@@ -98,6 +98,7 @@ export class PlanScreen {
           <div class="plan-hero">
             <h1>${t('plan.title')}</h1>
             <p>${t('plan.sub')}</p>
+            <a class="school-link" href="${SCHOOL_IT_URL}" target="_blank" rel="noopener noreferrer">${t('plan.school')}</a>
           </div>
 
           <section class="card">

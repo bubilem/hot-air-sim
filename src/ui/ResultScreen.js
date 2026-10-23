@@ -58,14 +58,17 @@ export class ResultScreen {
         <canvas id="diploma" width="${W}" height="${H}"></canvas>
         <div class="result-btns">
           <button class="btn cta" id="r-dl">${t('result.download')}</button>
+          <button class="btn ghost" id="r-share">${t('result.share')}</button>
+          <a class="btn ghost school" href="${SCHOOL_IT_URL}" target="_blank" rel="noopener noreferrer">${t('result.study')}</a>
           <button class="btn ghost" id="r-again">${t('result.again')}</button>
         </div>
-        <p class="result-school">${t('result.school')}
-          <a href="${SCHOOL_IT_URL}" target="_blank" rel="noopener noreferrer">${t('result.moreIt')}</a></p>
+        <p class="result-school">${t('result.school')}</p>
       </div>`;
     app.uiRoot.appendChild(this.el);
     this.canvas = this.el.querySelector('#diploma');
     this.el.querySelector('#r-dl').addEventListener('click', () => this.download());
+    this.shareBtn = this.el.querySelector('#r-share');
+    this.shareBtn.addEventListener('click', () => this.share());
     this.el.querySelector('#r-again').addEventListener('click', () => app.go('PLAN'));
     const draw = () => this.draw();
     draw();
@@ -79,6 +82,30 @@ export class ResultScreen {
     a.download = 'hot-air-sim-diplom.png';
     a.href = this.canvas.toDataURL('image/png');
     a.click();
+  }
+
+  /** Sdílení letu: nativní okno sdílení (s diplomem jako obrázkem), jinak zkopíruje text s odkazem na hru do schránky. */
+  async share() {
+    const r = this.app.flightResult;
+    const text = t('result.shareText').replace('{score}', r.score).replace('{stars}', '★'.repeat(r.stars)).replace('{dist}', fmtDist(r.targetDist));
+    const url = `${location.origin}${location.pathname}`;
+    const title = 'HotAirSim';
+    try {
+      const blob = await new Promise((res) => this.canvas.toBlob(res, 'image/png'));
+      const file = blob && new File([blob], 'hot-air-sim-diplom.png', { type: 'image/png' });
+      if (file && navigator.canShare?.({ files: [file] })) await navigator.share({ title, text: `${text}\n${url}`, files: [file] });
+      else if (navigator.share) await navigator.share({ title, text, url });
+      else await this.copyShare(`${text}\n${url}`);
+    } catch (e) {
+      if (e?.name === 'AbortError') return;   // uživatel okno sdílení zavřel
+      await this.copyShare(`${text}\n${url}`);
+    }
+  }
+
+  async copyShare(text) {
+    try { await navigator.clipboard.writeText(text); } catch { return; }
+    this.shareBtn.textContent = t('result.copied');
+    setTimeout(() => { this.shareBtn.textContent = t('result.share'); }, 2500);
   }
 
   draw() {

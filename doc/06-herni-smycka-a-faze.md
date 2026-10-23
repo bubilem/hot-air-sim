@@ -262,7 +262,7 @@ Po dokončení vyfukování (u úspěšného přistání) přejde hra do `CELEBR
   na zem se zastaví.
 - Po chvíli se ukáže titul podle `tier` a tlačítko „Převzít diplom“, které vytvoří `ResultScreen`.
 - `ResultScreen` kreslí osvědčení do `<canvas>` o rozměrech 1400 × 990 (obraz si lze stáhnout jako PNG),
-  s tlačítky *Stáhnout diplom* a *Letět znovu* (→ `PLAN`).
+  s tlačítky *Stáhnout diplom*, *Sdílet můj let* (`ResultScreen.share`: Web Share API s PNG diplomu, jinak kopie textu a odkazu do schránky), *Chci studovat IT →* (odkaz na obor IT) a *Letět znovu* (→ `PLAN`).
 
 ## 6.6 Předávání dat mezi fázemi
 

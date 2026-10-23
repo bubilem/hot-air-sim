@@ -236,6 +236,7 @@ small { color: var(--muted); font-size: 11px; font-weight: 600; letter-spacing: 
 .plan-tools .btn.gear { position: static; }
 .plan-body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 4px 18px 22px; display: grid; gap: 14px; align-content: start; }
 .plan-hero h1 { font-size: 2.25rem; line-height: 1.2; letter-spacing: -0.02em; margin: 4px 0 6px; font-weight: 700; }
+.plan-hero .school-link { display: inline-block; margin-top: 8px; font-size: 13px; font-weight: 600; }
 .plan-hero p { margin: 0; color: var(--muted); font-size: 1rem; font-weight: 400; line-height: 1.6; }
 
 .card {
@@ -393,6 +394,7 @@ small { color: var(--muted); font-size: 11px; font-weight: 600; letter-spacing: 
 .result-inner { width: min(960px, 100%); padding: max(14px, env(safe-area-inset-top)) 14px 30px; display: grid; gap: 14px; justify-items: center; }
 #diploma { width: 100%; height: auto; box-shadow: 0 8px 32px rgba(0,0,0,.25); }
 .result-school { margin: 0; font-size: 13px; line-height: 1.5; text-align: center; color: rgba(255,255,255,.7); }
+.btn.ghost.school { color: var(--yellow-1); }
 .result-btns { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
 
 /* Výběr pláště */

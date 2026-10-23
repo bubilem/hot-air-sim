@@ -4,6 +4,12 @@ Všechny významné změny HotAirSim. Formát vychází z [Keep a Changelog](htt
 z [SemVer](https://semver.org/lang/cs/) (`MAJOR.MINOR.PATCH`). Číslo verze je v `package.json`, postup vydání je
 v `README.md` (kapitola Verzování).
 
+## [Nepublikováno]
+
+### Přidáno
+- Stálý odkaz „Studuj IT u nás →“ na úvodní obrazovce a tlačítko „Chci studovat IT →“ na obrazovce Oslava (odkaz na obor IT na webu školy).
+- Tlačítko „Sdílet můj let“: nativní sdílení (s diplomem jako obrázkem), jinak zkopírování textu a odkazu na hru do schránky.
+
 ## [0.2.0] – 2026-10-23
 
 ### Přidáno
