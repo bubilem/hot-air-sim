@@ -82,7 +82,7 @@ export class PlanPhase {
     this.scene.update(dt);
     app.setRig({
       target: { x: -3, y: app.world.startY + 8, z: 2 },
-      yaw: this.t * 0.12,
+      yaw: -this.t * 0.12,
       pitch: 0.2,
       dist: 50,
     });
